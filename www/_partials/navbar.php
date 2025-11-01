@@ -71,7 +71,7 @@
             <ul class="dropdown-menu dropdown-menu-lg dropdown-menu-right">
               <!-- User image -->
               <li class="user-header bg-dark">
-                <img src="assets/img/user-no-image-gray.png" class="img img-circle elevation-2" alt="User Image" style="object-fit: cover; object-position: 100% 0%;">
+                <img src="<?= CDN_BASE ?>user-no-image-gray.png" class="img img-circle elevation-2" alt="User Image" style="object-fit: cover; object-position: 100% 0%;">
                 <p><?= $_SESSION["nama_user"]; ?></p>
                 <p><small class="text-muted" style="margin-top: -10px;"><?= $_SESSION['level'] ?></small></p>
               </li>

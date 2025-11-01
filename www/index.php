@@ -69,7 +69,7 @@ if (isset($_POST['login'])) {
 <head>
   <meta charset="utf-8">
   <meta http-equiv="X-UA-Compatible" content="IE=edge">
-  <link rel="shortcut icon" href="assets/img/favicon_carwash.ico">
+  <link rel="shortcut icon" href="<?= CDN_BASE ?>favicon_carwash.ico">
   <title>Sistem Kasir - Dejati Coffee Garden & Carwash</title>
   <!-- Tell the browser to be responsive to screen width -->
   <meta content="width=device-width, initial-scale=1, maximum-scale=1, user-scalable=no" name="viewport">
@@ -88,7 +88,7 @@ if (isset($_POST['login'])) {
 
     .bg::before {
       content: '';
-      background-image: url('./assets/img/background.jpg');
+      background-image: url('<?= CDN_BASE ?>background.jpg');
       background-repeat: no-repeat;
       background-size: cover;
       background-attachment: fixed;
@@ -120,7 +120,7 @@ if (isset($_POST['login'])) {
   <div class="login-box">
     <div class="login-box-body">
       <div class="login-logo">
-        <img width="160px" title="De Jati" src="assets/img/logo-dejati-black.png" style="margin: 5px auto;vertical-align:middle;" />
+        <img width="160px" title="De Jati" src="<?= CDN_BASE ?>logo-dejati-black.png" style="margin: 5px auto;vertical-align:middle;" />
         <div style="margin:10px;font-size:18px;">
           <strong>LOGIN KASIR</strong>
         </div>

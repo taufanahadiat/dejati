@@ -37,7 +37,7 @@ $breadcrumb = [
                                 <?php if ($isEdit && !empty($product['foto'])): ?>
                                     <!-- Show existing image -->
                                     <div id="existingImageWrapper">
-                                        <img src="dist/img/products/<?= htmlspecialchars($product['foto']) ?>"
+                                        <img src="<?= CDN_BASE ?>/img/products/<?= htmlspecialchars($product['foto']) ?>"
                                             alt="Foto Produk"
                                             class="img-thumbnail mb-2"
                                             style="max-height:120px">

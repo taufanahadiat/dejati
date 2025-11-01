@@ -13,3 +13,5 @@ $conn = mysqli_connect($sql_details['host'], $sql_details['user'], $sql_details[
 if (!$conn) {
     die("Gagal terhubung dengan database: " . mysqli_connect_error());
 }
+
+define('CDN_BASE', 'https://cdn.jsdelivr.net/gh/araisantai/assets-automated@main/assets-cafe/');

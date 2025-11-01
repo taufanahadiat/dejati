@@ -14,7 +14,7 @@ if (isset($_GET['id_produk'])) {
 
     if ($foto) {
         // 2. Delete image file if exists
-        $uploadDir = $_SERVER['DOCUMENT_ROOT'] . '/dist/img/products/';
+        $uploadDir = $_SERVER['DOCUMENT_ROOT'] .  CDN_BASE . '/img/products/';
         $uploadFile = $uploadDir . basename($foto);
 
         if (file_exists($uploadFile) && is_file($uploadFile)) {

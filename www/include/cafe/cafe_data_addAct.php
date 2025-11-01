@@ -18,7 +18,7 @@ function sanitize_filename($string)
 if (isset($_POST['upload_only']) && $_POST['upload_only']) {
     if (isset($_FILES['imageFile']) && $_FILES['imageFile']['error'] === UPLOAD_ERR_OK) {
         $tmpName = basename($_POST['foto']);
-        $uploadDir = $_SERVER['DOCUMENT_ROOT'] . '/dist/img/products/';
+        $uploadDir = $_SERVER['DOCUMENT_ROOT'] .  CDN_BASE . '/img/products/';
         $uploadFile = $uploadDir . $tmpName;
 
         $allowedTypes = ['image/jpeg', 'image/png'];
@@ -81,7 +81,7 @@ $id_prod = mysqli_insert_id($conn);
 
 // 3. Rename file on disk only if image uploaded
 if (!empty($temp_foto)) {
-    $uploadDir = $_SERVER['DOCUMENT_ROOT'] . '/dist/img/products/';
+    $uploadDir = $_SERVER['DOCUMENT_ROOT'] .  CDN_BASE . '/img/products/';
     $ext = pathinfo($temp_foto, PATHINFO_EXTENSION);
     $sanitized_name = sanitize_filename($nama_prod);
     $final_foto = "{$id_prod}_{$sanitized_name}.{$ext}";

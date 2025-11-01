@@ -18,7 +18,7 @@ function sanitize_filename($string)
 if (isset($_POST['upload_only']) && $_POST['upload_only']) {
     if (isset($_FILES['imageFile']) && $_FILES['imageFile']['error'] === UPLOAD_ERR_OK) {
         $tmpName = basename($_POST['foto']);
-        $uploadDir = $_SERVER['DOCUMENT_ROOT'] . '/dist/img/products/';
+        $uploadDir = $_SERVER['DOCUMENT_ROOT'] .  CDN_BASE . '/img/products/';
         $uploadFile = $uploadDir . $tmpName;
 
         $allowedTypes = ['image/jpeg', 'image/png'];
@@ -62,7 +62,7 @@ $current_foto = $current['foto'] ?? null;
 
 // === 2. build final foto filename if new file uploaded ===
 $final_foto = $current_foto; // default keep old one
-$uploadDir  = $_SERVER['DOCUMENT_ROOT'] . '/dist/img/products/';
+$uploadDir  = $_SERVER['DOCUMENT_ROOT'] .  CDN_BASE . '/img/products/';
 
 if (!empty($temp_foto) && $temp_foto !== $current_foto) {
     // only handle if Dropzone uploaded a new temp file

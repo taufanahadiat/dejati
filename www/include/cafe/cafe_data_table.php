@@ -33,8 +33,8 @@
                     $variantNames = $isVariant ? explode(';', $row['nama_var']) : [];
                     $variantPrices = $isVariant ? explode(';', $row['biaya_var']) : [];
 
-                    $imgPath = '../dist/img/products/' . $row['foto'];
-                    $imgExists = file_exists($_SERVER['DOCUMENT_ROOT'] . '/dist/img/products/' . $row['foto']);
+                    $imgPath = '<?= CDN_BASE ?>/img/products/' . $row['foto'];
+                    $imgExists = file_exists($_SERVER['DOCUMENT_ROOT'] .  CDN_BASE . '/img/products/' . $row['foto']);
             ?>
                     <tr>
                         <td><?= $no++; ?></td>
@@ -42,7 +42,7 @@
                             <?php
                             if ($row['foto'] && $imgExists):
                                 // Show thumbnail, link to full image
-                                $relativePath = 'dist/img/products/' . $row['foto'];
+                                $relativePath =  CDN_BASE . '/img/products/' . $row['foto'];
                             ?>
                                 <a href="<?= $relativePath ?>" target="_blank">
                                     <div style="width: 80px; height: 80px; overflow: hidden;">

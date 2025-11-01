@@ -2,7 +2,7 @@
   <aside class="main-sidebar sidebar-dark-primary elevation-4">
     <!-- Brand Logo -->
     <div class="brand-link d-flex align-items-center">
-      <img src="dist/img/logo-only-white.png" class="brand-image img-circle elevation-3" style="opacity: .8">
+      <img src="<?= CDN_BASE ?>/img/logo-only-white.png" class="brand-image img-circle elevation-3" style="opacity: .8">
       <span class="brand-text font-weight-light"><b>De'</b>Jati</span>
     </div>
 
@@ -14,7 +14,7 @@
           <!--<img src="<? //= $userPic; 
                         ?>" class="img img-circle elevation-2" alt="User Image" style="<? //= file_exists($imagePath) ? 'width: 52px; height: 64px; border-radius: 30%;' : 'width: 52px; height: 52px;'; 
                                                                                         ?>">-->
-          <img src="assets/img/user-no-image-gray.png" class="img img-circle elevation-2" alt="User Image">
+          <img src="<?= CDN_BASE ?>user-no-image-gray.png" class="img img-circle elevation-2" alt="User Image">
         </div>
         <div class="info">
           <a href="#" class="d-block"><?= $_SESSION["nama_user"]; ?></a>

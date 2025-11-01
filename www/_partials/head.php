@@ -1,7 +1,9 @@
+<?php require_once 'config/config.php';
+?>
 <head>
   <meta charset="UTF-8" />
   <meta http-equiv="Content-Type" content="text/html; charset=utf-8" />
-  <link rel="shortcut icon" href="../dist/img/logo-only-white.png" type="image/x-icon">
+  <link rel="shortcut icon" href="<?= CDN_BASE ?>/img/logo-only-white.png" type="image/x-icon">
   <title>De'Jati Universe</title>
   <!-- Tell the browser to be responsive to screen width -->
   <meta content="width=device-width, initial-scale=1, maximum-scale=1, user-scalable=no" name="viewport">

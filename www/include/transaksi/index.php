@@ -41,7 +41,7 @@ if ($result->num_rows > 0) {
             'nama_var' => $row['nama_var'] ?? '',
             'biaya_var' => $row['biaya_var'] ?? 0,
             'category' => $row['id_cat'],
-            'image'    => !empty($row['foto']) ? "dist/img/products/{$row['foto']}" : '',
+            'image'    => !empty($row['foto']) ? CDN_BASE . "/img/products/{$row['foto']}" : '',
         ];
     }
 }
