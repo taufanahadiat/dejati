@@ -1,0 +1,26 @@
+version: "3.9"
+
+services:
+  web:
+    build: .
+    container_name: lampp_web
+    ports:
+      - "8080:80"
+    volumes:
+      - .:/var/www/html
+    depends_on:
+      - db
+
+  db:
+    image: mysql:8.0
+    container_name: lampp_db
+    restart: always
+    environment:
+      MYSQL_ROOT_PASSWORD: akpidev3
+      MYSQL_DATABASE: dejati
+    volumes:
+      - db_data:/var/lib/mysql
+      - ./database:/docker-entrypoint-initdb.d  # auto-import SQL files here
+
+volumes:
+  db_data:

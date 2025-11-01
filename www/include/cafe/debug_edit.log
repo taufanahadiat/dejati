@@ -1,0 +1,14 @@
+[2025-08-17 16:01:43] {"id_prod":"32","foto":"32_aa.jpg","nama_prod":"ada","id_cat":"5","variant":"0","harga_toko":"1000","biaya":"1000"}
+[2025-08-17 16:02:14] {"id_prod":"32","foto":"32_aa.jpg","nama_prod":"ada","id_cat":"5","variant":"0","harga_toko":"1000","biaya":"1000"}
+[2025-08-17 16:03:03] {"id_prod":"32","foto":"32_ada.jpg","nama_prod":"ada","id_cat":"11","variant":"0","harga_toko":"1000","biaya":"1000"}
+[2025-08-17 16:33:31] {"id_prod":"32","foto":"img_1755423208858.jpg","nama_prod":"ada","id_cat":"11","variant":"0","harga_toko":"1000","biaya":"1000"}
+[2025-08-17 16:58:06] {"id_prod":"32","foto":"","remove_foto":"1","nama_prod":"ada","id_cat":"11","variant":"0","harga_toko":"1000","biaya":"1000"}
+[2025-08-17 16:58:30] {"id_prod":"32","foto":"img_1755424707911.jpg","remove_foto":"0","nama_prod":"ada","id_cat":"11","variant":"0","harga_toko":"1000","biaya":"1000"}
+[2025-08-17 20:07:37] {"id_prod":"16","foto":"16_beef.jpeg","remove_foto":"0","nama_prod":"Rice Bowl Beef","id_cat":"4","variant":"1","variant_name":["Beef Teriyaki","Beef Blackpepper"],"variant_price":["40000","40000"],"harga_toko":"","nama_var":"Beef Teriyaki;Beef Blackpepper","biaya_var":"40000;40000"}
+[2025-08-17 20:09:19] {"id_prod":"16","foto":"","remove_foto":"1","nama_prod":"Rice Bowl Beef","id_cat":"4","variant":"1","variant_name":["Beef Teriyaki","Beef Blackpepper"],"variant_price":["40000","40000"],"harga_toko":"","nama_var":"Beef Teriyaki;Beef Blackpepper","biaya_var":"40000;40000"}
+[2025-08-17 20:19:45] {"id_prod":"16","foto":"img_1755436779880.jpeg","remove_foto":"0","nama_prod":"Rice Bowl Beef","id_cat":"4","variant":"1","variant_name":["Beef Teriyaki","Beef Blackpepper"],"variant_price":["40000","40000"],"harga_toko":"","nama_var":"Beef Teriyaki;Beef Blackpepper","biaya_var":"40000;40000"}
+[2025-08-17 20:20:46] {"id_prod":"32","foto":"32_ada.jpg","remove_foto":"0","nama_prod":"ada aja","id_cat":"11","variant":"0","harga_toko":"1000","biaya":"1000"}
+[2025-08-17 20:36:52] {"id_prod":"32","foto":"img_1755437808461.jpg","remove_foto":"0","nama_prod":"ada aja","id_cat":"11","variant":"0","harga_toko":"1000","biaya":"1000"}
+[2025-08-17 20:38:43] {"id_prod":"32","foto":"32_ada_aja.jpg","remove_foto":"0","nama_prod":"ada aja apa","id_cat":"11","variant":"0","harga_toko":"1000","biaya":"1000"}
+[2025-08-17 21:35:05] {"id_prod":"32","foto":"32_ada_aja.jpg","remove_foto":"0","nama_prod":"ada aja apa","id_cat":"11","variant":"1","variant_name":["satu","dua"],"variant_price":["3000","5000"],"harga_toko":"1000","nama_var":"satu;dua","biaya_var":"3000;5000"}
+[2025-08-17 21:47:21] {"id_prod":"32","foto":"32_ada_aja.jpg","remove_foto":"0","nama_prod":"ada aja apa","id_cat":"11","variant":"0","harga_toko":"5000","biaya":"5000"}

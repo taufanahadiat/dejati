@@ -1,0 +1,7 @@
+[31-Jan-2011 14:32:25] PHP Warning:  mysql_fetch_array(): supplied argument is not a valid MySQL result resource in /home/h91627/public_html/trayekonomis/include/autocomplete/asal.php on line 7
+[31-Jan-2011 14:32:41] PHP Warning:  mysql_fetch_array(): supplied argument is not a valid MySQL result resource in /home/h91627/public_html/trayekonomis/include/autocomplete/kd_angkot.php on line 6
+[31-Jan-2011 14:32:47] PHP Warning:  mysql_fetch_array(): supplied argument is not a valid MySQL result resource in /home/h91627/public_html/trayekonomis/include/autocomplete/kd_angkot.php on line 6
+[31-Jan-2011 14:36:57] PHP Warning:  mysql_fetch_array(): supplied argument is not a valid MySQL result resource in /home/h91627/public_html/trayekonomis/include/autocomplete/asal.php on line 7
+[31-Jan-2011 14:37:02] PHP Warning:  mysql_fetch_array(): supplied argument is not a valid MySQL result resource in /home/h91627/public_html/trayekonomis/include/autocomplete/kd_angkot.php on line 6
+[15-Mar-2011 00:55:20] PHP Warning:  mysql_connect() [<a href='function.mysql-connect'>function.mysql-connect</a>]: Can't connect to local MySQL server through socket '/var/lib/mysql/mysql.sock' (11) in /home/h91627/public_html/trayekonomis/include/db.php on line 2
+[15-May-2011 13:03:51] PHP Warning:  mysql_connect() [<a href='function.mysql-connect'>function.mysql-connect</a>]: Access denied for user 'root'@'localhost' (using password: NO) in /home/h91627/public_html/trayekonomis/include/db.php on line 2

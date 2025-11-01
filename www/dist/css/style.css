@@ -1,0 +1,31 @@
+/* Make cursor pointer */
+.custom-control-label {
+  cursor: pointer;
+}
+
+.category-scroll {
+  overflow-x: auto;
+  overflow-y: hidden;
+  white-space: nowrap;
+  /* avoid wrapping */
+}
+
+.category-scroll::-webkit-scrollbar {
+  height: 8px;
+}
+
+.category-scroll::-webkit-scrollbar-thumb {
+  background: #ccc;
+  border-radius: 4px;
+}
+
+.nav-pills-custom {
+  display: flex;
+  flex-wrap: nowrap !important;
+  /* prevent wrapping */
+}
+
+.nav-pills-custom .nav-item {
+  flex: 0 0 auto;
+  /* don't stretch */
+}
