@@ -395,6 +395,54 @@
         });
     });
 </script>
+<style>
+@media print {
+  body {
+    font-family: 'Courier New', monospace;
+    font-size: 12px;
+    width: 80mm; /* matches 80mm thermal paper */
+    margin: 0;
+    padding: 0;
+  }
+
+  h3, h4, p {
+    margin: 0;
+    text-align: center;
+  }
+
+  table {
+    width: 100%;
+    border-collapse: collapse;
+    font-size: 12px;
+  }
+
+  th, td {
+    text-align: left;
+    padding: 2px 0;
+  }
+
+  th {
+    border-bottom: 1px dashed #000;
+  }
+
+  tfoot td {
+    border-top: 1px dashed #000;
+    font-weight: bold;
+  }
+
+  .totals {
+    margin-top: 5px;
+    border-top: 1px dashed #000;
+    border-bottom: 1px dashed #000;
+    padding: 4px 0;
+  }
+
+  @page {
+    margin: 5mm;
+  }
+}
+</style>
+
 <script>
     $(function() {
         // Open modal and show total
@@ -448,29 +496,52 @@
             $('#payModal').modal('hide');
         });
 
-        function printInvoice(tableNumber, items, total, paid, change, method) {
-            let popup = window.open('', 'Print', 'width=600,height=600');
-            popup.document.write('<html><head><title>Invoice</title>');
-            popup.document.write('</head><body>');
-            popup.document.write(`<h3>Invoice - Table #${tableNumber}</h3>`);
-            popup.document.write('<table border="1" cellpadding="5" cellspacing="0" width="100%">');
-            popup.document.write('<thead><tr><th>Item</th><th>Price</th><th>Qty</th><th>Total</th></tr></thead><tbody>');
+     function printInvoice(tableNumber, items, total, paid, change, method) {
+        let popup = window.open('', 'Print', 'width=350,height=600');
+        popup.document.write('<html><head><title>Invoice</title>');
 
-            items.forEach(row => {
-                popup.document.write(`<tr><td>${row.item}</td><td>${row.price}</td><td>${row.qty}</td><td>${row.total}</td></tr>`);
-            });
+        popup.document.write(`
+            <style>
+            body { font-family: 'Courier New', monospace; width:80mm; }
+            h3, h4, p { text-align:center; margin:2px 0; }
+            table { width:100%; font-size:12px; border-collapse:collapse; }
+            th, td { padding:2px 0; }
+            th { border-bottom:1px dashed #000; }
+            tfoot td { border-top:1px dashed #000; font-weight:bold; }
+            .line { border-top:1px dashed #000; margin:4px 0; }
+            @page { margin:5mm; }
+            </style>
+        `);
 
-            popup.document.write('</tbody></table>');
-            popup.document.write(`<h4>Total: ${total}</h4>`);
-            popup.document.write(`<p>Payment Method: ${method}</p>`);
-            popup.document.write(`<h4>Paid: Rp ${parseInt(paid).toLocaleString()}</h4>`);
-            popup.document.write(`<h4>Change: ${change}</h4>`);
-            popup.document.write('<p>Thank you!</p>');
-            popup.document.write('</body></html>');
-            popup.document.close();
-            popup.focus();
-            popup.print();
-            popup.close();
+        popup.document.write('</head><body>');
+        popup.document.write(`<h3>Dejati Carwash</h3>`);
+        popup.document.write(`<p>Jl. Contoh No.123<br>Telp: 0812-xxxx-xxxx</p>`);
+        popup.document.write('<div class="line"></div>');
+        popup.document.write(`<p><strong>Invoice</strong><br>Table: ${tableNumber}</p>`);
+
+        popup.document.write('<table>');
+        popup.document.write('<thead><tr><th>Item</th><th>Qty</th><th align="right">Total</th></tr></thead><tbody>');
+
+        items.forEach(row => {
+            const name = row.name || '-';
+            const qty = row.qty || 1;
+            const totalItem = (row.finalPrice * row.qty).toLocaleString('id-ID');
+            popup.document.write(`<tr><td>${name}</td><td>${qty}</td><td align="right">Rp ${totalItem}</td></tr>`);
+        });
+
+        popup.document.write(`</tbody></table>`);
+        popup.document.write('<div class="line"></div>');
+        popup.document.write(`<p>Total: <strong>${total}</strong></p>`);
+        popup.document.write(`<p>Bayar: Rp ${parseInt(paid).toLocaleString()}</p>`);
+        popup.document.write(`<p>Kembali: ${change}</p>`);
+        popup.document.write(`<p>Metode: ${method}</p>`);
+        popup.document.write('<div class="line"></div>');
+        popup.document.write(`<p>Terima kasih atas kunjungannya!<br>Silakan datang kembali</p>`);
+        popup.document.write('</body></html>');
+        popup.document.close();
+        popup.focus();
+        popup.print();
+        popup.close();
         }
     });
 
