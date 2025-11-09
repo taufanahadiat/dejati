@@ -76,52 +76,63 @@ if ($role === 'Kasir') {
 
     <?php include('_partials/js.php'); ?>
     <script>
-      $(document).ready(function() {
-        const navHeader = document.getElementById('nav-header');
-        if (!navHeader) return;
+  $(document).ready(function() {
+    const navHeader = document.getElementById('nav-header');
+    if (!navHeader) return;
 
-        function renderBreadcrumb(arr) {
-          navHeader.innerHTML = '';
-          const breadcrumbEl = document.createElement('ol');
-          breadcrumbEl.className = 'breadcrumb bg-transparent mb-0 pl-2 p-0';
+    function renderBreadcrumb(arr) {
+      navHeader.innerHTML = '';
+      const breadcrumbEl = document.createElement('ol');
+      breadcrumbEl.className = 'breadcrumb bg-transparent mb-0 pl-2 p-0 d-flex align-items-center';
 
-          arr.forEach((label, index) => {
-            const li = document.createElement('li');
-            li.classList.add('breadcrumb-item');
+      // 🟩 Add the sidebar toggle button FIRST
+      const toggleLi = document.createElement('li');
+      toggleLi.className = 'nav-item mr-2';
+      toggleLi.innerHTML = `
+        <a class="nav-link" data-widget="pushmenu" href="#" role="button">
+          <i class="fas fa-bars"></i>
+        </a>`;
+      breadcrumbEl.appendChild(toggleLi);
 
-            if (index === 0) {
-              li.innerHTML = `<span class="h5 mb-0">${label}</span>`;
-            } else if (index === arr.length - 1) {
-              li.classList.add('active');
-              li.innerHTML = `<span>${label}</span>`;
-            } else {
-              li.innerHTML = `<span>${label}</span>`;
-            }
+      // 🟦 Then, loop through breadcrumb items
+      arr.forEach((label, index) => {
+        const li = document.createElement('li');
+        li.classList.add('breadcrumb-item');
 
-            breadcrumbEl.appendChild(li);
-          });
-
-          navHeader.appendChild(breadcrumbEl);
+        if (index === 0) {
+          li.innerHTML = `<span class="h5 mb-0">${label}</span>`;
+        } else if (index === arr.length - 1) {
+          li.classList.add('active');
+          li.innerHTML = `<span>${label}</span>`;
+        } else {
+          li.innerHTML = `<span>${label}</span>`;
         }
 
-        // Initial render from PHP
-        const breadcrumb = <?= json_encode($breadcrumb ?? []) ?>;
-        if (breadcrumb.length > 0) {
-          const labels = breadcrumb.map(item => item.label);
-          renderBreadcrumb(labels);
-        }
-
-        // ✅ jQuery way for Bootstrap 4 tabs
-        $('[data-toggle="pill"][data-breadcrumb]').on('shown.bs.tab', function(e) {
-          try {
-            const breadcrumbData = JSON.parse(this.dataset.breadcrumb);
-            renderBreadcrumb(breadcrumbData);
-          } catch (err) {
-            console.error('Invalid breadcrumb JSON', err);
-          }
-        });
+        breadcrumbEl.appendChild(li);
       });
-    </script>
+
+      navHeader.appendChild(breadcrumbEl);
+    }
+
+    // Initial render from PHP
+    const breadcrumb = <?= json_encode($breadcrumb ?? []) ?>;
+    if (breadcrumb.length > 0) {
+      const labels = breadcrumb.map(item => item.label);
+      renderBreadcrumb(labels);
+    }
+
+    // ✅ jQuery way for Bootstrap 4 tabs
+    $('[data-toggle="pill"][data-breadcrumb]').on('shown.bs.tab', function(e) {
+      try {
+        const breadcrumbData = JSON.parse(this.dataset.breadcrumb);
+        renderBreadcrumb(breadcrumbData);
+      } catch (err) {
+        console.error('Invalid breadcrumb JSON', err);
+      }
+    });
+  });
+  </script>
+
   </body>
 
   </html>
