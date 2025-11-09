@@ -88,11 +88,7 @@ if ($role === 'Kasir') {
       // 🟩 Add the sidebar toggle button FIRST
       const toggleLi = document.createElement('li');
       toggleLi.className = 'nav-item mr-2';
-      toggleLi.innerHTML = `
-        <a class="nav-link" data-widget="pushmenu" href="#" role="button">
-          <i class="fas fa-bars"></i>
-        </a>`;
-      breadcrumbEl.appendChild(toggleLi);
+    
 
       // 🟦 Then, loop through breadcrumb items
       arr.forEach((label, index) => {
@@ -100,7 +96,14 @@ if ($role === 'Kasir') {
         li.classList.add('breadcrumb-item');
 
         if (index === 0) {
-          li.innerHTML = `<span class="h5 mb-0">${label}</span>`;
+          li.innerHTML = `
+            <span class="nav-toggle">
+              <a class="nav-link p-0" data-widget="pushmenu" href="#" role="button">
+                <i class="fas fa-bars"></i>
+              </a>
+            </span>
+            <span class="h5 mb-0 align-middle">${label}</span>
+          `;
         } else if (index === arr.length - 1) {
           li.classList.add('active');
           li.innerHTML = `<span>${label}</span>`;

@@ -72,6 +72,36 @@
       /* Optional: round corners */
 
     }
+#nav-header .breadcrumb .nav-toggle {
+  display: inline-flex;
+  align-items: center;
+  margin-left: 0.75rem; 
+  margin-right: 0.5rem; 
+}
+
+#nav-header .breadcrumb .nav-link {
+  display: inline-flex;
+  align-items: center;
+  padding: 0 !important;
+}
+
+#nav-header .breadcrumb .nav-link i {
+  font-size: 1.1rem;
+  vertical-align: middle;
+}
+
+#nav-header .breadcrumb {
+  padding-left: 0 !important;
+  margin-bottom: 0;
+  display: flex;
+  align-items: center;
+}
+
+#nav-header .breadcrumb-item {
+  display: inline-flex;
+  align-items: center;
+  margin-bottom: 0;
+}
   </style>
   <!-- jQuery -->
   <script src="plugins/jquery/jquery.min.js"></script>
