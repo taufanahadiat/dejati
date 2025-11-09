@@ -9,7 +9,9 @@ if (isset($_SESSION['loggedin'])) {
   if ($_SESSION['level'] === 'Administrator') {
     header("Location: ./main.php");
   } elseif ($_SESSION['level'] === 'Kasir') {
-    header("Location: ./home.php");
+    header("Location: ./main.php");
+  } elseif ($_SESSION['level'] === 'Karyawan') {
+    header("Location: ./main.php");
   }
   die();
 }
@@ -47,7 +49,7 @@ if (isset($_POST['login'])) {
       if ($data["level"] === 'Administrator') {
         header("Refresh: 0; url=./main.php");
       } elseif ($data["level"] === 'Kasir') {
-        header("Refresh: 0; url=./home.php");
+        header("Refresh: 0; url=./main.php");
       }
       die();
     } else {

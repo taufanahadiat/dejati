@@ -276,7 +276,7 @@ CREATE TABLE IF NOT EXISTS `tb_user` (
   `username` varchar(100) NOT NULL,
   `nama_user` varchar(100) NOT NULL,
   `password` varchar(100) NOT NULL,
-  `level` enum('Administrator','Kasir') NOT NULL,
+  `level` enum('Administrator','Kasir','Karyawan') NOT NULL,
   `status` enum('Aktif','Tidak Aktif') NOT NULL,
   `last_logged_in` datetime DEFAULT NULL,
   `ip_address` varchar(45) DEFAULT NULL,
@@ -290,11 +290,32 @@ CREATE TABLE IF NOT EXISTS `tb_user` (
 
 INSERT INTO `tb_user` (`id_user`, `username`, `nama_user`, `password`, `level`, `status`, `last_logged_in`, `ip_address`, `created_at`) VALUES
 (1, 'admin', 'Admin Dejati', '$2y$10$/4rfsIP6KB0iZis9H4pLr.P5v1OixyiWXg/4oi1a7d.8yaWM71pni', 'Administrator', 'Aktif', '2025-10-03 19:17:12', '::1', '2024-06-29 16:51:33'),
-(5, 'kasir12', 'Kasir', '$2y$10$osRuOF2fJIveI0N/y6WApeELtctJIq3R5mWNt8lN9zDX.DdCxouzS', 'Kasir', 'Aktif', NULL, NULL, '2024-06-29 16:51:33'),
+(2, 'kasir', 'Kasir', '$2y$10$/4rfsIP6KB0iZis9H4pLr.P5v1OixyiWXg/4oi1a7d.8yaWM71pni', 'Kasir', 'Aktif', NULL, NULL, '2024-06-29 16:51:33'),
+(3, 'jati35', 'Dejati Karyawan', '$2y$10$/4rfsIP6KB0iZis9H4pLr.P5v1OixyiWXg/4oi1a7d.8yaWM71pni', 'Karyawan', 'Aktif', NULL, NULL, '2024-06-29 16:51:33'),
+(6, 'user', 'User', '$2y$10$/4rfsIP6KB0iZis9H4pLr.P5v1OixyiWXg/4oi1a7d.8yaWM71pni', 'Kasir', 'Aktif', NULL, NULL, '2024-06-29 16:51:33'),
 (7, 'arta', 'arta', '$2y$10$bOIAOr4wgrmwR1AsSLrU9OHEhNLyfKvXA2KVBTYezXr1r1NPDqSLG', 'Kasir', 'Aktif', '2024-07-19 14:56:51', '192.168.0.102', '2024-07-19 07:40:47'),
-(8, 'aca', 'aca', '$2y$10$2e/VmKPz25duTvIJVlMQTejDYs.zZ1i/g1aciWbOgoSTNyvGaSRT6', 'Kasir', 'Aktif', NULL, NULL, '2024-07-19 07:41:35'),
-(9, 'libia', 'libia', '$2y$10$5S4HNJ7VHfAoMtJMr4o5m.TazteZIBXdN5pz1UDn/QYPOuognnbDW', 'Kasir', 'Aktif', NULL, NULL, '2024-07-19 07:42:29');
+(4, 'aca', 'aca', '$2y$10$2e/VmKPz25duTvIJVlMQTejDYs.zZ1i/g1aciWbOgoSTNyvGaSRT6', 'Kasir', 'Aktif', NULL, NULL, '2024-07-19 07:41:35'),
+(5, 'libia', 'libia', '$2y$10$5S4HNJ7VHfAoMtJMr4o5m.TazteZIBXdN5pz1UDn/QYPOuognnbDW', 'Kasir', 'Aktif', NULL, NULL, '2024-07-19 07:42:29');
 COMMIT;
+
+
+CREATE TABLE IF NOT EXISTS `tb_utility` (
+  `id` INT NOT NULL AUTO_INCREMENT,
+  `name` VARCHAR(100) NOT NULL,
+  `category` VARCHAR(100) NOT NULL,
+  PRIMARY KEY (`id`)
+) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4;
+
+CREATE TABLE IF NOT EXISTS `tb_stock` (
+  `id` INT NOT NULL AUTO_INCREMENT,
+  `name` VARCHAR(100) NOT NULL,
+  `item_number` INT NOT NULL DEFAULT 0,
+  PRIMARY KEY (id)
+) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4;
+
+INSERT INTO `tb_stock` (`id`, `name`, `item_number`) VALUES
+(1, 'Soto', 2),
+(2, 'Iga', 8);
 
 /*!40101 SET CHARACTER_SET_CLIENT=@OLD_CHARACTER_SET_CLIENT */;
 /*!40101 SET CHARACTER_SET_RESULTS=@OLD_CHARACTER_SET_RESULTS */;

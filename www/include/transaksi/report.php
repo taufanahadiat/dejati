@@ -125,7 +125,7 @@ $result = mysqli_query($conn, $sql);
             $("#modalContent").html("<p class='text-center'>Loading...</p>");
             $("#detailsModal").modal("show");
 
-            $.get("order_details.php", {
+            $.get("./include/transaksi/order_details.php", {
                 id: orderId
             }, function(data) {
                 $("#modalContent").html(data);

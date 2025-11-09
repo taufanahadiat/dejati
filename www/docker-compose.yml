@@ -1,16 +1,20 @@
 version: "3.9"
 
 services:
+  # --- PHP + Apache web app ---
   web:
     build: .
     container_name: lampp_web
-    ports:
-      - "8080:80"
+    expose:
+      - "80"
     volumes:
       - .:/var/www/html
     depends_on:
       - db
+    networks:
+      - proxy
 
+  # --- MySQL database ---
   db:
     image: mysql:8.0
     container_name: lampp_db
@@ -20,7 +24,30 @@ services:
       MYSQL_DATABASE: dejati
     volumes:
       - db_data:/var/lib/mysql
-      - ./database:/docker-entrypoint-initdb.d  # auto-import SQL files here
+      - ./database:/docker-entrypoint-initdb.d
+    networks:
+      - proxy
+
+  # --- Caddy (auto HTTPS reverse proxy) ---
+  caddy:
+    image: caddy:latest
+    container_name: caddy_proxy
+    restart: always
+    ports:
+      - "80:80"
+      - "443:443"
+    volumes:
+      - ./Caddyfile:/etc/caddy/Caddyfile
+      - caddy_data:/data
+      - caddy_config:/config
+    networks:
+      - proxy
 
 volumes:
   db_data:
+  caddy_data:
+  caddy_config:
+
+networks:
+  proxy:
+    driver: bridge

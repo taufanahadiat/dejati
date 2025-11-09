@@ -1,4 +1,4 @@
-  <!-- Main Sidebar Container -->
+<!-- Main Sidebar Container -->
   <aside class="main-sidebar sidebar-dark-primary elevation-4">
     <!-- Brand Logo -->
     <div class="brand-link d-flex align-items-center">
@@ -105,9 +105,9 @@
             </a>
             <ul class="nav nav-treeview">
               <li class="nav-item">
-                <a href="pages/UI/general.html" class="nav-link">
+                <a href="main.php?id=utility" class="nav-link">
                   <i class="nav-icon fa fa-list-check"></i>
-                  <p>Checklist</p>
+                  <p>Utility Management</p>
                 </a>
               </li>
             </ul>

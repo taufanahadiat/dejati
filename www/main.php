@@ -7,10 +7,25 @@ require_once 'config/config.php';
 if (empty($_SESSION['loggedin'])) {
   header("Location: ./");
   die();
-} elseif ($_SESSION['level'] === 'Kasir') {
-  header("Location: ./home.php");
+} 
+
+$role = $_SESSION['level'] ?? '';
+
+if ($role === 'Kasir') {
+  $id = isset($_GET['id']) ? $_GET['id'] : 'transaksi';
+  $allowed_pages = ['transaksi', 'report', 'utility'];
+  if (!in_array($id, $allowed_pages, true)) {
+    $id = 'transaksi';
+  }
+  $sidebar_partial = '_partials/sidebar_kasir.php';
+} elseif ($role === 'Karyawan') {
+  $id = isset($_GET['id']) ? $_GET['id'] : 'utility';
+  $sidebar_partial = '_partials/sidebar_karyawan.php';
 } else {
   $id = isset($_GET['id']) ? $_GET['id'] : 'dashboard';
+  $sidebar_partial = '_partials/sidebar.php';
+}
+
 ?>
 
   <!DOCTYPE html>
@@ -24,7 +39,7 @@ if (empty($_SESSION['loggedin'])) {
 
       <?php include('_partials/navbar.php'); ?>
 
-      <?php include('_partials/sidebar.php'); ?>
+      <?php include($sidebar_partial); ?>
 
       <!-- Content Wrapper. Contains page content -->
       <div class="content-wrapper">
@@ -42,8 +57,10 @@ if (empty($_SESSION['loggedin'])) {
         } elseif ($id == "report") {
           include_once('include/transaksi/report.php');
         } elseif ($id == "transaksi") {
-          include_once('include/transaksi/index.php');
-        } else {
+          include_once('include/transaksi/index.php'); 
+        } elseif ($id == "utility") {
+          include_once('include/utility/index.php');
+        }  else {
           echo "<h1>Page not found!</h1>";
         }
         ?>
@@ -109,6 +126,3 @@ if (empty($_SESSION['loggedin'])) {
 
   </html>
 
-<?php
-}
-?>

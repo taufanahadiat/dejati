@@ -1,0 +1,3 @@
+dejati.ip-dynamic.net {
+    reverse_proxy lampp_web:80
+}
