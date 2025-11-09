@@ -50,6 +50,8 @@ if (isset($_POST['login'])) {
         header("Refresh: 0; url=./main.php");
       } elseif ($data["level"] === 'Kasir') {
         header("Refresh: 0; url=./main.php");
+      } elseif ($data["level"] === 'Karyawan') {
+        header("Refresh: 0; url=./main.php");
       }
       die();
     } else {
