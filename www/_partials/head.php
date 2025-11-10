@@ -3,6 +3,9 @@
 <head>
   <meta charset="UTF-8" />
   <meta http-equiv="Content-Type" content="text/html; charset=utf-8" />
+  <link rel="manifest" href="/manifest.json">
+  <meta name="theme-color" content="#1f2937">
+  <link rel="apple-touch-icon" href="/assets/img/512.png">
   <link rel="shortcut icon" href="<?= CDN_BASE ?>/img/logo-only-white.png" type="image/x-icon">
   <title>De'Jati Universe</title>
   <!-- Tell the browser to be responsive to screen width -->

@@ -74,6 +74,9 @@ if (isset($_POST['login'])) {
   <meta charset="utf-8">
   <meta http-equiv="X-UA-Compatible" content="IE=edge">
   <link rel="shortcut icon" href="<?= CDN_BASE ?>favicon_carwash.ico">
+  <!-- manifest -->
+  <link rel="manifest" href="/manifest.json">
+  <meta name="theme-color" content="#1f2937">
   <title>Sistem Kasir - Dejati Coffee Garden & Carwash</title>
   <!-- Tell the browser to be responsive to screen width -->
   <meta content="width=device-width, initial-scale=1, maximum-scale=1, user-scalable=no" name="viewport">

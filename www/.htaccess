@@ -9,3 +9,20 @@ RewriteRule ^([^/]+)/?$ $1.php [L,NC]
 # Redirect explicit .php URLs to extensionless
 RewriteCond %{THE_REQUEST} \s/+([^\s?]+?)\.php[\s?]
 RewriteRule ^ %1 [R=301,L,NC]
+
+
+<IfModule mod_expires.c>
+    ExpiresActive On
+    ExpiresByType image/jpeg "access plus 1 year"
+    ExpiresByType image/png "access plus 1 year"
+    ExpiresByType image/gif "access plus 1 year"
+    ExpiresByType image/webp "access plus 1 year"
+    ExpiresByType text/css "access plus 1 year"
+    ExpiresByType application/javascript "access plus 1 year"
+</IfModule>
+
+<IfModule mod_headers.c>
+    <FilesMatch "\.(jpg|jpeg|png|gif|webp|css|js)$">
+        Header set Cache-Control "public, max-age=31536000, immutable"
+    </FilesMatch>
+</IfModule>
