@@ -5,6 +5,7 @@ services:
   web:
     build: .
     container_name: lampp_web
+    restart: unless-stopped
     expose:
       - "80"
     volumes:
@@ -18,7 +19,7 @@ services:
   db:
     image: mysql:8.0
     container_name: lampp_db
-    restart: always
+    restart: unless-stopped
     environment:
       MYSQL_ROOT_PASSWORD: akpidev3
       MYSQL_DATABASE: dejati
@@ -32,7 +33,7 @@ services:
   caddy:
     image: caddy:latest
     container_name: caddy_proxy
-    restart: always
+    restart: unless-stopped
     ports:
       - "80:80"
       - "443:443"
