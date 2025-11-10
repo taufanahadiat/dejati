@@ -77,6 +77,7 @@ if (isset($_POST['login'])) {
   <!-- manifest -->
   <link rel="manifest" href="/manifest.json">
   <meta name="theme-color" content="#1f2937">
+  <link rel="apple-touch-icon" href="/assets/img/512.png">
   <title>Sistem Kasir - Dejati Coffee Garden & Carwash</title>
   <!-- Tell the browser to be responsive to screen width -->
   <meta content="width=device-width, initial-scale=1, maximum-scale=1, user-scalable=no" name="viewport">
