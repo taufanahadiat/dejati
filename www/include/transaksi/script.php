@@ -496,53 +496,43 @@
             $('#payModal').modal('hide');
         });
 
-     function printInvoice(tableNumber, items, total, paid, change, method) {
-        let popup = window.open('', 'Print', 'width=350,height=600');
-        popup.document.write('<html><head><title>Invoice</title>');
+    function printInvoice(tableNumber, items, total, paid, change, method) {
+    let escpos = '';
+    escpos += '\x1B\x40'; // Initialize printer
+    escpos += '\x1B\x61\x01'; // Center
+    escpos += 'Dejati Carwash\n';
+    escpos += 'Jl. Contoh No.123\nTelp: 0812-xxxx-xxxx\n';
+    escpos += '-----------------------------\n';
+    escpos += `Invoice\nTable: ${tableNumber}\n`;
+    escpos += '-----------------------------\n';
 
-        popup.document.write(`
-            <style>
-            body { font-family: 'Courier New', monospace; width:80mm; }
-            h3, h4, p { text-align:center; margin:2px 0; }
-            table { width:100%; font-size:12px; border-collapse:collapse; }
-            th, td { padding:2px 0; }
-            th { border-bottom:1px dashed #000; }
-            tfoot td { border-top:1px dashed #000; font-weight:bold; }
-            .line { border-top:1px dashed #000; margin:4px 0; }
-            @page { margin:5mm; }
-            </style>
-        `);
+    items.forEach(row => {
+        const name = row.name || '-';
+        const qty = row.qty || 1;
+        const totalItem = (row.finalPrice * row.qty).toLocaleString('id-ID');
+        escpos += `${name} x${qty} Rp ${totalItem}\n`;
+    });
 
-        popup.document.write('</head><body>');
-        popup.document.write(`<h3>Dejati Carwash</h3>`);
-        popup.document.write(`<p>Jl. Contoh No.123<br>Telp: 0812-xxxx-xxxx</p>`);
-        popup.document.write('<div class="line"></div>');
-        popup.document.write(`<p><strong>Invoice</strong><br>Table: ${tableNumber}</p>`);
+    escpos += '-----------------------------\n';
+    escpos += `Total: Rp ${total}\n`;
+    escpos += `Bayar: Rp ${parseInt(paid).toLocaleString()}\n`;
+    escpos += `Kembali: ${change}\n`;
+    escpos += `Metode: ${method}\n`;
+    escpos += '-----------------------------\n';
+    escpos += 'Terima kasih atas kunjungannya!\nSilakan datang kembali\n\n\n';
+    escpos += '\x1D\x56\x00'; // Cut
 
-        popup.document.write('<table>');
-        popup.document.write('<thead><tr><th>Item</th><th>Qty</th><th align="right">Total</th></tr></thead><tbody>');
+    // --- Encode to Base64 ---
+    const base64Data = btoa(unescape(encodeURIComponent(escpos)));
 
-        items.forEach(row => {
-            const name = row.name || '-';
-            const qty = row.qty || 1;
-            const totalItem = (row.finalPrice * row.qty).toLocaleString('id-ID');
-            popup.document.write(`<tr><td>${name}</td><td>${qty}</td><td align="right">Rp ${totalItem}</td></tr>`);
-        });
+    // --- Create RawBT Intent URL ---
+    // const rawbtUrl = `intent://print/#Intent;scheme=rawbt;package=ru.a402d.rawbtprinter;S.raw_data=${base64Data};end;`;
 
-        popup.document.write(`</tbody></table>`);
-        popup.document.write('<div class="line"></div>');
-        popup.document.write(`<p>Total: <strong>${total}</strong></p>`);
-        popup.document.write(`<p>Bayar: Rp ${parseInt(paid).toLocaleString()}</p>`);
-        popup.document.write(`<p>Kembali: ${change}</p>`);
-        popup.document.write(`<p>Metode: ${method}</p>`);
-        popup.document.write('<div class="line"></div>');
-        popup.document.write(`<p>Terima kasih atas kunjungannya!<br>Silakan datang kembali</p>`);
-        popup.document.write('</body></html>');
-        popup.document.close();
-        popup.focus();
-        popup.print();
-        popup.close();
-        }
+    // --- Open RawBT automatically ---
+    const rawbtUrl = `rawbt:base64,${base64Data}`;
+    window.location.href = rawbtUrl;
+    }
+
     });
 
 
