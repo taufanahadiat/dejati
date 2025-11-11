@@ -256,7 +256,7 @@
 
             // Submit via AJAX
             $.ajax({
-                url: "include/cafe/cafe_data_addAct.php",
+                url: "/cafe_data_handler/",
                 method: "POST",
                 data: formData,
                 processData: false,

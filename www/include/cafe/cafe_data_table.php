@@ -83,7 +83,7 @@
                             <a href="main.php?id=cafeData_edit&id_produk=<?= $row['id_prod']; ?>" class="btn btn-success btn-sm">
                                 <i class="fas fa-edit"></i> Edit
                             </a>
-                            <a href="include/cafe/cafe_data_delAct.php?id_produk=<?= $row['id_prod']; ?>"
+                            <a href="/cafe_data_handler?id_produk=<?= $row['id_prod']; ?>"
                                 onclick="return confirm('Yakin ingin menghapus produk ini?');"
                                 class="btn btn-danger btn-sm">
                                 <i class="fas fa-trash"></i> Delete

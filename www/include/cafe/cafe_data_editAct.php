@@ -2,7 +2,7 @@
 ini_set('display_errors', 1);
 error_reporting(E_ALL);
 session_start();
-include '../../config/config.php';
+// include '../../config/config.php';
 
 file_put_contents("debug_edit.log", "[" . date('Y-m-d H:i:s') . "] " . json_encode($_POST) . PHP_EOL, FILE_APPEND);
 

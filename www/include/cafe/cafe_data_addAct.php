@@ -2,7 +2,7 @@
 ini_set('display_errors', 1);
 error_reporting(E_ALL);
 session_start();
-include '../../config/config.php';
+// include '../../config/config.php';
 
 file_put_contents("debug.log", "[" . date('Y-m-d H:i:s') . "] " . json_encode($_POST) . PHP_EOL, FILE_APPEND);
 
@@ -49,7 +49,11 @@ $variant     = $_POST['variant'] ?? 0;
 $nama_var    = $_POST['nama_var'] ?? null;
 $biaya_var   = $_POST['biaya_var'] ?? null;
 $biaya       = $variant == 1 ? null : ($_POST['biaya'] ?? null);
-$temp_foto   = basename($_POST['foto'] ?? null);
+$temp_foto = '';
+if (!empty($_POST['foto'])) {
+    $temp_foto = basename($_POST['foto']);
+}
+
 $updated_by  = $_SESSION['id_user'] ?? 0;
 $updated_at  = date('Y-m-d H:i:s');
 

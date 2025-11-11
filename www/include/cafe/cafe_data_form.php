@@ -370,7 +370,7 @@ $breadcrumb = [
 
             // Submit via AJAX
             $.ajax({
-                url: isEdit ? "include/cafe/cafe_data_editAct.php" : "include/cafe/cafe_data_addAct.php",
+                url: isEdit ? "/cafe_data_edit/" : "/cafe_data_handler/",
                 method: "POST",
                 data: formData,
                 processData: false,
