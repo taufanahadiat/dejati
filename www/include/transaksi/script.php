@@ -444,119 +444,154 @@
 </style>
 
 <script>
-    $(function() {
-        // Open modal and show total
-        // === PAY NOW BUTTON ===
-$('#payNow').click(function() {
+$(function () {
+  // === PAY NOW BUTTON ===
+  $('#payNow').off('click').on('click', function () {
     const totalText = $('#total-amount').text().replace(/[^0-9]/g, '');
-    $('#modal-total').val(`Rp ${parseInt(totalText).toLocaleString()}`);
+    $('#modal-total').val(`Rp ${parseInt(totalText || 0).toLocaleString('id-ID')}`);
     $('#customer-pay').val('');
     $('#change-amount').val('');
     $('#payModal').modal('show');
-});
+  });
 
-// === CALCULATE CHANGE ===
-$('#customer-pay').on('input', function() {
+  // === CALCULATE CHANGE ===
+  $('#customer-pay').off('input').on('input', function () {
     let total = parseInt($('#total-amount').text().replace(/[^0-9]/g, '')) || 0;
     let paid = parseInt($(this).val()) || 0;
     let change = paid - total;
-    $('#change-amount').val(`Rp ${change > 0 ? change.toLocaleString() : 0}`);
-});
+    $('#change-amount').val(`Rp ${change > 0 ? change.toLocaleString('id-ID') : 0}`);
+  });
 
-// === SUBMIT PAYMENT + PRINT ===
-$('#payForm').submit(function(e) {
+  // === SUBMIT PAYMENT FORM ===
+  $('#payForm').off('submit').on('submit', function (e) {
     e.preventDefault();
 
     const tableNumber = $('#table-number').val();
     const paymentMethod = $('#payment-method').val();
-    const total = $('#total-amount').text();
-    const paid = $('#customer-pay').val();
+    const total = $('#total-amount').text().replace(/[^0-9]/g, '');
+    const paid = $('#customer-pay').val().replace(/[^0-9]/g, '');
     const change = $('#change-amount').val();
     const orderItems = JSON.parse(localStorage.getItem('cart')) || [];
 
-    // Send order to server
-    $.post('include/transaksi/save_orderAct.php', {
-        tableNumber,
-        paymentMethod,
-        paid,
-        change,
-        total,
-        items: JSON.stringify(orderItems)
-    }, function(response) {
-        console.log('Order saved:', response);
+    // Send to server
+    $.post('/transaksi_post/', {
+      tableNumber,
+      paymentMethod,
+      paid,
+      change,
+      total,
+      items: JSON.stringify(orderItems)
+    }, function (response) {
+      console.log('Order saved:', response);
     });
 
-    // Print invoice (make sure printInvoice() exists)
-    const printWindow = printInvoice(tableNumber, orderItems, total, paid, change, paymentMethod);
+    // Print invoice
+    printInvoice(tableNumber, orderItems, total, paid, change, paymentMethod);
 
-    // Close payment modal
+    // Close modal
     $('#payModal').modal('hide');
+  });
 
-    // 🧹 Auto clear after print window closes
-    const clearTransaction = () => {
-        localStorage.removeItem('cart');
-        $('#order-table tbody').empty();
-        $('#total-amount').text('Rp 0');
-        $('#table-number').val('');
-        $('#payment-method').val('');
-        $('#customer-pay').val('');
-        $('#change-amount').val('');
-    };
-
-    // If printInvoice opens a popup, check when it's closed
-    if (printWindow && !printWindow.closed) {
-        const printCheck = setInterval(() => {
-            if (printWindow.closed) {
-                clearInterval(printCheck);
-                clearTransaction();
-            }
-        }, 800);
-    } else {
-        // fallback clear after short delay
-        setTimeout(clearTransaction, 1500);
-    }
-});
-
-
-    function printInvoice(tableNumber, items, total, paid, change, method) {
-    let escpos = '';
-    escpos += '\x1B\x40'; // Initialize printer
-    escpos += '\x1B\x61\x01'; // Center
-    escpos += 'Dejati Carwash\n';
-    escpos += 'Jl. Contoh No.123\nTelp: 0812-xxxx-xxxx\n';
+  // === PRINT FUNCTION ===
+  function printInvoice(tableNumber, items, total, paid, change, method) {
+    let escpos = '\x1B\x40\x1B\x61\x01';
+    escpos += 'Dejati Carwash\nJl. Contoh No.123\nTelp: 0812-xxxx-xxxx\n';
     escpos += '-----------------------------\n';
-    escpos += `Invoice\nTable: ${tableNumber}\n`;
-    escpos += '-----------------------------\n';
+    escpos += `Invoice\nTable: ${tableNumber}\n-----------------------------\n`;
 
     items.forEach(row => {
-        const name = row.name || '-';
-        const qty = row.qty || 1;
-        const totalItem = (row.finalPrice * row.qty).toLocaleString('id-ID');
-        escpos += `${name} x${qty} Rp ${totalItem}\n`;
+      const name = row.name || '-';
+      const qty = row.qty || 1;
+      const totalItem = (row.finalPrice * row.qty).toLocaleString('id-ID');
+      escpos += `${name} x${qty} Rp ${totalItem}\n`;
     });
 
     escpos += '-----------------------------\n';
-    escpos += `Total: Rp ${total}\n`;
-    escpos += `Bayar: Rp ${parseInt(paid).toLocaleString()}\n`;
+    escpos += `Total: Rp ${parseInt(total).toLocaleString('id-ID')}\n`;
+    escpos += `Bayar: Rp ${parseInt(paid).toLocaleString('id-ID')}\n`;
     escpos += `Kembali: ${change}\n`;
     escpos += `Metode: ${method}\n`;
     escpos += '-----------------------------\n';
     escpos += 'Terima kasih atas kunjungannya!\nSilakan datang kembali\n\n\n';
-    escpos += '\x1D\x56\x00'; // Cut
+    escpos += '\x1D\x56\x00';
 
-    // --- Encode to Base64 ---
     const base64Data = btoa(unescape(encodeURIComponent(escpos)));
-
-    // --- Create RawBT Intent URL ---
-    // const rawbtUrl = `intent://print/#Intent;scheme=rawbt;package=ru.a402d.rawbtprinter;S.raw_data=${base64Data};end;`;
-
-    // --- Open RawBT automatically ---
     const rawbtUrl = `rawbt:base64,${base64Data}`;
     window.location.href = rawbtUrl;
+  }
+    //  === CLEAR CART BUTTON ===
+  $('#clearCart').on('click', function() {
+    if (confirm('Hapus Transaksi Ini?')) {
+        localStorage.removeItem('cart'); // remove cart from localStorage
+        cart = []; // clear global cart
+        $('#order-table tbody').empty(); // clear table rows
+        $('#total-amount').text('Rp 0'); // reset total
+        $('#table-number').val('');
+        $('#payment-method').val('');
+        $('#customer-pay').val('');
+        $('#change-amount').val('');
+        console.log('✅ Cart cleared');
     }
+});
 
+// === OPEN BILL HANDLER ===
+$('#openBill').off('click').on('click', function () {
+  $('#open-table-number').val('');
+  $('#open-payment-method').val('Cash');
+  $('#openBillModal').modal('show');
+});
+
+$('#openBillForm').off('submit').on('submit', function (e) {
+  e.preventDefault();
+
+  const tableNumber = $('#open-table-number').val();
+  const paymentMethod = 'cash'; // always cash
+  const total = $('#total-amount').text().replace(/[^0-9]/g, '');
+  const orderItems = JSON.parse(localStorage.getItem('cart')) || [];
+
+  if (!orderItems.length) {
+    Swal.fire({
+      icon: 'warning',
+      title: 'Cart Empty',
+      text: 'Please add items before opening a bill.'
     });
+    return;
+  }
+
+  $.post('/transaksi_post/', {
+    tableNumber,
+    paymentMethod,
+    paid: 0,
+    change: 0,
+    total,
+    items: JSON.stringify(orderItems),
+    status: 'open_bill'
+  }, function (response) {
+    console.log('✅ Open bill saved:', response);
+    Swal.fire({
+      icon: 'success',
+      title: 'Bill Opened!',
+      text: `Table ${tableNumber} has been saved.`,
+      confirmButtonColor: '#17a2b8'
+    });
+  }).fail(function (err) {
+    console.error('❌ Error:', err);
+    Swal.fire({
+      icon: 'error',
+      title: 'Failed',
+      text: 'Unable to save open bill.'
+    });
+  });
+
+  $('#openBillModal').modal('hide');
+});
 
 
-    console.log(JSON.parse(localStorage.getItem('cart')));
+  // === Just log for debugging ===
+  console.log('Cart loaded:', JSON.parse(localStorage.getItem('cart')));
+});
+
+// ADDEDD
+
 </script>
+

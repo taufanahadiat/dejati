@@ -108,11 +108,50 @@ function formatPrice($number)
                             <div class="mt-auto border-top pt-2">
                                 <h5>Total: <span id="total-amount">Rp 0</span></h5>
                                 <button class="btn btn-success btn-block mt-2" id="payNow">Pay Now</button>
+                                <button class="btn btn-info btn-block mb-2" id="openBill">Open Bill</button>
+                                <button class="btn btn-danger btn-block mt-2" id="clearCart">Clear Transaction</button>
                             </div>
                         </div>
                     </div>
                 </div>
             </div>
+
+            <!-- Open Bill Modal -->
+<!-- Open Bill Modal -->
+<div class="modal fade" id="openBillModal" tabindex="-1" aria-labelledby="openBillModalLabel" aria-hidden="true">
+  <div class="modal-dialog modal-dialog-centered modal-lg"> <!-- modal-lg makes it wider -->
+    <form id="openBillForm" class="w-100">
+      <div class="modal-content shadow-lg" style="border-radius: 12px;">
+        <div class="modal-header bg-info text-white">
+          <h5 class="modal-title" id="openBillModalLabel">Open Bill</h5>
+          <button type="button" class="close text-white" data-dismiss="modal" aria-label="Close">
+            <span aria-hidden="true">&times;</span>
+          </button>
+        </div>
+
+        <div class="modal-body px-4 py-3">
+          <div class="form-group">
+            <label for="open-table-number" class="font-weight-semibold">Table Number</label>
+            <input type="number" class="form-control form-control-lg" id="open-table-number" name="table_number" placeholder="Enter table number" required>
+          </div>
+
+          <div class="form-group mt-3">
+            <label for="open-payment-method" class="font-weight-semibold">Payment Method</label>
+            <input type="text" class="form-control form-control-lg" id="open-payment-method" name="payment_method" value="Cash" readonly>
+          </div>
+        </div>
+
+        <div class="modal-footer justify-content-end border-0 px-4 pb-4">
+          <button type="button" class="btn btn-outline-secondary" data-dismiss="modal">Cancel</button>
+          <button type="submit" class="btn btn-info px-4">Save Open Bill</button>
+        </div>
+      </div>
+    </form>
+  </div>
+</div>
+
+
+
             <!-- Pay Modal -->
             <div class="modal fade" id="payModal" tabindex="-1" aria-labelledby="payModalLabel" aria-hidden="true">
                 <div class="modal-dialog">
@@ -270,7 +309,7 @@ function formatPrice($number)
                     </div>
                 </div>
             </div>
-
+                               
             <!-- Buy Query Modal -->
             <div class="modal fade" id="buyQueryModal" tabindex="-1" role="dialog" aria-hidden="true">
                 <div class="modal-dialog modal-dialog-centered" role="document">
@@ -400,5 +439,86 @@ function formatPrice($number)
                 </div>
             </div>
 </section>
+
+
+<?php
+// place this near the top of index.php, before HTML output
+$imported_order_json = null;
+if ($_SERVER['REQUEST_METHOD'] === 'POST' && !empty($_POST['order_details'])) {
+    // order_details is a JSON string sent via form hidden input
+    $raw = $_POST['order_details'];
+    // validate / decode
+    $decoded = json_decode($raw, true);
+    if (json_last_error() === JSON_ERROR_NONE && !empty($decoded)) {
+        // keep for injection into JS below
+        $imported_order_json = json_encode($decoded, JSON_UNESCAPED_UNICODE);
+    }
+}
+?>
+<?php
+// jika page menerima order_details via POST dari report.php
+if (!empty($imported_order_json)):
+    // $imported_order_json sudah berisi JSON dari server (lihat chat sebelumnya)
+?>
+<script>
+(function(){
+  // data dari server (format yang dikirim dari report.php)
+  const IMPORTED = <?= $imported_order_json ?>;
+
+  // build cart array sesuai struktur yang dipakai script.php:updateCartDisplay()
+  const importedCart = [];
+
+  // helper to safely parse int
+  const toInt = v => {
+    if (typeof v === 'string') v = v.replace(/[^\d\-]/g,'');
+    return parseInt(v) || 0;
+  };
+
+  if (Array.isArray(IMPORTED.items)) {
+    IMPORTED.items.forEach(it => {
+      importedCart.push({
+        id: it.id_tr || it.item_id || 0,
+        name: (it.item_name || it.name || '').trim(),
+        unitPrice: toInt(it.item_price || it.price || 0),
+        finalPrice: toInt(it.item_price || it.price || 0), // assume no discount imported
+        discountValue: 0,
+        discountType: 'amount', // or 'percent' if you want
+        qty: toInt(it.quantity || it.qty || 1),
+        orderType: it.order_type || 'dine-in',
+        cartType: 'product',
+        notes: it.notes || ''
+      });
+    });
+  }
+
+  if (Array.isArray(IMPORTED.carwash)) {
+    IMPORTED.carwash.forEach(cw => {
+      importedCart.push({
+        id: cw.id_tr || cw.id || 0,
+        name: (cw.item_name || cw.name || 'Carwash').trim() + ' (Carwash)',
+        unitPrice: toInt(cw.unit_price || cw.item_price || cw.price || 0),
+        finalPrice: toInt(cw.total ? (toInt(cw.total) / Math.max(1, toInt(cw.qty))) : (cw.unit_price || cw.item_price || cw.price) ),
+        discountValue: 0,
+        discountType: 'amount',
+        qty: toInt(cw.qty || 1),
+        orderType: cw.order_type || 'dine-in',
+        cartType: 'carwash',
+        notes: `NoPol: ${cw.nopol || ''} Service: ${cw.service || ''} Ukuran: ${cw.ukuran || ''} Vacuum: ${cw.vacuum || ''}`
+      });
+    });
+  }
+
+  // Save to localStorage exactly as script.php expects
+  localStorage.setItem('cart', JSON.stringify(importedCart));
+  console.log('✅ Imported cart written to localStorage:', importedCart);
+
+  // We DO NOT directly modify table HTML here.
+  // include/transaksi/script.php will call updateCartDisplay() on DOM ready
+  // and render rows with the correct structure.
+
+})();
+</script>
+<?php endif; ?>
+
 <!-- Script -->
 <?php include 'include/transaksi/script.php'; ?>

@@ -47,10 +47,14 @@ $result = mysqli_query($conn, $sql);
                                     <td><?= number_format($row['paid_amount'], 0, ",", ".") ?></td>
                                     <td><?= number_format($row['change_amount'], 0, ",", ".") ?></td>
                                     <td>
-                                        <button class="btn btn-sm btn-info view-details"
-                                            data-id="<?= $row['id'] ?>">
+                                        <button class="btn btn-sm btn-info view-details" data-id="<?= $row['id'] ?>">
                                             <i class="fas fa-eye"></i> View
                                         </button>
+                                        <?php if ($row['paid_amount'] == 0): ?>
+                                            <button id="btnTransact" class="btn btn-sm btn-success transact" data-id="<?= $row['id'] ?>">
+                                                <i class="fas fa-cash-register"></i> Transact
+                                            </button>
+                                        <?php endif; ?>
                                     </td>
                                 </tr>
                             <?php endwhile; ?>
@@ -77,6 +81,50 @@ $result = mysqli_query($conn, $sql);
     </div>
 </div>
 
+<!-- 💵 Transact Modal -->
+<div class="modal fade" id="transactModal" tabindex="-1">
+  <div class="modal-dialog modal-md">
+    <div class="modal-content">
+      <div class="modal-header bg-success">
+        <h5 class="modal-title">Finalize Transaction</h5>
+        <button type="button" class="close" data-dismiss="modal">&times;</button>
+      </div>
+      <div class="modal-body">
+        <form id="transactForm">
+          <input type="hidden" name="id" id="transact_id">
+          <div class="form-group">
+            <label>Total Amount</label>
+            <input type="text" class="form-control" id="transact_total" readonly>
+          </div>
+          <div class="form-group">
+            <label>Payment Method</label>
+            <select class="form-control" id="transact_method" required>
+              <option value="cash">Cash</option>
+              <option value="qris">QRIS</option>
+              <option value="debit">Debit</option>
+            </select>
+          </div>
+          <div class="form-group">
+            <label>Paid Amount</label>
+            <input type="number" class="form-control" id="transact_paid" required>
+          </div>
+          <div class="form-group">
+            <label>Change</label>
+            <input type="text" class="form-control" id="transact_change" readonly>
+          </div>
+        </form>
+      </div>
+      <div class="modal-footer">
+        <button class="btn btn-success" id="confirmTransact">
+          <i class="fas fa-check"></i> Confirm & Print
+        </button>
+      </div>
+    </div>
+  </div>
+</div>
+
+
+
 <!-- JS -->
 <script src="../../plugins/jquery/jquery.min.js"></script>
 <script src="../../plugins/bootstrap/js/bootstrap.bundle.min.js"></script>
@@ -95,7 +143,41 @@ $result = mysqli_query($conn, $sql);
 <script src="../../plugins/daterangepicker/daterangepicker.js"></script>
 
 <script>
-    $(function() {
+    $(function() {        
+$(function(){
+  // Delegate click: each row's .transact has data-id
+  $(document).on('click', '.transact', function (e) {
+    e.preventDefault();
+    const orderId = $(this).data('id');
+    if (!orderId) return alert('No order id');
+
+    // Fetch JSON from server endpoint
+    $.get('/order_get_json.php', { id: orderId })
+      .done(function (data) {
+        // create a form and POST JSON to the transaksi page (browser navigation)
+        const form = document.createElement('form');
+        form.method = 'POST';
+        form.action = '/main?id=transaksi';
+
+        const input = document.createElement('input');
+        input.type = 'hidden';
+        input.name = 'order_details';
+        input.value = JSON.stringify(data);
+        form.appendChild(input);
+
+        // also send order id and optionally totals if you want
+        const idInput = document.createElement('input');
+        idInput.type = 'hidden';
+        idInput.name = 'order_id';
+        idInput.value = orderId;
+        form.appendChild(idInput);
+
+        document.body.appendChild(form);
+        form.submit();
+      });
+  });
+});
+
         // DataTable
         let table = $("#ordersTable").DataTable({
             "responsive": true,
@@ -120,14 +202,13 @@ $result = mysqli_query($conn, $sql);
         });
 
         // Modal Details Loader
-        $(".view-details").click(function() {
+        // ✅ Event delegation to support new DataTable rows
+        $(document).on("click", ".view-details", function() {
             let orderId = $(this).data("id");
             $("#modalContent").html("<p class='text-center'>Loading...</p>");
             $("#detailsModal").modal("show");
 
-            $.get("./include/transaksi/order_details.php", {
-                id: orderId
-            }, function(data) {
+            $.get("/order_get/", { id: orderId }, function(data) {
                 $("#modalContent").html(data);
             });
         });

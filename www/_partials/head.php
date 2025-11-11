@@ -6,8 +6,9 @@
   <link rel="manifest" href="/manifest.json">
   <meta name="theme-color" content="#1f2937">
   <link rel="apple-touch-icon" href="/assets/img/512.png">
-  <link rel="shortcut icon" href="<?= CDN_BASE ?>/img/logo-only-white.png" type="image/x-icon">
+  <link rel="shortcut icon" href="<?= CDN_BASE ?>favicon_carwash.ico">
   <title>De'Jati Universe</title>
+  <meta http-equiv="Content-Security-Policy" content="upgrade-insecure-requests">
   <!-- Tell the browser to be responsive to screen width -->
   <meta content="width=device-width, initial-scale=1, maximum-scale=1, user-scalable=no" name="viewport">
   <!-- Tempusdominus Bootstrap 4 -->

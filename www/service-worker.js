@@ -37,14 +37,20 @@ self.addEventListener('activate', (event) => {
 
 // ✅ Fetch handler: cache-first fallback
 self.addEventListener('fetch', (event) => {
+  const url = new URL(event.request.url);
+
+  // Force HTTPS
+  if (url.protocol === 'http:') {
+    const httpsUrl = url.href.replace('http:', 'https:');
+    event.respondWith(Response.redirect(httpsUrl));
+    return;
+  }
+
   if (event.request.method !== 'GET') return;
 
   event.respondWith(
-    caches.match(event.request).then((cached) => {
-      return (
-        cached ||
-        fetch(event.request).catch(() => caches.match(OFFLINE_URL))
-      );
-    })
+    caches.match(event.request).then((cached) =>
+      cached || fetch(event.request).catch(() => caches.match(OFFLINE_URL))
+    )
   );
 });

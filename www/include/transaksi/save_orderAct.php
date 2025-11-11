@@ -1,5 +1,5 @@
 <?php
-include '../../config/config.php';
+header('Content-Type: application/json');
 date_default_timezone_set("Asia/Jakarta");
 
 $tableNumber = $_POST['tableNumber'] ?? '';
@@ -8,6 +8,11 @@ $paid = (int) str_replace(['Rp', ',', '.'], '', $_POST['paid'] ?? '0');
 $change = (int) str_replace(['Rp', ',', '.'], '', $_POST['change'] ?? '0');
 $total = (int) str_replace(['Rp', ',', '.'], '', $_POST['total'] ?? '0');
 $items = json_decode($_POST['items'] ?? '[]', true);
+
+if (!$tableNumber || !$paymentMethod || !$total || empty($items)) {
+    echo json_encode(['status' => 'error', 'message' => 'Missing required fields']);
+    exit;
+}
 
 // Insert order
 $orderSql = "INSERT INTO orders (table_number, payment_method, total_amount, paid_amount, change_amount, created_at)

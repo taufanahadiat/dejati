@@ -1,19 +1,46 @@
-<link rel="stylesheet" href="dist/css/material-symbols.css">
-<style>
-    /* Raise icon modal above the edit modal */
-    #iconModal {
-        z-index: 1061 !important;
-        /* default modal is 1050, backdrop is 1040 */
-    }
-
-    .modal-backdrop.show:nth-of-type(2) {
-        z-index: 1060 !important;
-    }
-</style>
-
-
 <?php
-// Fetch categories
+$message = "";
+
+// === Handle Add/Edit/Delete (POST only) ===
+if ($_SERVER['REQUEST_METHOD'] === 'POST') {
+    $action = $_POST['action'] ?? '';
+
+    // ADD
+    if ($action === 'add') {
+        $name_cat = trim($_POST['name_cat']);
+        $icon = trim($_POST['icon']);
+        if ($name_cat && $icon) {
+            $stmt = $conn->prepare("INSERT INTO tb_category (name_cat, icon) VALUES (?, ?)");
+            $stmt->bind_param("ss", $name_cat, $icon);
+            $stmt->execute();
+            $message = "<div class='alert alert-success'>✅ Kategori berhasil disimpan!</div>";
+        } else {
+            $message = "<div class='alert alert-warning'>⚠️ Isi semua field!</div>";
+        }
+    }
+
+    // EDIT
+    if ($action === 'edit') {
+        $id = (int) $_POST['id_cat'];
+        $name_cat = trim($_POST['name_cat']);
+        $icon = trim($_POST['icon']);
+        $stmt = $conn->prepare("UPDATE tb_category SET name_cat=?, icon=? WHERE id_cat=?");
+        $stmt->bind_param("ssi", $name_cat, $icon, $id);
+        $stmt->execute();
+        $message = "<div class='alert alert-success'>✏️ Kategori berhasil diperbarui!</div>";
+    }
+
+    // DELETE
+    if ($action === 'delete') {
+        $id = (int) $_POST['id_cat'];
+        $stmt = $conn->prepare("DELETE FROM tb_category WHERE id_cat=?");
+        $stmt->bind_param("i", $id);
+        $stmt->execute();
+        $message = "<div class='alert alert-info'>🗑️ Kategori berhasil dihapus.</div>";
+    }
+}
+
+// === Fetch Categories ===
 $categories = [];
 $sql = "SELECT * FROM tb_category ORDER BY id_cat ASC";
 $result = $conn->query($sql);
@@ -23,269 +50,207 @@ if ($result->num_rows > 0) {
     }
 }
 ?>
-<div class="row">
-    <!-- Left: Add Category Form -->
-    <div class="col-md-6">
-        <div class="card card-default">
-            <div class="card-header d-flex justify-content-between align-items-center">
-                <h3 class="card-title">Tambah Group/Kategori</h3>
-            </div>
-            <div class="card-body">
-                <form id="addCategoryForm">
-                    <div class="form-group row">
-                        <label class="col-sm-4 col-form-label">Nama Grup</label>
-                        <div class="col-sm-8">
-                            <input type="text" name="name_cat" id="name_cat" class="form-control" placeholder="Masukkan Nama Grup" required>
+
+<link rel="stylesheet" href="dist/css/material-symbols.css">
+<link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/bootstrap@4.6.2/dist/css/bootstrap.min.css">
+
+<style>
+#iconModal {
+    z-index: 1061 !important;
+}
+.modal-backdrop.show:nth-of-type(2) {
+    z-index: 1060 !important;
+}
+</style>
+
+<div class="container-fluid mt-3">
+    <?= $message ?>
+    <div class="row">
+        <!-- Left: Add Category -->
+        <div class="col-md-6">
+            <div class="card">
+                <div class="card-header">Tambah Group/Kategori</div>
+                <div class="card-body">
+                    <form method="POST">
+                        <input type="hidden" name="action" value="add">
+                        <div class="form-group row">
+                            <label class="col-sm-4 col-form-label">Nama Grup</label>
+                            <div class="col-sm-8">
+                                <input type="text" name="name_cat" id="name_cat" class="form-control" required>
+                            </div>
                         </div>
-                    </div>
-                    <div class="form-group row">
-                        <label class="col-sm-4 col-form-label">Pilih Icon</label>
-                        <div class="col-sm-8">
-                            <button id="addIconPickerBtn" type="button" class="btn btn-outline-secondary d-inline-flex align-items-center" data-toggle="modal" data-target="#iconModal">
-                                <span id="selectedIcon" class="material-symbols-outlined mr-2" style="font-size: 24px;">help</span>
-                                <span id="selectedIconLabel">Pilih icon</span>
-                            </button>
-                            <input type="hidden" name="icon" id="iconInput" value="help">
+                        <div class="form-group row">
+                            <label class="col-sm-4 col-form-label">Pilih Icon</label>
+                            <div class="col-sm-8">
+                                <button id="addIconPickerBtn" type="button" class="btn btn-outline-secondary" data-toggle="modal" data-target="#iconModal">
+                                    <span id="selectedIcon" class="material-symbols-outlined mr-2" style="font-size:24px;">help</span>
+                                    <span id="selectedIconLabel">Pilih icon</span>
+                                </button>
+                                <input type="hidden" name="icon" id="iconInput" value="help">
+                            </div>
                         </div>
-                    </div>
-                    <div class="form-group row mt-2">
-                        <div class="col-md-12 text-right">
+                        <div class="text-right">
                             <button type="submit" class="btn btn-success">
-                                <i class="fas fa-save"></i> Simpan Produk
+                                <i class="fas fa-save"></i> Simpan
                             </button>
                         </div>
-                    </div>
-                </form>
-                <div id="formResult" class="mt-2 text-success"></div>
-            </div>
-        </div>
-    </div>
-
-    <!-- Right: Category List -->
-    <div class="col-md-6">
-        <div class="card card-default">
-            <div class="card-header">
-                <h3 class="card-title">Daftar Kategori</h3>
-            </div>
-            <div class="card-body p-2" id="categoryListContainer">
-                <?php include 'cafe_category_list.php'; ?>
-            </div>
-        </div>
-    </div>
-
-    <!-- Icon Picker Modal -->
-    <div class="modal fade" id="iconModal" tabindex="-1" role="dialog" aria-labelledby="iconModalLabel" aria-hidden="true">
-        <div class="modal-dialog modal-lg" role="document">
-            <div class="modal-content">
-                <div class="modal-header">
-                    <h5 class="modal-title">Pilih Icon</h5>
-                    <button type="button" class="close" data-dismiss="modal" aria-label="Tutup">
-                        <span aria-hidden="true">&times;</span>
-                    </button>
-                </div>
-                <div class="modal-body">
-                    <input type="text" id="iconSearch" class="form-control mb-3" placeholder="Cari icon...">
-                    <div class="row" id="iconGrid" style="max-height: 400px; overflow-y: auto;"></div>
+                    </form>
                 </div>
             </div>
         </div>
-    </div>
 
-    <script>
-        const materialIcons = [
-            "restaurant", "local_cafe", "store", "category", "shopping_cart", "fastfood",
-            "icecream", "emoji_food_beverage", "bakery_dining", "brunch_dining", "coffee",
-            "coffee_maker", "kettle", "local_drink", "near_me", "food_bank", "blender",
-            "ramen_dining", "takeout_dining", "lunch_dining", "dinner_dining", "local_bar",
-            "liquor", "kebab_dining", "wine_bar", "set_meal", "tapas", "egg_alt", "grocery",
-            "cake", "cookie", "donut_small", "outdoor_grill", "rice_bowl", "soup_kitchen",
-            "nutrition", "emoji_nature", "local_dining", "restaurant_menu", "kitchen",
-            "yoshoku", "washoku", "bento", "breakfast_dining", "hot_tub", "spa", "pool", "fitness_center",
-            "sports_bar", "cottage", "home", "houseboat", "apartment", "bedroom_baby",
-            "bedroom_child", "bedroom_parent", "home_repair_service", "local_florist",
-            "local_grocery_store", "local_pharmacy", "local_hospital", "local_library",
-            "local_post_office", "local_shipping", "local_taxi", "local_atm", "local_parking",
-            "local_printshop", "local_see", "local_activity", "local_airport", "local_pizza"
-        ];
-
-        let iconSelectContext = "add";
-
-        function populateIcons(filter = "") {
-            const $iconGrid = $("#iconGrid");
-            $iconGrid.empty();
-
-            const filtered = materialIcons.filter(icon =>
-                icon.toLowerCase().includes(filter.toLowerCase())
-            );
-
-            $.each(filtered, function(_, icon) {
-                const $col = $(`
-                <div class="col-2 text-center mb-3">
-                    <div class="border rounded p-2 icon-option" data-icon="${icon}" style="cursor:pointer;">
-                        <span class="material-symbols-outlined" style="font-size:24px;">${icon}</span>
-                        <div style="font-size:0.75rem;">${icon}</div>
-                    </div>
+        <!-- Right: Category List -->
+        <div class="col-md-6">
+            <div class="card">
+                <div class="card-header">Daftar Kategori</div>
+                <div class="card-body p-2">
+                    <table class="table table-bordered table-sm">
+                        <thead>
+                            <tr>
+                                <th>ID</th>
+                                <th>Nama</th>
+                                <th>Icon</th>
+                                <th>Aksi</th>
+                            </tr>
+                        </thead>
+                        <tbody>
+                        <?php if (empty($categories)): ?>
+                            <tr><td colspan="4" class="text-center text-muted">Belum ada kategori</td></tr>
+                        <?php else: ?>
+                            <?php foreach ($categories as $cat): ?>
+                            <tr>
+                                <td><?= $cat['id_cat'] ?></td>
+                                <td><?= htmlspecialchars($cat['name_cat']) ?></td>
+                                <td><span class="material-symbols-outlined"><?= htmlspecialchars($cat['icon']) ?></span></td>
+                                <td>
+                                    <!-- Edit -->
+                                    <button type="button" class="btn btn-warning btn-sm"
+                                        onclick="openEditModal(<?= $cat['id_cat'] ?>, '<?= htmlspecialchars($cat['name_cat']) ?>', '<?= htmlspecialchars($cat['icon']) ?>')">Edit</button>
+                                    
+                                    <!-- Delete -->
+                                    <form method="POST" class="d-inline" onsubmit="return confirm('Yakin hapus kategori ini?')">
+                                        <input type="hidden" name="action" value="delete">
+                                        <input type="hidden" name="id_cat" value="<?= $cat['id_cat'] ?>">
+                                        <button type="submit" class="btn btn-danger btn-sm">Hapus</button>
+                                    </form>
+                                </td>
+                            </tr>
+                            <?php endforeach; ?>
+                        <?php endif; ?>
+                        </tbody>
+                    </table>
                 </div>
-            `);
-                $iconGrid.append($col);
-            });
-        }
+            </div>
+        </div>
+    </div>
+</div>
 
-        $(function() {
-            populateIcons();
+<!-- Edit Modal -->
+<div class="modal fade" id="editModal" tabindex="-1" role="dialog">
+  <div class="modal-dialog" role="document">
+    <form method="POST" class="modal-content">
+      <input type="hidden" name="action" value="edit">
+      <input type="hidden" name="id_cat" id="edit_id_cat">
+      <div class="modal-header">
+        <h5 class="modal-title">Edit Kategori</h5>
+        <button type="button" class="close" data-dismiss="modal">&times;</button>
+      </div>
+      <div class="modal-body">
+        <div class="form-group">
+          <label>Nama Grup</label>
+          <input type="text" name="name_cat" id="edit_name_cat" class="form-control" required>
+        </div>
+        <div class="form-group">
+          <label>Pilih Icon</label>
+          <button id="editIconPickerBtn" type="button" class="btn btn-outline-secondary" data-toggle="modal" data-target="#iconModal">
+              <span id="editSelectedIcon" class="material-symbols-outlined mr-2" style="font-size:24px;">help</span>
+              <span id="editSelectedIconLabel">Pilih icon</span>
+          </button>
+          <input type="hidden" name="icon" id="edit_icon" value="help">
+        </div>
+      </div>
+      <div class="modal-footer">
+        <button type="submit" class="btn btn-success">Simpan</button>
+        <button type="button" class="btn btn-secondary" data-dismiss="modal">Batal</button>
+      </div>
+    </form>
+  </div>
+</div>
 
-            $("#addIconPickerBtn").on('click', function() {
-                iconSelectContext = "add";
-            });
+<!-- Icon Picker Modal -->
+<div class="modal fade" id="iconModal" tabindex="-1" role="dialog" aria-hidden="true">
+  <div class="modal-dialog modal-lg">
+    <div class="modal-content">
+      <div class="modal-header">
+        <h5 class="modal-title">Pilih Icon</h5>
+        <button type="button" class="close" data-dismiss="modal">&times;</button>
+      </div>
+      <div class="modal-body">
+        <input type="text" id="iconSearch" class="form-control mb-3" placeholder="Cari icon...">
+        <div class="row" id="iconGrid" style="max-height:400px;overflow-y:auto;"></div>
+      </div>
+    </div>
+  </div>
+</div>
 
-            $("#editIconPickerBtn").on('click', function() {
-                iconSelectContext = "edit";
-                $("#editCategoryModal").modal("hide");
-                setTimeout(() => $("#iconModal").modal("show"), 400);
-            });
+<script src="https://code.jquery.com/jquery-3.6.0.min.js"></script>
+<script src="https://cdn.jsdelivr.net/npm/bootstrap@4.6.2/dist/js/bootstrap.bundle.min.js"></script>
 
-            $("#iconModal").on("hidden.bs.modal", function() {
-                if (iconSelectContext === "edit") {
-                    $("#editCategoryModal").modal("show");
-                }
-            });
+<script>
+const materialIcons = [
+    "restaurant", "local_cafe", "store", "category", "shopping_cart", "fastfood",
+    "icecream", "emoji_food_beverage", "bakery_dining", "brunch_dining", "coffee",
+    "coffee_maker", "kettle", "local_drink", "near_me", "food_bank", "blender",
+    "ramen_dining", "takeout_dining", "lunch_dining", "dinner_dining", "local_bar",
+    "liquor", "wine_bar", "set_meal", "tapas", "egg_alt", "cake", "cookie",
+    "donut_small", "outdoor_grill", "rice_bowl", "soup_kitchen", "nutrition",
+    "restaurant_menu", "home", "cottage", "apartment", "local_pharmacy"
+];
+let iconSelectContext = "add";
 
-            $("#iconSearch").on("input", function() {
-                populateIcons($(this).val());
-            });
+function populateIcons(filter = "") {
+  const $grid = $("#iconGrid").empty();
+  const filtered = materialIcons.filter(i => i.toLowerCase().includes(filter.toLowerCase()));
+  filtered.forEach(icon => {
+    const item = $(`
+      <div class="col-2 text-center mb-3">
+        <div class="border rounded p-2 icon-option" data-icon="${icon}" style="cursor:pointer;">
+          <span class="material-symbols-outlined" style="font-size:24px;">${icon}</span>
+          <div style="font-size:0.75rem;">${icon}</div>
+        </div>
+      </div>`);
+    $grid.append(item);
+  });
+}
 
-            $("#iconGrid").on("click", ".icon-option", function() {
-                const icon = $(this).data("icon");
+$(function(){
+  populateIcons();
+  $("#iconSearch").on("input", function(){ populateIcons($(this).val()); });
 
-                if (iconSelectContext === "add") {
-                    $("#selectedIcon").text(icon);
-                    $("#selectedIconLabel").text(icon);
-                    $("#iconInput").val(icon);
-                } else {
-                    $("#editSelectedIcon").text(icon);
-                    $("#editSelectedIconLabel").text(icon);
-                    $("#edit_icon").val(icon);
-                }
+  $("#addIconPickerBtn").click(() => iconSelectContext = "add");
+  $("#editIconPickerBtn").click(() => iconSelectContext = "edit");
 
-                $("#iconModal").modal("hide");
-            });
+  $("#iconGrid").on("click", ".icon-option", function(){
+    const icon = $(this).data("icon");
+    if (iconSelectContext === "add") {
+      $("#selectedIcon").text(icon);
+      $("#selectedIconLabel").text(icon);
+      $("#iconInput").val(icon);
+    } else {
+      $("#editSelectedIcon").text(icon);
+      $("#editSelectedIconLabel").text(icon);
+      $("#edit_icon").val(icon);
+    }
+    $("#iconModal").modal("hide");
+  });
+});
 
-            $("#addCategoryForm").on("submit", function(e) {
-                e.preventDefault();
-
-                $.ajax({
-                    url: 'include/cafe/cafe_category_addAct.php',
-                    method: 'POST',
-                    data: $(this).serialize(),
-                    success: function(response) {
-                        $('#formResult').html('').removeClass("text-danger").addClass("text-success");
-
-                        Swal.fire({
-                            toast: true,
-                            icon: 'success',
-                            title: 'Kategori berhasil ditambahkan',
-                            position: 'top-end',
-                            showConfirmButton: false,
-                            timer: 1500,
-                            timerProgressBar: true
-                        });
-
-                        $('#addCategoryForm')[0].reset();
-                        $('#selectedIcon').text('help');
-                        $('#selectedIconLabel').text('Pilih icon');
-
-                        setTimeout(function() {
-                            location.reload();
-                        }, 2000);
-                    },
-                    error: function() {
-                        $('#formResult').html("Terjadi kesalahan saat mengirim data.").addClass("text-danger");
-                    }
-                });
-            });
-
-            $(document).on("click", ".btn-edit", function() {
-                const id = $(this).data("id");
-                const name = $(this).data("name");
-                const icon = $(this).data("icon");
-
-                $("#edit_id_cat").val(id);
-                $("#edit_name_cat").val(name);
-                $("#edit_icon").val(icon);
-                $("#editSelectedIcon").text(icon);
-                $("#editSelectedIconLabel").text(icon);
-
-                $("#editCategoryModal").modal("show");
-            });
-
-            $("#editCategoryForm").on("submit", function(e) {
-                e.preventDefault();
-
-                $.ajax({
-                    url: 'include/cafe/cafe_category_editAct.php',
-                    method: 'POST',
-                    data: $(this).serialize(),
-                    success: function() {
-                        $('#editCategoryModal').modal('hide');
-                        $('#categoryListContainer').load('cafe_category_list.php');
-                        Swal.fire({
-                            toast: true,
-                            icon: 'success',
-                            title: 'Kategori diperbarui',
-                            position: 'top-end',
-                            showConfirmButton: false,
-                            timer: 1500,
-                            timerProgressBar: true
-                        });
-                        setTimeout(function() {
-                            location.reload();
-                        }, 2000);
-                    },
-                    error: function() {
-                        alert("Gagal menyimpan perubahan.");
-                    }
-                });
-            });
-
-            $(document).on("click", ".btn-delete", function() {
-                const id_cat = $(this).data("id");
-
-                Swal.fire({
-                    title: 'Hapus Kategori?',
-                    text: "Tindakan ini tidak bisa dibatalkan!",
-                    icon: 'warning',
-                    showCancelButton: true,
-                    confirmButtonColor: '#d33',
-                    cancelButtonColor: '#6c757d',
-                    confirmButtonText: 'Ya, hapus',
-                    cancelButtonText: 'Batal'
-                }).then((result) => {
-                    if (result.isConfirmed) {
-                        $.ajax({
-                            url: 'include/cafe/cafe_category_deleteAct.php',
-                            method: 'POST',
-                            data: {
-                                id_cat
-                            },
-                            success: function() {
-                                $('#categoryListContainer').load('cafe_category_list.php');
-                                Swal.fire({
-                                    icon: 'success',
-                                    title: 'Berhasil',
-                                    text: 'Kategori berhasil dihapus',
-                                    timer: 1500,
-                                    showConfirmButton: false
-                                });
-                                setTimeout(function() {
-                                    location.reload();
-                                }, 2000);
-                            },
-                            error: function() {
-                                Swal.fire('Gagal', 'Tidak bisa menghapus kategori', 'error');
-                            }
-                        });
-                    }
-                });
-            });
-        });
-    </script>
+function openEditModal(id, name, icon){
+  $("#edit_id_cat").val(id);
+  $("#edit_name_cat").val(name);
+  $("#edit_icon").val(icon);
+  $("#editSelectedIcon").text(icon);
+  $("#editSelectedIconLabel").text(icon);
+  $("#editModal").modal("show");
+}
+</script>
