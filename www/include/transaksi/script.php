@@ -446,55 +446,77 @@
 <script>
     $(function() {
         // Open modal and show total
-        $('#payNow').click(function() {
-            const totalText = $('#total-amount').text().replace(/[^0-9]/g, '');
-            $('#modal-total').val(`Rp ${parseInt(totalText).toLocaleString()}`);
-            $('#customer-pay').val('');
-            $('#change-amount').val('');
-            $('#payModal').modal('show');
-        });
+        // === PAY NOW BUTTON ===
+$('#payNow').click(function() {
+    const totalText = $('#total-amount').text().replace(/[^0-9]/g, '');
+    $('#modal-total').val(`Rp ${parseInt(totalText).toLocaleString()}`);
+    $('#customer-pay').val('');
+    $('#change-amount').val('');
+    $('#payModal').modal('show');
+});
 
-        // Calculate change on input
-        $('#customer-pay').on('input', function() {
-            let total = parseInt($('#total-amount').text().replace(/[^0-9]/g, '')) || 0;
-            let paid = parseInt($(this).val()) || 0;
-            let change = paid - total;
+// === CALCULATE CHANGE ===
+$('#customer-pay').on('input', function() {
+    let total = parseInt($('#total-amount').text().replace(/[^0-9]/g, '')) || 0;
+    let paid = parseInt($(this).val()) || 0;
+    let change = paid - total;
+    $('#change-amount').val(`Rp ${change > 0 ? change.toLocaleString() : 0}`);
+});
 
-            $('#change-amount').val(`Rp ${change > 0 ? change.toLocaleString() : 0}`);
-        });
+// === SUBMIT PAYMENT + PRINT ===
+$('#payForm').submit(function(e) {
+    e.preventDefault();
 
-        // Submit payment form and print
-        $('#payForm').submit(function(e) {
-            e.preventDefault();
+    const tableNumber = $('#table-number').val();
+    const paymentMethod = $('#payment-method').val();
+    const total = $('#total-amount').text();
+    const paid = $('#customer-pay').val();
+    const change = $('#change-amount').val();
+    const orderItems = JSON.parse(localStorage.getItem('cart')) || [];
 
-            // Collect order data
-            const tableNumber = $('#table-number').val();
-            const paymentMethod = $('#payment-method').val();
-            const total = $('#total-amount').text();
-            const paid = $('#customer-pay').val();
-            const change = $('#change-amount').val();
+    // Send order to server
+    $.post('include/transaksi/save_orderAct.php', {
+        tableNumber,
+        paymentMethod,
+        paid,
+        change,
+        total,
+        items: JSON.stringify(orderItems)
+    }, function(response) {
+        console.log('Order saved:', response);
+    });
 
-            const orderItems = JSON.parse(localStorage.getItem('cart')) || [];
+    // Print invoice (make sure printInvoice() exists)
+    const printWindow = printInvoice(tableNumber, orderItems, total, paid, change, paymentMethod);
 
-            // Send to server
-            $.post('include/transaksi/save_orderAct.php', {
-                tableNumber,
-                paymentMethod,
-                paid,
-                change,
-                total,
-                items: JSON.stringify(orderItems)
-            }, function(response) {
-                // Optional: handle response
-                console.log(response);
-            });
+    // Close payment modal
+    $('#payModal').modal('hide');
 
-            // Print invoice
-            printInvoice(tableNumber, orderItems, total, paid, change, paymentMethod);
+    // 🧹 Auto clear after print window closes
+    const clearTransaction = () => {
+        localStorage.removeItem('cart');
+        $('#order-table tbody').empty();
+        $('#total-amount').text('Rp 0');
+        $('#table-number').val('');
+        $('#payment-method').val('');
+        $('#customer-pay').val('');
+        $('#change-amount').val('');
+    };
 
-            // Close modal
-            $('#payModal').modal('hide');
-        });
+    // If printInvoice opens a popup, check when it's closed
+    if (printWindow && !printWindow.closed) {
+        const printCheck = setInterval(() => {
+            if (printWindow.closed) {
+                clearInterval(printCheck);
+                clearTransaction();
+            }
+        }, 800);
+    } else {
+        // fallback clear after short delay
+        setTimeout(clearTransaction, 1500);
+    }
+});
+
 
     function printInvoice(tableNumber, items, total, paid, change, method) {
     let escpos = '';
