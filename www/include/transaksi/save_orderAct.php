@@ -15,10 +15,11 @@ if (!$tableNumber || !$paymentMethod || !$total || empty($items)) {
 }
 
 // Insert order
+$createdAt = date('Y-m-d H:i:s');
 $orderSql = "INSERT INTO orders (table_number, payment_method, total_amount, paid_amount, change_amount, created_at)
-             VALUES (?, ?, ?, ?, ?, NOW())";
+             VALUES (?, ?, ?, ?, ?, ?)";
 $stmt = mysqli_prepare($conn, $orderSql);
-mysqli_stmt_bind_param($stmt, "ssiii", $tableNumber, $paymentMethod, $total, $paid, $change);
+mysqli_stmt_bind_param($stmt, "ssiiis", $tableNumber, $paymentMethod, $total, $paid, $change, $createdAt);
 $success = mysqli_stmt_execute($stmt);
 
 if (!$success) {
@@ -29,33 +30,36 @@ if (!$success) {
 $orderId = mysqli_insert_id($conn);
 
 foreach ($items as $item) {
+    // debug item here
+    // echo json_encode(['debug_item' => $item], JSON_PRETTY_PRINT);
     $productId = $item['id'];
     $itemName = $item['name'];
     $qty = (int) $item['qty'];
     $unitPrice = (int) $item['unitPrice'];
     $finalPrice = (int) $item['finalPrice'];
+        
 
-    if ($item['cartType'] === 'carwash') {
+    if ($item['cartType'] == 'carwash') {
         $nopol = $item['nopol'] ?? '';
         $service = $item['service'] ?? '';
         $ukuran = $item['ukuran'] ?? '';
-        $vacuum = $item['vacuum'] ?? 'no';
+        $vacuum = strtolower(trim($item['vacuum'] ?? 'no'));
         $notes = $item['notes'] ?? '';
 
         // Calculate profits
         $profit_pegawai = (int) round($finalPrice * 0.30);
         $profit_management = $finalPrice - $profit_pegawai; // or use round($finalPrice * 0.70)
 
-        $sql = "INSERT INTO order_carwash (
-                id_tr, id_prod, item_name, qty, unit_price, total,
-                nopol, service, ukuran, vacuum,
-                profit_pegawai, profit_management
+        $sql = "INSERT INTO `order_carwash` (
+                `id_tr`, `id_prod`, `item_name`, `qty`, `unit_price`, `total`,
+                `nopol`, `service`, `ukuran`, `vacuum`,
+                `profit_pegawai`, `profit_management`
             ) VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?)";
 
         $stmt = mysqli_prepare($conn, $sql);
         mysqli_stmt_bind_param(
             $stmt,
-            "issiiisssiii",
+            "issiiissssii",
             $orderId,
             $productId,
             $itemName,
@@ -70,7 +74,7 @@ foreach ($items as $item) {
             $profit_management
         );
         mysqli_stmt_execute($stmt);
-    } else {
+    } else{
         // Save into order_items
         $itemTotal = $finalPrice * $qty;
 
@@ -80,6 +84,7 @@ foreach ($items as $item) {
         mysqli_stmt_bind_param($stmt, "issiii", $orderId, $productId, $itemName, $unitPrice, $qty, $itemTotal);
         mysqli_stmt_execute($stmt);
     }
+ 
 }
 
 echo json_encode(['status' => 'success', 'order_id' => $orderId]);

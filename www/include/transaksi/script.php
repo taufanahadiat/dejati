@@ -495,7 +495,7 @@ $(function () {
   // === PRINT FUNCTION ===
   function printInvoice(tableNumber, items, total, paid, change, method) {
     let escpos = '\x1B\x40\x1B\x61\x01';
-    escpos += 'Dejati Carwash\nJl. Contoh No.123\nTelp: 0812-xxxx-xxxx\n';
+    escpos += 'Dejati Coffee Garden\nIG: instagram.com/dejati.coffee\nWifi: dejati37/';
     escpos += '-----------------------------\n';
     escpos += `Invoice\nTable: ${tableNumber}\n-----------------------------\n`;
 
