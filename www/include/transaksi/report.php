@@ -10,6 +10,11 @@ $sql = "SELECT * FROM orders ORDER BY created_at DESC";
 $result = mysqli_query($conn, $sql);
 ?>
 
+
+<!-- Flatpickr DateTime Picker -->
+<link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/flatpickr/dist/flatpickr.min.css">
+<script src="https://cdn.jsdelivr.net/npm/flatpickr"></script>
+
 <!-- Content Wrapper -->
 <section class="content">
     <div class="row">
@@ -18,15 +23,28 @@ $result = mysqli_query($conn, $sql);
                 <div class="card-body">
 
                     <!-- 🔎 Filters -->
-                    <div class="row mb-3">
-                        <div class="col-md-3">
-                            <input type="text" id="dateRange" class="form-control" placeholder="Select Date Range">
-                        </div>
-                        <!-- Button -->
-                        <button id="printClosinganBtn" class="btn btn-info mb-3">
-                          <i class="fas fa-print"></i> Print Closingan
-                        </button>
-                    </div>
+                    <div class="row mb-3 align-items-end">
+  <div class="col-md-4">
+    <label for="dateRange"><strong>Filter by Date</strong></label>
+    <input type="text" id="dateRange" class="form-control" placeholder="Pilih tanggal dan waktu">
+  </div>
+  <div class="col-md-2">
+    <button id="applyDateFilter" class="btn btn-primary btn-block mt-4">
+      <i class="fas fa-filter"></i> Apply
+    </button>
+  </div>
+  <div class="col-md-2">
+    <button id="resetFilter" class="btn btn-outline-secondary btn-block mt-4">
+      <i class="fas fa-undo"></i> Show All
+    </button>
+  </div>
+  <div class="col-md-4 text-right">
+    <button id="printClosinganBtn" class="btn btn-info mt-4">
+      <i class="fas fa-print"></i> Print Closingan
+    </button>
+  </div>
+</div>
+
 
 
 <!-- Modal -->
@@ -171,8 +189,8 @@ $result = mysqli_query($conn, $sql);
 <script src="../../plugins/datatables-buttons/js/buttons.html5.min.js"></script>
 <script src="../../plugins/datatables-buttons/js/buttons.print.min.js"></script>
 <script src="../../plugins/datatables-buttons/js/buttons.colVis.min.js"></script>
-<script src="../../plugins/moment/moment.min.js"></script>
-<script src="../../plugins/daterangepicker/daterangepicker.js"></script>
+<!-- <script src="../../plugins/moment/moment.min.js"></script>
+<script src="../../plugins/daterangepicker/daterangepicker.js"></script> -->
 
 
 <script>
@@ -247,7 +265,7 @@ $(function(){
     if (!orderId) return alert('No order id');
 
     // Fetch JSON from server endpoint
-    $.get('/order_get_json.php', { id: orderId })
+    $.get('/order_get_json/', { id: orderId })
       .done(function (data) {
         // create a form and POST JSON to the transaksi page (browser navigation)
         const form = document.createElement('form');
@@ -275,26 +293,79 @@ $(function(){
 
         // DataTable
         let table = $("#ordersTable").DataTable({
-            "responsive": true,
-            "lengthChange": true,
-            "autoWidth": false,
-            "buttons": ["copy", "csv", "excel", "pdf", "print", "colvis"]
-        });
+  "responsive": true,
+  "lengthChange": true,
+  "autoWidth": false,
+  "buttons": ["copy", "csv", "excel", "pdf", "print", "colvis"],
+  "order": [[0, "desc"]] // ✅ Sort by Date (first column) descending
+});
+
         table.buttons().container().appendTo('#ordersTable_wrapper .col-md-6:eq(0)');
 
-        // Date Range Filter
-        $('#dateRange').daterangepicker({
-            locale: {
-                format: 'YYYY-MM-DD'
-            }
-        });
+// === FLATPICKR DATE RANGE (DATE ONLY) ===
+// Force local (Asia/Jakarta) date, independent of device/browser quirks
+// === FLATPICKR DATE RANGE (DATE ONLY) ===
+// Force local (Asia/Jakarta) date handling
+function getLocalDate(offsetDays = 0) {
+  const d = new Date();
+  d.setMinutes(d.getMinutes() - d.getTimezoneOffset());
+  d.setDate(d.getDate() + offsetDays);
+  return d.toISOString().split('T')[0]; // "YYYY-MM-DD"
+}
 
-        // Filters
-        $('#dateRange').on('change', function() {
-            let dateRange = $('#dateRange').val();
-            table.columns(1).search(dateRange);
-            table.draw();
-        });
+const yesterday = getLocalDate(-1);
+const today = getLocalDate(0);
+
+const datePicker = flatpickr("#dateRange", {
+  mode: "range",
+  dateFormat: "Y-m-d",
+  defaultDate: [yesterday, today], // ✅ preselect yesterday → today
+  locale: { firstDayOfWeek: 1 },
+  onReady: function(selectedDates, dateStr, instance) {
+    $('#dateRange').val(`${yesterday} to ${today}`);
+    applyDateFilter(yesterday, today); // ✅ auto apply on load
+  }
+});
+
+// === APPLY FILTER BUTTON ===
+$('#applyDateFilter').on('click', function() {
+  const range = $('#dateRange').val();
+  if (!range.includes(' to ')) {
+    alert('Please select a valid date range.');
+    return;
+  }
+
+  const [start, end] = range.split(' to ');
+  applyDateFilter(start, end);
+});
+
+// === RESET FILTER BUTTON ===
+$('#resetFilter').on('click', function() {
+  $('#dateRange').val('');
+  table.rows().every(function() {
+    $(this.node()).show();
+  });
+});
+
+
+// === FILTER FUNCTION ===
+function applyDateFilter(start, end) {
+  const startDate = new Date(start);
+  const endDate = new Date(end);
+  endDate.setHours(23, 59, 59, 999); // include full day
+
+  table.rows().every(function() {
+    const dateStr = this.data()[0]; // first column = created_at
+    const rowDate = new Date(dateStr);
+
+    if (rowDate >= startDate && rowDate <= endDate) {
+      $(this.node()).show();
+    } else {
+      $(this.node()).hide();
+    }
+  });
+}
+
 
         // Modal Details Loader
         // ✅ Event delegation to support new DataTable rows
