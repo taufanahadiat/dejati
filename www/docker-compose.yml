@@ -23,6 +23,8 @@ services:
     environment:
       MYSQL_ROOT_PASSWORD: akpidev3
       MYSQL_DATABASE: dejati
+      TZ: Asia/Jakarta
+    command: --default-time-zone='Asia/Jakarta'
     volumes:
       - db_data:/var/lib/mysql
       - ./database:/docker-entrypoint-initdb.d

@@ -22,7 +22,39 @@ $result = mysqli_query($conn, $sql);
                         <div class="col-md-3">
                             <input type="text" id="dateRange" class="form-control" placeholder="Select Date Range">
                         </div>
+                        <!-- Button -->
+                        <button id="printClosinganBtn" class="btn btn-info mb-3">
+                          <i class="fas fa-print"></i> Print Closingan
+                        </button>
                     </div>
+
+
+<!-- Modal -->
+<div class="modal fade" id="closinganModal" tabindex="-1" role="dialog" aria-labelledby="closinganModalLabel" aria-hidden="true">
+  <div class="modal-dialog modal-lg" role="document">
+    <div class="modal-content">
+      <div class="modal-header bg-info text-white">
+        <h5 class="modal-title">Preview Closingan Hari Ini</h5>
+        <button type="button" class="close text-white" data-dismiss="modal">&times;</button>
+      </div>
+      <div class="modal-body">
+        <div id="closinganPreview" class="p-2 border rounded bg-light">
+          <p>Loading data...</p>
+        </div>
+
+        <hr>
+        <h6>Apakah ada pengeluaran hari ini?</h6>
+        <div id="pengeluaranList"></div>
+
+        <button id="addPengeluaran" class="btn btn-outline-primary btn-sm mt-2">+ Tambah Pengeluaran</button>
+      </div>
+      <div class="modal-footer">
+        <button id="confirmPrintClosingan" class="btn btn-success">Print & Simpan</button>
+        <button class="btn btn-secondary" data-dismiss="modal">Tutup</button>
+      </div>
+    </div>
+  </div>
+</div>
 
                     <!-- 📋 Orders Table -->
                     <table id="ordersTable" class="table table-bordered table-striped">
@@ -141,6 +173,69 @@ $result = mysqli_query($conn, $sql);
 <script src="../../plugins/datatables-buttons/js/buttons.colVis.min.js"></script>
 <script src="../../plugins/moment/moment.min.js"></script>
 <script src="../../plugins/daterangepicker/daterangepicker.js"></script>
+
+
+<script>
+$(function () {
+  // === PRINT CLOSINGAN BUTTON ===
+  $('#printClosinganBtn').on('click', function () {
+    $('#closinganModal').modal('show');
+    loadClosinganData();
+  });
+
+  // === LOAD DATA PREVIEW ===
+  function loadClosinganData() {
+    $('#closinganPreview').html('<p>Loading...</p>');
+    $.get('/closingan/', function (data) {
+      $('#closinganPreview').html(data);
+    });
+  }
+
+  // === ADD PENGELUARAN INPUT FIELD ===
+  $('#addPengeluaran').on('click', function () {
+    $('#pengeluaranList').append(`
+      <div class="input-group mb-2 pengeluaran-item">
+        <input type="text" class="form-control keterangan" placeholder="Keterangan">
+        <input type="number" class="form-control total" placeholder="Total (Rp)">
+        <div class="input-group-append">
+          <button class="btn btn-danger remove-pengeluaran" type="button">&times;</button>
+        </div>
+      </div>
+    `);
+  });
+
+  // === REMOVE PENGELUARAN ROW ===
+  $(document).on('click', '.remove-pengeluaran', function () {
+    $(this).closest('.pengeluaran-item').remove();
+  });
+
+  // === PRINT & SAVE CLOSINGAN ===
+  $('#confirmPrintClosingan').on('click', function () {
+    const pengeluaran = [];
+
+    $('.pengeluaran-item').each(function () {
+      const keterangan = $(this).find('.keterangan').val();
+      const total = $(this).find('.total').val();
+      if (keterangan && total) {
+        pengeluaran.push({ keterangan, total });
+      }
+    });
+
+    $.post('/pengeluaran/', { data: JSON.stringify(pengeluaran) }, function (res) {
+      console.log('Pengeluaran saved:', res);
+
+      // After pengeluaran saved, get closingan data again and print
+      $.get('/closingan?print=true', function (escpos) {
+        const base64Data = btoa(unescape(encodeURIComponent(escpos)));
+        const rawbtUrl = `rawbt:base64,${base64Data}`;
+        window.location.href = rawbtUrl;
+        $('#closinganModal').modal('hide');
+      });
+    });
+  });
+});
+</script>
+
 
 <script>
     $(function() {        
