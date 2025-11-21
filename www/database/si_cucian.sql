@@ -329,6 +329,18 @@ CREATE TABLE pengeluaran (
     created_at DATETIME DEFAULT CURRENT_TIMESTAMP
 );
 
+CREATE TABLE tb_closingan (
+  id INT AUTO_INCREMENT PRIMARY KEY,
+  tanggal DATE,
+  total_penjualan INT,
+  cash INT,
+  qris INT,
+  card INT,
+  cafe INT,
+  carwash INT,
+  detail_pengeluaran TEXT,
+  created_at DATETIME
+);
 
 /*!40101 SET CHARACTER_SET_CLIENT=@OLD_CHARACTER_SET_CLIENT */;
 /*!40101 SET CHARACTER_SET_RESULTS=@OLD_CHARACTER_SET_RESULTS */;

@@ -34,6 +34,25 @@ $pengeluaran_rows = [];
 while ($row = mysqli_fetch_assoc($pengeluaran)) $pengeluaran_rows[] = $row;
 
 if (isset($_GET['print'])) {
+    // ----- INSERT INTO tb_closingan -----
+   $json_pengeluaran = mysqli_real_escape_string($conn, json_encode($pengeluaran_rows));
+
+  $sql = "INSERT INTO tb_closingan 
+          (tanggal, total_penjualan, cash, qris, card, cafe, carwash, detail_pengeluaran, created_at)
+          VALUES (
+            CURDATE(),
+            $total_penjualan,
+            $cash,
+            $qris,
+            $card,
+            $cafe,
+            $carwash,
+            '$json_pengeluaran',
+            NOW()
+          )";
+
+  mysqli_query($conn, $sql);
+  
   // Build ESC/POS
   $escpos  = "\x1B\x40\x1B\x61\x01";
   $escpos .= "Dejati Coffee Garden\nLaporan Closingan\n-----------------------------\n";

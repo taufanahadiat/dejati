@@ -56,6 +56,8 @@ if ($role === 'Kasir') {
           include_once('include/carwash/carwash_data_add.php');
         } elseif ($id == "report") {
           include_once('include/transaksi/report.php');
+        } elseif ($id == "dailyReport") {
+          include_once('include/transaksi/dailyReport.php');  
         } elseif ($id == "transaksi") {
           include_once('include/transaksi/index.php'); 
         } elseif ($id == "utility") {

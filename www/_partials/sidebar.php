@@ -93,6 +93,12 @@
                   <p>History</p>
                 </a>
               </li>
+              <li class="nav-item">
+                <a href="main.php?id=dailyReport" class="nav-link">
+                  <i class="nav-icon fa fa-calendar-day"></i>
+                  <p>Daily Report</p>
+                </a>
+              </li>
             </ul>
           </li>
           <li class="nav-item has-treeview">
