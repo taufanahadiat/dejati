@@ -411,6 +411,41 @@ if ($resource === 'users') {
     }
 }
 
+
+if ($resource === 'stock') {
+    $data['stock'] = $data['stock'] ?? [];
+    if ($method === 'GET') out(['stock' => $data['stock']]);
+    if ($method === 'POST') {
+        $payload = input();
+        $row = [
+            'id' => nextId($data['stock']),
+            'name' => trim((string) ($payload['name'] ?? '')),
+            'itemNumber' => (int) ($payload['itemNumber'] ?? 0),
+            'updatedAt' => now(),
+            'updatedBy' => $currentUser['id'],
+        ];
+        if ($row['name'] === '') out(['error' => 'Stock item name is required'], 422);
+        $data['stock'][] = $row;
+        $store->write($data);
+        out(['item' => $row], 201);
+    }
+    if (($method === 'PUT' || $method === 'PATCH') && isset($segments[1])) {
+        $id = (int) $segments[1];
+        $payload = input();
+        foreach ($data['stock'] as &$row) {
+            if ((int) $row['id'] === $id) {
+                if (array_key_exists('name', $payload)) $row['name'] = trim((string) $payload['name']);
+                if (array_key_exists('itemNumber', $payload)) $row['itemNumber'] = (int) $payload['itemNumber'];
+                $row['updatedAt'] = now();
+                $row['updatedBy'] = $currentUser['id'];
+                $store->write($data);
+                out(['item' => $row]);
+            }
+        }
+        out(['error' => 'Stock item not found'], 404);
+    }
+}
+
 if ($resource === 'printer-settings') {
     if ($method === 'GET') out(['settings' => $data['printerSettings'] ?? []]);
     if ($method === 'PUT' || $method === 'PATCH') {

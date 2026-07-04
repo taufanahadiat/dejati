@@ -557,5 +557,17 @@
     "connection": "rawbt",
     "footer": "Terima kasih atas kunjungannya!",
     "autoPrint": false
-  }
+  },
+  "stock": [
+    {
+      "id": 1,
+      "name": "Soto",
+      "itemNumber": 2
+    },
+    {
+      "id": 2,
+      "name": "Iga",
+      "itemNumber": 8
+    }
+  ]
 }
