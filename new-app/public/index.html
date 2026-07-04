@@ -1,0 +1,174 @@
+<!doctype html>
+<html lang="en">
+  <head>
+    <meta charset="utf-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1">
+    <title>Dejati POS</title>
+    <link rel="stylesheet" href="styles.css">
+    <link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Material+Symbols+Outlined">
+  </head>
+  <body>
+    <section id="loginView" class="login-shell">
+      <form id="loginForm" class="login-card">
+        <div class="brand">
+          <div class="brand-mark">DJ</div>
+          <div>
+            <h1>Dejati POS</h1>
+            <p>Cafe Garden & Carwash</p>
+          </div>
+        </div>
+        <div class="field">
+          <label for="username">Username</label>
+          <input id="username" class="input" name="username" value="admin" autocomplete="username">
+        </div>
+        <div class="field">
+          <label for="password">Password</label>
+          <input id="password" class="input" name="password" value="admin123" type="password" autocomplete="current-password">
+        </div>
+        <p id="loginError" class="error"></p>
+        <button class="btn primary" type="submit">Log In</button>
+      </form>
+    </section>
+
+    <section id="appView" class="app-shell hidden">
+      <aside class="sidebar">
+        <div class="brand">
+          <div class="brand-mark">DJ</div>
+          <div>
+            <h1>Dejati POS</h1>
+            <p id="roleLabel">Workspace</p>
+          </div>
+        </div>
+        <nav class="nav" id="nav">
+          <button data-view="pos" class="active"><span class="material-symbols-outlined">point_of_sale</span>Kasir</button>
+          <button data-view="reports"><span class="material-symbols-outlined">receipt_long</span>Transaksi</button>
+          <button data-view="catalog"><span class="material-symbols-outlined">inventory_2</span>Produk</button>
+          <button data-view="closing"><span class="material-symbols-outlined">summarize</span>Closing</button>
+        </nav>
+        <div class="user-chip">
+          <strong id="userName">User</strong><br>
+          <span id="userRole">Role</span>
+        </div>
+      </aside>
+
+      <main class="main">
+        <div class="topbar">
+          <div>
+            <h2 id="viewTitle">Transaksi Kasir</h2>
+            <p id="viewSubtitle">Build cafe and carwash orders from one cart.</p>
+          </div>
+          <button id="logoutBtn" class="btn">Log Out</button>
+        </div>
+
+        <section id="posView" class="view pos-layout">
+          <div class="panel">
+            <div class="panel-head">
+              <h3>Menu</h3>
+              <span class="pill" id="catalogCount">0 items</span>
+            </div>
+            <div class="panel-body">
+              <div class="toolbar">
+                <input id="searchInput" class="input" placeholder="Search product or service">
+                <button id="refreshBtn" class="btn icon" title="Refresh catalog"><span class="material-symbols-outlined">refresh</span></button>
+              </div>
+              <div id="categoryTabs" class="categories"></div>
+              <div id="productGrid" class="product-grid"></div>
+            </div>
+          </div>
+
+          <div class="panel">
+            <div class="panel-head">
+              <h3>Order Summary</h3>
+              <button id="clearCartBtn" class="btn danger">Clear</button>
+            </div>
+            <div class="panel-body">
+              <div id="cartList" class="cart-list"></div>
+              <div class="totals">
+                <div class="total-row">
+                  <span>Total</span>
+                  <strong id="cartTotal">Rp 0</strong>
+                </div>
+                <div class="pay-actions">
+                  <button id="payBtn" class="btn success">Pay Now</button>
+                  <button id="openBillBtn" class="btn warn">Open Bill</button>
+                </div>
+              </div>
+            </div>
+          </div>
+        </section>
+
+        <section id="reportsView" class="view hidden">
+          <div class="panel">
+            <div class="panel-head">
+              <h3>History Transaksi</h3>
+              <button id="reloadOrdersBtn" class="btn icon" title="Refresh"><span class="material-symbols-outlined">refresh</span></button>
+            </div>
+            <div class="panel-body">
+              <table class="table">
+                <thead>
+                  <tr>
+                    <th>Date</th>
+                    <th>Table</th>
+                    <th>Status</th>
+                    <th>Payment</th>
+                    <th>Total</th>
+                    <th>Action</th>
+                  </tr>
+                </thead>
+                <tbody id="ordersBody"></tbody>
+              </table>
+            </div>
+          </div>
+        </section>
+
+        <section id="catalogView" class="view hidden">
+          <div class="summary-grid">
+            <div class="metric"><span>Cafe Products</span><strong id="productMetric">0</strong></div>
+            <div class="metric"><span>Carwash</span><strong id="carwashMetric">0</strong></div>
+            <div class="metric"><span>Categories</span><strong id="categoryMetric">0</strong></div>
+            <div class="metric"><span>Cart Items</span><strong id="cartMetric">0</strong></div>
+          </div>
+          <div class="panel">
+            <div class="panel-head">
+              <h3>Add Product</h3>
+            </div>
+            <div class="panel-body">
+              <form id="productForm" class="toolbar">
+                <input id="newProductName" class="input" placeholder="Product name">
+                <input id="newProductPrice" class="input" type="number" min="0" placeholder="Price">
+                <select id="newProductCategory" class="select"></select>
+                <button class="btn primary" type="submit">Save Product</button>
+              </form>
+            </div>
+          </div>
+        </section>
+
+        <section id="closingView" class="view hidden">
+          <div id="closingMetrics" class="summary-grid"></div>
+          <div class="panel">
+            <div class="panel-head">
+              <h3>Pengeluaran Hari Ini</h3>
+              <button id="saveClosingBtn" class="btn success">Save Closing</button>
+            </div>
+            <div class="panel-body">
+              <form id="expenseForm" class="toolbar">
+                <input id="expenseDescription" class="input" placeholder="Keterangan">
+                <input id="expenseTotal" class="input" type="number" min="0" placeholder="Total Rp">
+                <button class="btn primary" type="submit">Tambah</button>
+              </form>
+              <table class="table">
+                <thead>
+                  <tr><th>Time</th><th>Keterangan</th><th>Total</th></tr>
+                </thead>
+                <tbody id="expensesBody"></tbody>
+              </table>
+            </div>
+          </div>
+        </section>
+      </main>
+    </section>
+
+    <div id="modalHost"></div>
+    <script src="app.js"></script>
+  </body>
+</html>

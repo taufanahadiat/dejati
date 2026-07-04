@@ -1,0 +1,9 @@
+tunnel: dae86d49-b921-48f9-85aa-249439fa4808
+credentials-file: /etc/cloudflared/dae86d49-b921-48f9-85aa-249439fa4808.json
+
+ingress:
+  - hostname: pos.dejaticoffee.com
+    service: http://localhost:80
+  - hostname: api.dejaticoffee.com
+    service: http://localhost:8090
+  - service: http_status:404

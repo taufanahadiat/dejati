@@ -1,0 +1,561 @@
+{
+  "users": [
+    {
+      "id": 1,
+      "username": "admin",
+      "name": "Admin Dejati",
+      "password": "admin123",
+      "role": "Administrator",
+      "status": "Aktif"
+    },
+    {
+      "id": 2,
+      "username": "kasir",
+      "name": "Kasir",
+      "password": "admin123",
+      "role": "Kasir",
+      "status": "Aktif"
+    },
+    {
+      "id": 3,
+      "username": "jati35",
+      "name": "Dejati Karyawan",
+      "password": "admin123",
+      "role": "Karyawan",
+      "status": "Aktif"
+    }
+  ],
+  "categories": [
+    {
+      "id": 1,
+      "name": "Coffee",
+      "icon": "coffee"
+    },
+    {
+      "id": 2,
+      "name": "Meals",
+      "icon": "yoshoku"
+    },
+    {
+      "id": 3,
+      "name": "Mie & Pasta",
+      "icon": "ramen_dining"
+    },
+    {
+      "id": 4,
+      "name": "Rice Bowl",
+      "icon": "washoku"
+    },
+    {
+      "id": 5,
+      "name": "Ala Carte",
+      "icon": "fastfood"
+    },
+    {
+      "id": 6,
+      "name": "Snacks",
+      "icon": "cookie"
+    },
+    {
+      "id": 7,
+      "name": "Tea Based",
+      "icon": "local_florist"
+    },
+    {
+      "id": 8,
+      "name": "Manual Brew",
+      "icon": "coffee_maker"
+    },
+    {
+      "id": 9,
+      "name": "DeJati's Tropical",
+      "icon": "local_bar"
+    },
+    {
+      "id": 11,
+      "name": "Aneka Juice",
+      "icon": "blender"
+    },
+    {
+      "id": 12,
+      "name": "Milk Based",
+      "icon": "grocery"
+    }
+  ],
+  "products": [
+    {
+      "id": 12,
+      "name": "Paket Chicken Katsu",
+      "categoryId": 2,
+      "hasVariants": false,
+      "variants": [],
+      "price": 35000,
+      "image": "12_paket_chicken_katsu.jpg"
+    },
+    {
+      "id": 11,
+      "name": "French Fries",
+      "categoryId": 6,
+      "hasVariants": false,
+      "variants": [],
+      "price": 22000,
+      "image": "11_french_fries.jpg"
+    },
+    {
+      "id": 10,
+      "name": "Paket Se'i Sapi",
+      "categoryId": 2,
+      "hasVariants": false,
+      "variants": [],
+      "price": 40000,
+      "image": "10_paket_se_i_sapi.jpg"
+    },
+    {
+      "id": 9,
+      "name": "Paket Ayam Geprek",
+      "categoryId": 2,
+      "hasVariants": true,
+      "variants": [
+        {
+          "name": "Hemat",
+          "price": 27000
+        },
+        {
+          "name": "Komplit",
+          "price": 30000
+        }
+      ],
+      "price": null,
+      "image": "9_ayam_geprek.jpg"
+    },
+    {
+      "id": 13,
+      "name": "Spaghetti Aglio Olio",
+      "categoryId": 3,
+      "hasVariants": false,
+      "variants": [],
+      "price": 32000,
+      "image": "13_spaghetti_aglio_olio.jpg"
+    },
+    {
+      "id": 14,
+      "name": "Spaghetti Bolognese",
+      "categoryId": 3,
+      "hasVariants": false,
+      "variants": [],
+      "price": 35000,
+      "image": "14_spaghetti_bolognese.jpg"
+    },
+    {
+      "id": 15,
+      "name": "Spaghetti Carbonara",
+      "categoryId": 3,
+      "hasVariants": false,
+      "variants": [],
+      "price": 37000,
+      "image": "15_spagehtti_carbonara.jpg"
+    },
+    {
+      "id": 16,
+      "name": "Rice Bowl Beef",
+      "categoryId": 4,
+      "hasVariants": true,
+      "variants": [
+        {
+          "name": "Beef Teriyaki",
+          "price": 40000
+        },
+        {
+          "name": "Beef Blackpepper",
+          "price": 40000
+        }
+      ],
+      "price": null,
+      "image": "16_rice_bowl_beef.jpeg"
+    },
+    {
+      "id": 17,
+      "name": "Ricebowl Chicken",
+      "categoryId": 4,
+      "hasVariants": true,
+      "variants": [
+        {
+          "name": "Chicken Asam Manis",
+          "price": 35000
+        },
+        {
+          "name": "Chicken Teriyaki",
+          "price": 35000
+        }
+      ],
+      "price": null,
+      "image": "17_ricebowl_chicken.jpeg"
+    },
+    {
+      "id": 18,
+      "name": "Paket Iga Bakar",
+      "categoryId": 2,
+      "hasVariants": false,
+      "variants": [],
+      "price": 50000,
+      "image": "18_paket_iga_bakar.jpeg"
+    },
+    {
+      "id": 19,
+      "name": "Mie Goreng Dejati",
+      "categoryId": 3,
+      "hasVariants": false,
+      "variants": [],
+      "price": 22000,
+      "image": "19_mie_goreng_dejati.jpeg"
+    },
+    {
+      "id": 20,
+      "name": "Nasi Goreng",
+      "categoryId": 2,
+      "hasVariants": true,
+      "variants": [
+        {
+          "name": "Spesial",
+          "price": 25000
+        },
+        {
+          "name": "Kampung",
+          "price": 20000
+        }
+      ],
+      "price": null,
+      "image": "20_nasi_goreng.jpeg"
+    },
+    {
+      "id": 21,
+      "name": "Paket Ayam Kampung",
+      "categoryId": 2,
+      "hasVariants": true,
+      "variants": [
+        {
+          "name": "Hemat",
+          "price": 37000
+        },
+        {
+          "name": "Komplit",
+          "price": 40000
+        }
+      ],
+      "price": null,
+      "image": "21_paket_ayam_kampung.jpeg"
+    },
+    {
+      "id": 22,
+      "name": "Tahu Walik",
+      "categoryId": 6,
+      "hasVariants": false,
+      "variants": [],
+      "price": 20000,
+      "image": "22_tahu_walik.jpeg"
+    },
+    {
+      "id": 23,
+      "name": "Dimsum",
+      "categoryId": 6,
+      "hasVariants": false,
+      "variants": [],
+      "price": 22000,
+      "image": "23_dimsum.jpeg"
+    },
+    {
+      "id": 24,
+      "name": "Pempek",
+      "categoryId": 6,
+      "hasVariants": false,
+      "variants": [],
+      "price": 25000,
+      "image": "24_pempek.jpeg"
+    },
+    {
+      "id": 25,
+      "name": "Zuppa Soup",
+      "categoryId": 6,
+      "hasVariants": false,
+      "variants": [],
+      "price": 27000,
+      "image": "25_zuppa_soup.jpeg"
+    },
+    {
+      "id": 30,
+      "name": "Mie Godog",
+      "categoryId": 3,
+      "hasVariants": false,
+      "variants": [],
+      "price": 25000,
+      "image": "30_mie_godog.jpeg"
+    },
+    {
+      "id": 31,
+      "name": "Vietnam Drip",
+      "categoryId": 8,
+      "hasVariants": false,
+      "variants": [],
+      "price": 25000,
+      "image": "31_vietnam_drip.jpeg"
+    },
+    {
+      "id": 33,
+      "name": "Latte Original",
+      "categoryId": 1,
+      "hasVariants": true,
+      "variants": [
+        {
+          "name": "Hot",
+          "price": 22000
+        },
+        {
+          "name": "Cold",
+          "price": 23000
+        }
+      ],
+      "price": null,
+      "image": "33_latte_original.jpeg"
+    },
+    {
+      "id": 34,
+      "name": "Cappucino",
+      "categoryId": 1,
+      "hasVariants": true,
+      "variants": [
+        {
+          "name": "Hot",
+          "price": 22000
+        },
+        {
+          "name": "Cold",
+          "price": 23000
+        }
+      ],
+      "price": null,
+      "image": "34_cappucino.jpeg"
+    },
+    {
+      "id": 35,
+      "name": "Dejati Signature",
+      "categoryId": 1,
+      "hasVariants": true,
+      "variants": [
+        {
+          "name": "Hot",
+          "price": 23000
+        },
+        {
+          "name": "Ice",
+          "price": 25000
+        }
+      ],
+      "price": null,
+      "image": "35_dejati_signature.jpeg"
+    },
+    {
+      "id": 36,
+      "name": "Americano",
+      "categoryId": 1,
+      "hasVariants": true,
+      "variants": [
+        {
+          "name": "Hot",
+          "price": 20000
+        },
+        {
+          "name": "Ice",
+          "price": 22000
+        }
+      ],
+      "price": null,
+      "image": "36_americano.jpeg"
+    },
+    {
+      "id": 37,
+      "name": "Coffee Mocktail",
+      "categoryId": 1,
+      "hasVariants": false,
+      "variants": [],
+      "price": 30000,
+      "image": "37_coffee_mocktail.jpeg"
+    },
+    {
+      "id": 38,
+      "name": "Caramel Macchiato",
+      "categoryId": 1,
+      "hasVariants": false,
+      "variants": [],
+      "price": 25000,
+      "image": "38_caramel_macchiato.jpeg"
+    },
+    {
+      "id": 39,
+      "name": "Mint Latte",
+      "categoryId": 1,
+      "hasVariants": true,
+      "variants": [
+        {
+          "name": "Avocado",
+          "price": 25000
+        },
+        {
+          "name": "Red Velvet",
+          "price": 25000
+        },
+        {
+          "name": "Matcha",
+          "price": 25000
+        }
+      ],
+      "price": null,
+      "image": "39_mint_latte.jpeg"
+    },
+    {
+      "id": 40,
+      "name": "Yogurt Punch",
+      "categoryId": 9,
+      "hasVariants": false,
+      "variants": [],
+      "price": 30000,
+      "image": "40_yogurt_punch.jpeg"
+    },
+    {
+      "id": 41,
+      "name": "Affogato",
+      "categoryId": 1,
+      "hasVariants": false,
+      "variants": [],
+      "price": 25000,
+      "image": "41_affogato.jpeg"
+    },
+    {
+      "id": 42,
+      "name": "Sewindu",
+      "categoryId": 12,
+      "hasVariants": false,
+      "variants": [],
+      "price": 30000,
+      "image": "42_sewindu.jpeg"
+    },
+    {
+      "id": 43,
+      "name": "Royal Milk Tea",
+      "categoryId": 12,
+      "hasVariants": false,
+      "variants": [],
+      "price": 30000,
+      "image": "43_royal_milk_tea.jpeg"
+    },
+    {
+      "id": 44,
+      "name": "Milkshake",
+      "categoryId": 12,
+      "hasVariants": true,
+      "variants": [
+        {
+          "name": "Vanilla",
+          "price": 27000
+        },
+        {
+          "name": "Caramel",
+          "price": 27000
+        },
+        {
+          "name": "Hazelnut",
+          "price": 27000
+        },
+        {
+          "name": "Chocolate",
+          "price": 27000
+        },
+        {
+          "name": "Taro",
+          "price": 27000
+        }
+      ],
+      "price": null,
+      "image": "44_milkshake.jpeg"
+    }
+  ],
+  "carwashProducts": [
+    {
+      "id": 1,
+      "name": "Promo Cuci Mobil",
+      "price": 30000
+    },
+    {
+      "id": 2,
+      "name": "Cuci Motor",
+      "price": 20000
+    },
+    {
+      "id": 4,
+      "name": "Cuci Mobil Hidrolik",
+      "price": 50000
+    },
+    {
+      "id": 5,
+      "name": "Salon Mobil",
+      "price": 70000
+    },
+    {
+      "id": 6,
+      "name": "Promo Hidrolik Dejati Car Wash",
+      "price": 45000
+    },
+    {
+      "id": 7,
+      "name": "Dejati car wash vacum",
+      "price": 35000
+    }
+  ],
+  "orders": [
+    {
+      "id": 1,
+      "tableNumber": "8",
+      "paymentMethod": "cash",
+      "totalAmount": 78000,
+      "paidAmount": 80000,
+      "changeAmount": 2000,
+      "status": "paid",
+      "createdAt": "2025-08-24 22:53:15",
+      "items": [
+        {
+          "type": "carwash",
+          "productId": 4,
+          "name": "Cuci Mobil Hidrolik",
+          "qty": 1,
+          "unitPrice": 55000,
+          "finalPrice": 55000,
+          "total": 55000,
+          "nopol": "BM 7287 HJ",
+          "service": "Budi",
+          "ukuran": "Mobil Besar",
+          "vacuum": "yes",
+          "profitPegawai": 16500,
+          "profitManagement": 38500
+        },
+        {
+          "type": "product",
+          "productId": 35,
+          "name": "Dejati Signature (Hot)",
+          "qty": 1,
+          "unitPrice": 23000,
+          "finalPrice": 23000,
+          "total": 23000
+        }
+      ]
+    }
+  ],
+  "expenses": [],
+  "closings": [],
+  "printerSettings": {
+    "id": 1,
+    "name": "RawBT 80mm",
+    "paperWidth": 80,
+    "connection": "rawbt",
+    "footer": "Terima kasih atas kunjungannya!",
+    "autoPrint": false
+  }
+}

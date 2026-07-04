@@ -1,0 +1,10 @@
+services:
+  dejati-api:
+    build:
+      context: ./backend-api
+    container_name: dejati-api
+    restart: unless-stopped
+    ports:
+      - "127.0.0.1:8090:8080"
+    volumes:
+      - ./backend-api/data:/app/data
