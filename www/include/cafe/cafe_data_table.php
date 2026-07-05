@@ -1,3 +1,4 @@
+﻿<?php require_once __DIR__ . '/cafe_image_helper.php'; ?>
 <div class="mb-3">
     <a class="btn btn-primary btn-sm" href="main.php?id=cafeData_add">
         <i class="fas fa-plus"></i> Tambah Data Produk
@@ -33,27 +34,18 @@
                     $variantNames = $isVariant ? explode(';', $row['nama_var']) : [];
                     $variantPrices = $isVariant ? explode(';', $row['biaya_var']) : [];
 
-                    $imgPath = '<?= CDN_BASE ?>/img/products/' . $row['foto'];
-                    $imgExists = file_exists($_SERVER['DOCUMENT_ROOT'] .  CDN_BASE . '/img/products/' . $row['foto']);
+                    $imageUrl = cafe_product_image_url($row['foto'] ?? '');
             ?>
                     <tr>
                         <td><?= $no++; ?></td>
                         <td>
-                            <?php
-                            if ($row['foto'] && $imgExists):
-                                // Show thumbnail, link to full image
-                                $relativePath =  CDN_BASE . '/img/products/' . $row['foto'];
-                            ?>
-                                <a href="<?= $relativePath ?>" target="_blank">
-                                    <div style="width: 80px; height: 80px; overflow: hidden;">
-                                        <img src="<?= $relativePath ?>" alt="Foto Produk"
-                                            class="img-thumbnail elevation-2"
-                                            style="width: 100%; height: 100%; object-fit: cover; border-radius: 20%;">
-                                    </div>
-                                </a>
-                            <?php else: ?>
-                                <span class="text-muted">No image</span>
-                            <?php endif; ?>
+                            <a href="<?= htmlspecialchars($imageUrl) ?>" target="_blank">
+                                <div style="width: 80px; height: 80px; overflow: hidden;">
+                                    <img src="<?= htmlspecialchars($imageUrl) ?>" alt="Foto Produk"
+                                        class="img-thumbnail elevation-2"
+                                        style="width: 100%; height: 100%; object-fit: cover; border-radius: 20%;">
+                                </div>
+                            </a>
                         </td>
                         <td><?= htmlspecialchars($row['nama_prod']); ?></td>
                         <td><?= htmlspecialchars($row['name_cat'] ?? '-'); ?></td>
@@ -110,7 +102,7 @@
             searching: true,
             ordering: true,
             info: true,
-            pageLength: 50, // 👈 default show 50 entries
+            pageLength: 50, // ðŸ‘ˆ default show 50 entries
             lengthMenu: [
                 [10, 25, 50, 100, -1],
                 [10, 25, 50, 100, "All"]

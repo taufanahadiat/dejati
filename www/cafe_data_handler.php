@@ -1,10 +1,10 @@
-<?php
-include ('config/config.php');
-// Include the backend logic (safe server-side include)
-if (isset($_GET['id_produk'])) {
-    $id_prod = intval($_GET['id_produk']);
+﻿<?php
+include('config/config.php');
+require_once __DIR__ . '/include/cafe/cafe_image_helper.php';
 
-    // 1. Get image filename from DB
+if (isset($_GET['id_produk'])) {
+    $id_prod = (int)$_GET['id_produk'];
+
     $stmt = $conn->prepare("SELECT foto FROM tb_datacafe WHERE id_prod = ?");
     $stmt->bind_param("i", $id_prod);
     $stmt->execute();
@@ -12,31 +12,20 @@ if (isset($_GET['id_produk'])) {
     $stmt->fetch();
     $stmt->close();
 
-    if ($foto) {
-        // 2. Delete image file if exists
-        $uploadDir = $_SERVER['DOCUMENT_ROOT'] .  CDN_BASE . '/img/products/';
-        $uploadFile = $uploadDir . basename($foto);
+    cafe_delete_local_image($foto ?? '');
 
-        if (file_exists($uploadFile) && is_file($uploadFile)) {
-            unlink($uploadFile);
-        }
-    }
-
-    // 3. Delete from DB
     $stmt = $conn->prepare("DELETE FROM tb_datacafe WHERE id_prod = ?");
     $stmt->bind_param("i", $id_prod);
     $stmt->execute();
     $stmt->close();
 
-    // Redirect back to table page
     header("Location: /main.php?id=cafeData&msg=deleted");
     exit;
 }
-elseif ($_SERVER['REQUEST_METHOD'] === 'POST'){
+
+if ($_SERVER['REQUEST_METHOD'] === 'POST') {
     include __DIR__ . '/include/cafe/cafe_data_addAct.php';
-} 
-else {
-    echo "Invalid request.";
+    exit;
 }
 
-
+echo "Invalid request.";

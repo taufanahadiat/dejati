@@ -1,4 +1,5 @@
-<?php
+﻿<?php
+require_once __DIR__ . '/cafe_image_helper.php';
 $isEdit = isset($_GET['id_produk']);
 $product = null;
 
@@ -37,7 +38,7 @@ $breadcrumb = [
                                 <?php if ($isEdit && !empty($product['foto'])): ?>
                                     <!-- Show existing image -->
                                     <div id="existingImageWrapper">
-                                        <img src="<?= CDN_BASE ?>/img/products/<?= htmlspecialchars($product['foto']) ?>"
+                                        <img src="<?= htmlspecialchars(cafe_product_image_url($product['foto'])) ?>"
                                             alt="Foto Produk"
                                             class="img-thumbnail mb-2"
                                             style="max-height:120px">
@@ -52,7 +53,7 @@ $breadcrumb = [
                                 <?php else: ?>
                                     <!-- Dropzone only if no existing image -->
                                     <div id="dropzoneImage" class="dropzone border border-secondary rounded p-2"></div>
-                                    <small class="form-text text-muted">Format .JPG, .JPEG, .PNG — Maks. 7 MB</small>
+                                    <small class="form-text text-muted">Format .JPG, .JPEG, .PNG â€” Maks. 7 MB</small>
                                     <input type="hidden" name="foto" id="foto">
                                 <?php endif; ?>
                             </div>
@@ -176,7 +177,7 @@ $breadcrumb = [
     <?php if (!$isEdit || empty($product['foto'])): ?>
         // Initialize Dropzone only if no existing image
         let imageDropzone = new Dropzone("#dropzoneImage", {
-            url: "include/cafe/cafe_data_addAct.php",
+            url: "<?= $isEdit ? '/cafe_data_edit/' : '/cafe_data_handler/' ?>",
             maxFiles: 1,
             maxFilesize: 7,
             acceptedFiles: ".jpg,.jpeg,.png",
@@ -190,8 +191,7 @@ $breadcrumb = [
                 let dz = this;
 
                 dz.on("sending", function(file, xhr, formData) {
-                    const ext = file.name.split('.').pop().toLowerCase();
-                    const uniqueName = "img_" + Date.now() + "." + ext;
+                    const uniqueName = "img_" + Date.now() + ".jpg";
 
                     file.newName = uniqueName;
                     formData.append("foto", uniqueName);
@@ -232,7 +232,7 @@ $breadcrumb = [
                 $("#imageFormGroup .col-md-6").prepend('<div id="dropzoneImage" class="dropzone border border-secondary rounded p-2"></div>');
                 // re-init Dropzone
                 new Dropzone("#dropzoneImage", {
-                    url: "include/cafe/cafe_data_addAct.php",
+                    url: "<?= $isEdit ? '/cafe_data_edit/' : '/cafe_data_handler/' ?>",
                     maxFiles: 1,
                     maxFilesize: 7,
                     acceptedFiles: ".jpg,.jpeg,.png",
@@ -244,8 +244,7 @@ $breadcrumb = [
                     init: function() {
                         let dz = this;
                         dz.on("sending", function(file, xhr, formData) {
-                            const ext = file.name.split('.').pop().toLowerCase();
-                            const uniqueName = "img_" + Date.now() + "." + ext;
+                            const uniqueName = "img_" + Date.now() + ".jpg";
                             file.newName = uniqueName;
                             formData.append("foto", uniqueName);
                             formData.append("upload_only", true);
@@ -315,7 +314,7 @@ $breadcrumb = [
             renderVariantInputs(count, existingNames, existingPrices);
         });
 
-        // If we’re in edit mode, restore values from PHP
+        // If weâ€™re in edit mode, restore values from PHP
         let existingNames = [];
         let existingPrices = [];
 

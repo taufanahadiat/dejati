@@ -1,33 +1,30 @@
-<?php
-//cek session
+﻿<?php
 session_start();
-
-require_once 'config/config.php';
+require_once '../../config/config.php';
 
 if (empty($_SESSION['loggedin'])) {
-  header("Location: ./");
-  die();
-} elseif ($_SESSION['level'] === 'Kasir') {
-  header("Location: ./home.php");
-} else {
-  if (!isset($_GET['id_paket'])) {
-    header('Location: paket.php');
-  }
-
-  $id_paket = $_GET['id_paket'];
-
-  $sql = "SELECT * FROM tb_paket WHERE id_paket=$id_paket";
-  $query = mysqli_query($conn, $sql);
-  $paket = mysqli_fetch_assoc($query);
-
-  if (mysqli_num_rows($query) < 1) {
-    header("Location: paket.php");
-  } else {
-    $sql = "DELETE FROM tb_paket WHERE id_paket=$id_paket";
-    $query = mysqli_query($conn, $sql);
-    if ($query) {
-      $_SESSION['success'] = 'Data paket berhasil dihapus.';
-      header('Location: paket.php');
-    }
-  }
+    header('Location: ../../');
+    exit;
 }
+
+if ($_SESSION['level'] === 'Kasir') {
+    header('Location: ../../main.php?id=transaksi');
+    exit;
+}
+
+$id_produk = (int)($_GET['id_produk'] ?? 0);
+if ($id_produk <= 0) {
+    header('Location: ../../main.php?id=carwashData');
+    exit;
+}
+
+$stmt = $conn->prepare('DELETE FROM tb_datacarwash WHERE id_produk = ?');
+$stmt->bind_param('i', $id_produk);
+
+if ($stmt->execute()) {
+    $_SESSION['success'] = 'Data produk carwash berhasil dihapus.';
+} else {
+    $_SESSION['error'] = 'Data produk carwash gagal dihapus.';
+}
+
+header('Location: ../../main.php?id=carwashData');

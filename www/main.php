@@ -1,4 +1,4 @@
-<?php
+﻿<?php
 //cek session
 session_start();
 
@@ -52,7 +52,7 @@ if ($role === 'Kasir') {
           include_once('include/cafe/cafe_data.php');
         } elseif ($id == "cafeData_add" || $id == "cafeData_edit") {
           include_once('include/cafe/cafe_data_form.php');
-        } elseif ($id == "carwashData_add") {
+        } elseif ($id == "carwashData_add" || $id == "carwashData_edit") {
           include_once('include/carwash/carwash_data_add.php');
         } elseif ($id == "report") {
           include_once('include/transaksi/report.php');
@@ -87,12 +87,12 @@ if ($role === 'Kasir') {
       const breadcrumbEl = document.createElement('ol');
       breadcrumbEl.className = 'breadcrumb bg-transparent mb-0 pl-2 p-0 d-flex align-items-center';
 
-      // 🟩 Add the sidebar toggle button FIRST
+      // ðŸŸ© Add the sidebar toggle button FIRST
       const toggleLi = document.createElement('li');
       toggleLi.className = 'nav-item mr-2';
     
 
-      // 🟦 Then, loop through breadcrumb items
+      // ðŸŸ¦ Then, loop through breadcrumb items
       arr.forEach((label, index) => {
         const li = document.createElement('li');
         li.classList.add('breadcrumb-item');
@@ -126,7 +126,7 @@ if ($role === 'Kasir') {
       renderBreadcrumb(labels);
     }
 
-    // ✅ jQuery way for Bootstrap 4 tabs
+    // âœ… jQuery way for Bootstrap 4 tabs
     $('[data-toggle="pill"][data-breadcrumb]').on('shown.bs.tab', function(e) {
       try {
         const breadcrumbData = JSON.parse(this.dataset.breadcrumb);
@@ -142,8 +142,8 @@ if ($role === 'Kasir') {
   if ('serviceWorker' in navigator) {
     window.addEventListener('load', () => {
       navigator.serviceWorker.register('/service-worker.js')
-        .then(reg => console.log('✅ Service worker registered:', reg.scope))
-        .catch(err => console.error('❌ SW registration failed:', err));
+        .then(reg => console.log('âœ… Service worker registered:', reg.scope))
+        .catch(err => console.error('âŒ SW registration failed:', err));
     });
   }
   </script>
@@ -151,4 +151,6 @@ if ($role === 'Kasir') {
   </body>
 
   </html>
+
+
 
