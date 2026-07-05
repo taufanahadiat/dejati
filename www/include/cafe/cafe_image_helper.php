@@ -1,4 +1,4 @@
-﻿<?php
+<?php
 
 const CAFE_PRODUCT_UPLOAD_DIR = __DIR__ . '/../../dist/img/products/';
 const CAFE_PRODUCT_UPLOAD_URL = '/dist/img/products/';

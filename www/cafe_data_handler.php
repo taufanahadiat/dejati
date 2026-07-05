@@ -1,4 +1,4 @@
-﻿<?php
+<?php
 include('config/config.php');
 require_once __DIR__ . '/include/cafe/cafe_image_helper.php';
 

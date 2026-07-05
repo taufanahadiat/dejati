@@ -1,4 +1,4 @@
-﻿<?php
+<?php
 $id_produk = (int)($_GET['id_produk'] ?? $_GET['id_paket'] ?? 0);
 $target = '../../main.php?id=carwashData';
 if ($id_produk > 0) {

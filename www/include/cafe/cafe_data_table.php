@@ -1,4 +1,4 @@
-﻿<?php require_once __DIR__ . '/cafe_image_helper.php'; ?>
+<?php require_once __DIR__ . '/cafe_image_helper.php'; ?>
 <div class="mb-3">
     <a class="btn btn-primary btn-sm" href="main.php?id=cafeData_add">
         <i class="fas fa-plus"></i> Tambah Data Produk

@@ -1,4 +1,4 @@
-﻿<?php
+<?php
 //cek session
 session_start();
 

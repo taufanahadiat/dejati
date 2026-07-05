@@ -1,4 +1,4 @@
-﻿<?php
+<?php
 $isEdit = isset($_GET['id_produk']);
 $product = null;
 

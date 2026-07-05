@@ -1,4 +1,4 @@
-﻿<?php
+<?php
 $breadcrumb = [
   ['label' => 'Daftar Carwash', 'link' => '#'],
   ['label' => 'Data', 'link' => '', 'active' => true]

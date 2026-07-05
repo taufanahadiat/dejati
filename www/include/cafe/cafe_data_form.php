@@ -1,4 +1,4 @@
-﻿<?php
+<?php
 require_once __DIR__ . '/cafe_image_helper.php';
 $isEdit = isset($_GET['id_produk']);
 $product = null;
