@@ -5,7 +5,10 @@ $product = null;
 
 if ($isEdit) {
     $id = intval($_GET['id_produk']);
-    $query = mysqli_query($conn, "SELECT * FROM tb_datacafe WHERE id_prod = $id");
+    $stmt = $conn->prepare("SELECT id_prod, nama_prod, id_cat, variant, nama_var, biaya_var, biaya, foto FROM tb_datacafe WHERE id_prod = ? LIMIT 1");
+    $stmt->bind_param("i", $id);
+    $stmt->execute();
+    $query = $stmt->get_result();
     $product = mysqli_fetch_assoc($query);
 }
 
@@ -38,7 +41,7 @@ $breadcrumb = [
                                 <?php if ($isEdit && !empty($product['foto'])): ?>
                                     <!-- Show existing image -->
                                     <div id="existingImageWrapper">
-                                        <img src="<?= htmlspecialchars(cafe_product_image_url($product['foto'])) ?>"
+                                        <img src="<?= htmlspecialchars(cafe_product_image_url($product['foto'])) ?>" loading="lazy" decoding="async"
                                             alt="Foto Produk"
                                             class="img-thumbnail mb-2"
                                             style="max-height:120px">
@@ -53,7 +56,7 @@ $breadcrumb = [
                                 <?php else: ?>
                                     <!-- Dropzone only if no existing image -->
                                     <div id="dropzoneImage" class="dropzone border border-secondary rounded p-2"></div>
-                                    <small class="form-text text-muted">Format .JPG, .JPEG, .PNG â€” Maks. 7 MB</small>
+                                    <small class="form-text text-muted">Format .JPG, .JPEG, .PNG Ã¢â‚¬â€ Maks. 7 MB</small>
                                     <input type="hidden" name="foto" id="foto">
                                 <?php endif; ?>
                             </div>
@@ -314,7 +317,7 @@ $breadcrumb = [
             renderVariantInputs(count, existingNames, existingPrices);
         });
 
-        // If weâ€™re in edit mode, restore values from PHP
+        // If weÃ¢â‚¬â„¢re in edit mode, restore values from PHP
         let existingNames = [];
         let existingPrices = [];
 

@@ -41,7 +41,7 @@
                         <td>
                             <a href="<?= htmlspecialchars($imageUrl) ?>" target="_blank">
                                 <div style="width: 80px; height: 80px; overflow: hidden;">
-                                    <img src="<?= htmlspecialchars($imageUrl) ?>" alt="Foto Produk"
+                                    <img src="<?= htmlspecialchars($imageUrl) ?>" alt="Foto Produk" loading="lazy" decoding="async"
                                         class="img-thumbnail elevation-2"
                                         style="width: 100%; height: 100%; object-fit: cover; border-radius: 20%;">
                                 </div>
@@ -102,10 +102,11 @@
             searching: true,
             ordering: true,
             info: true,
-            pageLength: 50, // ðŸ‘ˆ default show 50 entries
+            deferRender: true,
+            pageLength: 25,
             lengthMenu: [
-                [10, 25, 50, 100, -1],
-                [10, 25, 50, 100, "All"]
+                [10, 25, 50, 100],
+                [10, 25, 50, 100]
             ] // optional
         });
 

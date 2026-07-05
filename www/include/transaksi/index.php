@@ -1,13 +1,14 @@
 <link rel="stylesheet" href="dist/css/material-symbols.css">
 <link rel="stylesheet" href="include/transaksi/custom.css">
 <?php
+require_once __DIR__ . '/../cafe/cafe_image_helper.php';
 $breadcrumb = [
     ['label' => 'Transaksi Kasir', 'link' => '#'],
 ];
 
 $categories = [];
 // Query categories
-$sql = "SELECT * FROM tb_category";
+$sql = "SELECT id_cat, name_cat, icon FROM tb_category ORDER BY name_cat ASC";
 $result = $conn->query($sql);
 
 $cat_first = [
@@ -28,7 +29,7 @@ if ($result->num_rows > 0) {
 
 <?php
 $products = [];
-$sql = "SELECT * FROM tb_datacafe";
+$sql = "SELECT id_prod, nama_prod, biaya, variant, nama_var, biaya_var, id_cat, foto FROM tb_datacafe ORDER BY nama_prod ASC";
 $result = $conn->query($sql);
 
 if ($result->num_rows > 0) {
@@ -41,12 +42,12 @@ if ($result->num_rows > 0) {
             'nama_var' => $row['nama_var'] ?? '',
             'biaya_var' => $row['biaya_var'] ?? 0,
             'category' => $row['id_cat'],
-            'image'    => !empty($row['foto']) ? CDN_BASE . "/img/products/{$row['foto']}" : '',
+            'image'    => cafe_product_image_url($row['foto'] ?? ''),
         ];
     }
 }
 
-$carwashQuery = "SELECT * FROM tb_datacarwash";
+$carwashQuery = "SELECT id_produk, produk, biaya FROM tb_datacarwash ORDER BY produk ASC";
 $carwashResult = $conn->query($carwashQuery);
 
 $carwashProducts = [];
@@ -283,7 +284,7 @@ function formatPrice($number)
                                         ?>
 
                                         <?php if ($imgExists): ?>
-                                            <img class="card-img-top p-1 mx-auto d-block"
+                                            <img class="card-img-top p-1 mx-auto d-block" loading="lazy" decoding="async"
                                                 style="width: 100px; height: 100px; object-fit: cover; border-radius: 10%;"
                                                 src="<?= htmlspecialchars($p['image']) ?>"
                                                 alt="<?= htmlspecialchars($p['name']) ?>"

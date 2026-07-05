@@ -54,7 +54,7 @@ $breadcrumb = [
               </thead>
               <tbody>
                 <?php
-                $query = mysqli_query($conn, "SELECT * FROM tb_datacarwash ORDER BY produk ASC");
+                $query = mysqli_query($conn, "SELECT id_produk, produk, biaya FROM tb_datacarwash ORDER BY produk ASC");
                 if (mysqli_num_rows($query) > 0) {
                   $no = 1;
                   while ($row = mysqli_fetch_array($query)) {
