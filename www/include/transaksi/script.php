@@ -623,7 +623,7 @@ $(function () {
 
   function buildCashierReceipt(tableNumber, items, subtotal, discountPercent, discount, grandTotal, paid, change, method) {
     let escpos = "\x1B\x40\x1B\x61\x01";
-    escpos += "Dejati Coffee Garden\nIG: instagram.com/dejati.coffee\nWifi: dejati37/";
+    escpos += "Dejati Coffee Garden\nIG: instagram.com/dejati.coffee\nWifi: dejati37\n/";
     escpos += "-----------------------------\n";
     escpos += `CASHIER COPY\nInvoice\nTable: ${tableNumber}\n-----------------------------\n`;
 
