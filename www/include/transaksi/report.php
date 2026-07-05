@@ -22,7 +22,7 @@ $result = mysqli_query($conn, $sql);
             <div class="card card-outline card-dark">
                 <div class="card-body">
 
-                    <!-- 🔎 Filters -->
+                    <!-- ÃƒÂ°Ã…Â¸Ã¢â‚¬ÂÃ…Â½ Filters -->
                     <div class="row mb-3 align-items-end">
   <div class="col-md-4">
     <label for="dateRange"><strong>Filter by Date</strong></label>
@@ -74,7 +74,7 @@ $result = mysqli_query($conn, $sql);
   </div>
 </div>
 
-                    <!-- 📋 Orders Table -->
+                    <!-- ÃƒÂ°Ã…Â¸Ã¢â‚¬Å“Ã¢â‚¬Â¹ Orders Table -->
                     <table id="ordersTable" class="table table-bordered table-striped">
                         <thead>
                             <tr>
@@ -100,6 +100,12 @@ $result = mysqli_query($conn, $sql);
                                         <button class="btn btn-sm btn-info view-details" data-id="<?= $row['id'] ?>">
                                             <i class="fas fa-eye"></i> View
                                         </button>
+                                        <button class="btn btn-sm btn-primary print-invoice" data-id="<?= $row['id'] ?>">
+                                            <i class="fas fa-print"></i> Print Invoice
+                                        </button>
+                                        <button class="btn btn-sm btn-warning print-chit" data-id="<?= $row['id'] ?>">
+                                            <i class="fas fa-receipt"></i> Print Cheat
+                                        </button>
                                         <?php if ($row['paid_amount'] == 0): ?>
                                             <button id="btnTransact" class="btn btn-sm btn-success transact" data-id="<?= $row['id'] ?>">
                                                 <i class="fas fa-cash-register"></i> Transact
@@ -116,7 +122,7 @@ $result = mysqli_query($conn, $sql);
     </div>
 </section>
 
-<!-- 📦 Modal -->
+<!-- ÃƒÂ°Ã…Â¸Ã¢â‚¬Å“Ã‚Â¦ Modal -->
 <div class="modal fade" id="detailsModal" tabindex="-1">
     <div class="modal-dialog modal-lg">
         <div class="modal-content">
@@ -131,7 +137,7 @@ $result = mysqli_query($conn, $sql);
     </div>
 </div>
 
-<!-- 💵 Transact Modal -->
+<!-- ÃƒÂ°Ã…Â¸Ã¢â‚¬â„¢Ã‚Âµ Transact Modal -->
 <div class="modal fade" id="transactModal" tabindex="-1">
   <div class="modal-dialog modal-md">
     <div class="modal-content">
@@ -297,7 +303,7 @@ $(function(){
   "lengthChange": true,
   "autoWidth": false,
   "buttons": ["copy", "csv", "excel", "pdf", "print", "colvis"],
-  "order": [[0, "desc"]] // ✅ Sort by Date (first column) descending
+  "order": [[0, "desc"]] // ÃƒÂ¢Ã…â€œÃ¢â‚¬Â¦ Sort by Date (first column) descending
 });
 
         table.buttons().container().appendTo('#ordersTable_wrapper .col-md-6:eq(0)');
@@ -319,11 +325,11 @@ const today = getLocalDate(0);
 const datePicker = flatpickr("#dateRange", {
   mode: "range",
   dateFormat: "Y-m-d",
-  defaultDate: [yesterday, today], // ✅ preselect yesterday → today
+  defaultDate: [yesterday, today], // ÃƒÂ¢Ã…â€œÃ¢â‚¬Â¦ preselect yesterday ÃƒÂ¢Ã¢â‚¬Â Ã¢â‚¬â„¢ today
   locale: { firstDayOfWeek: 1 },
   onReady: function(selectedDates, dateStr, instance) {
     $('#dateRange').val(`${yesterday} to ${today}`);
-    applyDateFilter(yesterday, today); // ✅ auto apply on load
+    applyDateFilter(yesterday, today); // ÃƒÂ¢Ã…â€œÃ¢â‚¬Â¦ auto apply on load
   }
 });
 
@@ -368,7 +374,7 @@ function applyDateFilter(start, end) {
 
 
         // Modal Details Loader
-        // ✅ Event delegation to support new DataTable rows
+        // ÃƒÂ¢Ã…â€œÃ¢â‚¬Â¦ Event delegation to support new DataTable rows
         $(document).on("click", ".view-details", function() {
             let orderId = $(this).data("id");
             $("#modalContent").html("<p class='text-center'>Loading...</p>");
@@ -379,6 +385,177 @@ function applyDateFilter(start, end) {
             });
         });
     });
+</script>
+<script>
+$(function () {
+  const REPORT_BT_SERVICE = "000018f0-0000-1000-8000-00805f9b34fb";
+  const REPORT_BT_CHARACTERISTIC = "00002af1-0000-1000-8000-00805f9b34fb";
+  const REPORT_BT_CHUNK_SIZE = 180;
+  const reportPrinters = {
+    cashier: { label: "Cashier", storageKey: "bt_cashier_printer_id", device: null, characteristic: null },
+    kitchen: { label: "Kitchen", storageKey: "bt_kitchen_printer_id", device: null, characteristic: null }
+  };
+
+  function reportMoney(value) {
+    return parseInt(value || 0, 10).toLocaleString("id-ID");
+  }
+
+  function reportBluetoothSupported() {
+    return !!(navigator.bluetooth && navigator.bluetooth.getDevices);
+  }
+
+  async function getReportPrinter(role) {
+    if (!reportBluetoothSupported()) {
+      throw new Error("Web Bluetooth requires Chrome/Edge on Android over HTTPS.");
+    }
+
+    const printer = reportPrinters[role];
+    if (printer.characteristic && printer.device && printer.device.gatt.connected) return printer;
+
+    const savedId = localStorage.getItem(printer.storageKey);
+    if (!savedId) {
+      throw new Error(`${printer.label} printer is not selected. Connect it from the Transaksi page first.`);
+    }
+
+    const devices = await navigator.bluetooth.getDevices();
+    printer.device = devices.find(device => device.id === savedId) || null;
+    if (!printer.device) {
+      throw new Error(`${printer.label} printer permission is missing. Reconnect it from the Transaksi page.`);
+    }
+
+    if (!printer.device.gatt.connected) {
+      await printer.device.gatt.connect();
+    }
+
+    const service = await printer.device.gatt.getPrimaryService(REPORT_BT_SERVICE);
+    printer.characteristic = await service.getCharacteristic(REPORT_BT_CHARACTERISTIC);
+    return printer;
+  }
+
+  async function writeReportPrinter(role, escpos) {
+    const printer = await getReportPrinter(role);
+    const bytes = new TextEncoder().encode(escpos);
+
+    for (let offset = 0; offset < bytes.length; offset += REPORT_BT_CHUNK_SIZE) {
+      const chunk = bytes.slice(offset, offset + REPORT_BT_CHUNK_SIZE);
+      if (printer.characteristic.writeValueWithoutResponse) {
+        await printer.characteristic.writeValueWithoutResponse(chunk);
+      } else {
+        await printer.characteristic.writeValue(chunk);
+      }
+      await new Promise(resolve => setTimeout(resolve, 50));
+    }
+  }
+
+  function normalizeReportItems(data) {
+    const items = [];
+
+    (data.items || []).forEach(item => {
+      items.push({
+        name: item.item_name || "-",
+        qty: parseInt(item.quantity || 1, 10) || 1,
+        unitPrice: parseInt(item.item_price || 0, 10) || 0,
+        finalPrice: parseInt(item.item_price || 0, 10) || 0,
+        notes: "",
+        orderType: ""
+      });
+    });
+
+    (data.carwash || []).forEach(item => {
+      const notes = `NoPol: ${item.nopol || ""}, Service: ${item.service || ""}, Ukuran: ${item.ukuran || ""}, Vacuum: ${(item.vacuum || "no") === "yes" ? "Ya" : "Tidak"}`;
+      items.push({
+        name: item.item_name || "Carwash",
+        qty: parseInt(item.qty || 1, 10) || 1,
+        unitPrice: parseInt(item.unit_price || 0, 10) || 0,
+        finalPrice: parseInt(item.total || item.unit_price || 0, 10) || 0,
+        notes,
+        orderType: "carwash"
+      });
+    });
+
+    return items;
+  }
+
+  function buildReportInvoice(data) {
+    const order = data.order || {};
+    const items = normalizeReportItems(data);
+    const subtotal = items.reduce((sum, item) => sum + ((parseInt(item.finalPrice || item.unitPrice || 0, 10) || 0) * item.qty), 0);
+    const grandTotal = parseInt(order.total_amount || subtotal, 10) || 0;
+    const paid = parseInt(order.paid_amount || 0, 10) || 0;
+    const change = parseInt(order.change_amount || 0, 10) || 0;
+    const discount = Math.max(0, subtotal - grandTotal);
+    const discountPercent = subtotal > 0 ? Math.round((discount / subtotal) * 100) : 0;
+
+    let escpos = "\x1B\x40\x1B\x61\x01";
+    escpos += "Dejati Coffee Garden\nIG: instagram.com/dejati.coffee\nWifi: Dejati\nPassword: dejati37\n";
+    escpos += "-----------------------------\n";
+    escpos += `CASHIER DEJATI\nInvoice Reprint\nTable: ${order.table_number || "-"}\n-----------------------------\n`;
+
+    items.forEach(item => {
+      const price = parseInt(item.finalPrice || item.unitPrice || 0, 10) || 0;
+      escpos += `${item.name} x${item.qty} Rp ${(price * item.qty).toLocaleString("id-ID")}\n`;
+      if (item.notes) escpos += `  ${item.notes}\n`;
+    });
+
+    escpos += "-----------------------------\n";
+    escpos += `Subtotal: Rp ${reportMoney(subtotal)}\n`;
+    escpos += `Discount (${discountPercent}%): Rp ${reportMoney(discount)}\n`;
+    escpos += `Total: Rp ${reportMoney(grandTotal)}\n`;
+    escpos += `Bayar: Rp ${reportMoney(paid)}\n`;
+    escpos += `Kembali: Rp ${reportMoney(change)}\n`;
+    escpos += `Metode: ${order.payment_method || "-"}\n`;
+    escpos += "-----------------------------\n";
+    escpos += "Terima kasih atas kunjungannya!\n\n\n";
+    escpos += "\x1D\x56\x00";
+    return escpos;
+  }
+
+  function buildReportChit(title, data) {
+    const order = data.order || {};
+    const items = normalizeReportItems(data);
+    let escpos = "\x1B\x40\x1B\x61\x01";
+    escpos += "Dejati Coffee Garden\n";
+    escpos += "-----------------------------\n";
+    escpos += `${title}\nTable: ${order.table_number || "-"}\n-----------------------------\n`;
+
+    items.forEach(item => {
+      escpos += `${item.name} x${item.qty}\n`;
+      if (item.orderType) escpos += `  Type: ${item.orderType}\n`;
+      if (item.notes) escpos += `  Notes: ${item.notes}\n`;
+    });
+
+    escpos += "-----------------------------\n\n\n";
+    escpos += "\x1D\x56\x00";
+    return escpos;
+  }
+
+  function fetchReportOrder(orderId) {
+    return $.get('/order_get_json/', { id: orderId });
+  }
+
+  $(document).on('click', '.print-invoice', async function () {
+    const orderId = $(this).data('id');
+    try {
+      const data = await fetchReportOrder(orderId);
+      await writeReportPrinter('cashier', buildReportInvoice(data));
+      Swal.fire({ icon: 'success', title: 'Printed', text: 'Invoice sent to cashier printer.' });
+    } catch (error) {
+      Swal.fire({ icon: 'error', title: 'Print Invoice Failed', text: error.message || 'Unable to print invoice.' });
+    }
+  });
+
+  $(document).on('click', '.print-chit', async function () {
+    const orderId = $(this).data('id');
+    try {
+      const data = await fetchReportOrder(orderId);
+      await writeReportPrinter('cashier', buildReportChit('CASHIER CHIT REPRINT', data));
+      await writeReportPrinter('kitchen', buildReportChit('KITCHEN CHIT REPRINT', data));
+      Swal.fire({ icon: 'success', title: 'Printed', text: 'Cheat sent to cashier and kitchen printers.' });
+    } catch (error) {
+      Swal.fire({ icon: 'error', title: 'Print Cheat Failed', text: error.message || 'Unable to print cheat.' });
+    }
+  });
+});
 </script>
 </body>
 
