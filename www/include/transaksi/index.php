@@ -110,6 +110,13 @@ function formatPrice($number)
                                 <button class="btn btn-success btn-block mt-2" id="payNow">Pay Now</button>
                                 <button class="btn btn-info btn-block mb-2" id="openBill">Open Bill</button>
                                 <button class="btn btn-danger btn-block mt-2" id="clearCart">Clear Transaction</button>
+                                <div class="border-top pt-2 mt-2">
+                                    <small class="text-muted d-block mb-1">Bluetooth Printers</small>
+                                    <button type="button" class="btn btn-outline-primary btn-sm btn-block" id="connectCashierPrinter">Connect Cashier Printer</button>
+                                    <small class="d-block text-muted mb-1" id="cashierPrinterStatus">Cashier: not connected</small>
+                                    <button type="button" class="btn btn-outline-primary btn-sm btn-block" id="connectKitchenPrinter">Connect Kitchen Printer</button>
+                                    <small class="d-block text-muted" id="kitchenPrinterStatus">Kitchen: not connected</small>
+                                </div>
                             </div>
                         </div>
                     </div>
@@ -514,7 +521,7 @@ if (!empty($imported_order_json)):
 
   // Save to localStorage exactly as script.php expects
   localStorage.setItem('cart', JSON.stringify(importedCart));
-  console.log('ÃƒÆ’Ã‚Â¢Ãƒâ€¦Ã¢â‚¬Å“ÃƒÂ¢Ã¢â€šÂ¬Ã‚Â¦ Imported cart written to localStorage:', importedCart);
+  console.log('ÃƒÆ’Ã†â€™Ãƒâ€šÃ‚Â¢ÃƒÆ’Ã¢â‚¬Â¦ÃƒÂ¢Ã¢â€šÂ¬Ã…â€œÃƒÆ’Ã‚Â¢ÃƒÂ¢Ã¢â‚¬Å¡Ã‚Â¬Ãƒâ€šÃ‚Â¦ Imported cart written to localStorage:', importedCart);
 
   // We DO NOT directly modify table HTML here.
   // include/transaksi/script.php will call updateCartDisplay() on DOM ready
