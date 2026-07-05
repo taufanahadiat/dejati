@@ -132,7 +132,7 @@ function formatPrice($number)
         <div class="modal-body px-4 py-3">
           <div class="form-group">
             <label for="open-table-number" class="font-weight-semibold">Table Number</label>
-            <input type="number" class="form-control form-control-lg" id="open-table-number" name="table_number" placeholder="Enter table number" required>
+            <input type="text" class="form-control form-control-lg" id="open-table-number" name="table_number" placeholder="Enter table number, e.g. A1 / VIP 2 / Takeaway" required>
           </div>
 
           <div class="form-group mt-3">
@@ -167,7 +167,7 @@ function formatPrice($number)
                                 <!-- Table number -->
                                 <div class="form-group">
                                     <label for="table-number">Table Number</label>
-                                    <input type="number" class="form-control" id="table-number" name="table_number" required>
+                                    <input type="text" class="form-control" id="table-number" name="table_number" placeholder="e.g. A1 / VIP 2 / Takeaway" required>
                                 </div>
 
                                 <!-- Payment method -->
@@ -181,19 +181,32 @@ function formatPrice($number)
                                     </select>
                                 </div>
 
-                                <!-- Total amount -->
                                 <div class="form-group">
-                                    <label>Total Price</label>
+                                    <label>Subtotal</label>
+                                    <input type="text" class="form-control" id="modal-subtotal" readonly>
+                                </div>
+
+                                <div class="form-group">
+                                    <label for="payment-discount">Discount</label>
+                                    <input type="text" class="form-control" id="payment-discount" inputmode="numeric" placeholder="0">
+                                    <small class="form-text text-muted">Discount is applied to the final payment only.</small>
+                                </div>
+
+                                <div class="form-group">
+                                    <label>Grand Total</label>
                                     <input type="text" class="form-control" id="modal-total" readonly>
                                 </div>
 
-                                <!-- Customer payment -->
                                 <div class="form-group">
                                     <label for="customer-pay">Customer Pay</label>
-                                    <input type="number" class="form-control" id="customer-pay" required>
+                                    <input type="text" class="form-control" id="customer-pay" inputmode="numeric" required>
+                                    <div class="btn-group btn-group-sm mt-2" role="group" aria-label="Quick payment buttons">
+                                        <button type="button" class="btn btn-outline-primary quick-pay" data-amount="50000">50,000</button>
+                                        <button type="button" class="btn btn-outline-primary quick-pay" data-amount="100000">100,000</button>
+                                        <button type="button" class="btn btn-outline-primary quick-pay" data-amount="500000">500,000</button>
+                                    </div>
                                 </div>
 
-                                <!-- Change -->
                                 <div class="form-group">
                                     <label>Change</label>
                                     <input type="text" class="form-control" id="change-amount" readonly>
@@ -342,15 +355,6 @@ function formatPrice($number)
                                     </div>
                                 </div>
 
-                                <!-- Discount Section -->
-                                <div class="form-group col-md-6 ml-1">
-                                    <div class=" row">
-                                        <input type="number" id="discountValue" class="form-control mt-2 col-md-6" placeholder="Disc.">
-                                        <div class="d-flex align-items-center">
-                                            <input type="checkbox" name="discountType" id="discountPercent" value="percent" checked data-bootstrap-switch data-on-text="%" data-off-text="Rp" data-on-color="dark" data-off-color="secondary">
-                                        </div>
-                                    </div>
-                                </div>
 
                                 <!-- Order Type Section -->
                                 <div class="row form-group ml-1">
@@ -510,7 +514,7 @@ if (!empty($imported_order_json)):
 
   // Save to localStorage exactly as script.php expects
   localStorage.setItem('cart', JSON.stringify(importedCart));
-  console.log('✅ Imported cart written to localStorage:', importedCart);
+  console.log('Ã¢Å“â€¦ Imported cart written to localStorage:', importedCart);
 
   // We DO NOT directly modify table HTML here.
   // include/transaksi/script.php will call updateCartDisplay() on DOM ready
