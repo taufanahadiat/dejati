@@ -14,7 +14,7 @@ $result = mysqli_query($conn, $sql);
 <!-- Flatpickr DateTime Picker -->
 <link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/flatpickr/dist/flatpickr.min.css">
 <script src="https://cdn.jsdelivr.net/npm/flatpickr"></script>
-<script src="/assets/js/bluetooth-printer-manager.js?v=2026070501"></script>
+<script src="/assets/js/bluetooth-printer-manager.js?v=2026070502"></script>
 
 <!-- Content Wrapper -->
 <section class="content">
@@ -411,27 +411,35 @@ function applyDateFilter(start, end) {
 </script>
 <script>
 $(function () {
-  if (!window.DejatiBluetoothPrinter) {
-    throw new Error("Bluetooth printer manager is not loaded.");
+  if (window.DejatiBluetoothPrinter) {
+    window.DejatiBluetoothPrinter.bindStatus({
+      cashier: "#reportCashierPrinterStatus",
+      kitchen: "#reportKitchenPrinterStatus"
+    });
+  } else {
+    console.error("Bluetooth printer manager is not loaded.");
+    $("#reportCashierPrinterStatus").text("Cashier: printer script not loaded");
+    $("#reportKitchenPrinterStatus").text("Kitchen: printer script not loaded");
   }
-
-  window.DejatiBluetoothPrinter.bindStatus({
-    cashier: "#reportCashierPrinterStatus",
-    kitchen: "#reportKitchenPrinterStatus"
-  });
 
   function reportMoney(value) {
     return parseInt(value || 0, 10).toLocaleString("id-ID");
   }
 
+  function requirePrinterManager() {
+    if (!window.DejatiBluetoothPrinter) {
+      throw new Error("Printer script is not loaded. Refresh the app once and try again.");
+    }
+    return window.DejatiBluetoothPrinter;
+  }
+
   async function getReportPrinter(role, forceChooser = false) {
-    return forceChooser
-      ? window.DejatiBluetoothPrinter.setup(role)
-      : window.DejatiBluetoothPrinter.connect(role);
+    const manager = requirePrinterManager();
+    return forceChooser ? manager.setup(role) : manager.connect(role);
   }
 
   async function writeReportPrinter(role, escpos) {
-    await window.DejatiBluetoothPrinter.write(role, escpos);
+    await requirePrinterManager().write(role, escpos);
   }
 
   function normalizeReportItems(data) {
@@ -465,7 +473,7 @@ $(function () {
 
   window.getReportPrinter = getReportPrinter;
   window.writeReportPrinter = writeReportPrinter;
-  window.DejatiBluetoothPrinter.refreshStatus();
+  if (window.DejatiBluetoothPrinter) window.DejatiBluetoothPrinter.refreshStatus();
 
   $("#reportConnectCashierPrinter").off("click").on("click", async function () {
     try {

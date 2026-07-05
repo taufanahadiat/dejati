@@ -538,14 +538,16 @@ $(function () {
     });
   });
 
-  if (!window.DejatiBluetoothPrinter) {
-    throw new Error("Bluetooth printer manager is not loaded.");
+  if (window.DejatiBluetoothPrinter) {
+    window.DejatiBluetoothPrinter.bindStatus({
+      cashier: "#cashierPrinterStatus",
+      kitchen: "#kitchenPrinterStatus"
+    });
+  } else {
+    console.error("Bluetooth printer manager is not loaded.");
+    $("#cashierPrinterStatus").text("Cashier: printer script not loaded");
+    $("#kitchenPrinterStatus").text("Kitchen: printer script not loaded");
   }
-
-  window.DejatiBluetoothPrinter.bindStatus({
-    cashier: "#cashierPrinterStatus",
-    kitchen: "#kitchenPrinterStatus"
-  });
 
   function showPrinterSetupError(error) {
     Swal.fire({
@@ -555,18 +557,24 @@ $(function () {
     });
   }
 
+  function requirePrinterManager() {
+    if (!window.DejatiBluetoothPrinter) {
+      throw new Error("Printer script is not loaded. Refresh the app once and try again.");
+    }
+    return window.DejatiBluetoothPrinter;
+  }
+
   async function connectBluetoothPrinter(role, forceChooser = false) {
-    return forceChooser
-      ? window.DejatiBluetoothPrinter.setup(role)
-      : window.DejatiBluetoothPrinter.connect(role);
+    const manager = requirePrinterManager();
+    return forceChooser ? manager.setup(role) : manager.connect(role);
   }
 
   async function writeEscposToPrinter(role, escpos) {
-    await window.DejatiBluetoothPrinter.write(role, escpos);
+    await requirePrinterManager().write(role, escpos);
   }
 
   async function printBluetoothJobsSequentially(jobs) {
-    await window.DejatiBluetoothPrinter.writeSequential(jobs);
+    await requirePrinterManager().writeSequential(jobs);
   }
 
   function buildCashierReceipt(tableNumber, items, subtotal, discountPercent, discount, grandTotal, paid, change, method) {
@@ -665,7 +673,7 @@ $(function () {
     }
   });
 
-  window.DejatiBluetoothPrinter.refreshStatus();
+  if (window.DejatiBluetoothPrinter) window.DejatiBluetoothPrinter.refreshStatus();
 
 $('#clearCart').on('click', function() {
     if (confirm('Hapus Transaksi Ini?')) {

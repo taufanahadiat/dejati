@@ -2,11 +2,12 @@
   const SERVICE_UUID = "000018f0-0000-1000-8000-00805f9b34fb";
   const CHARACTERISTIC_UUID = "00002af1-0000-1000-8000-00805f9b34fb";
   const CHUNK_SIZE = 180;
-  const SETTINGS_KEY = "dejati_bluetooth_printer_settings_v1";
+  const SETTINGS_KEY = "dejati_bluetooth_printer_settings_v2";
+  const LEGACY_SETTINGS_KEY = "dejati_bluetooth_printer_settings_v1";
 
   const roles = {
-    cashier: { label: "Cashier", legacyKey: "bt_cashier_printer_id" },
-    kitchen: { label: "Kitchen", legacyKey: "bt_kitchen_printer_id" }
+    cashier: { label: "Cashier", legacyKey: "bt_cashier_printer_id", order: 0 },
+    kitchen: { label: "Kitchen", legacyKey: "bt_kitchen_printer_id", order: 1 }
   };
 
   const state = {
@@ -22,12 +23,27 @@
     return !!(navigator.bluetooth && navigator.bluetooth.getDevices);
   }
 
-  function readSettings() {
+  function readJson(key) {
     try {
-      return JSON.parse(localStorage.getItem(SETTINGS_KEY) || "{}");
+      return JSON.parse(localStorage.getItem(key) || "{}");
     } catch (error) {
       return {};
     }
+  }
+
+  function readSettings() {
+    const settings = readJson(SETTINGS_KEY);
+    const legacySettings = readJson(LEGACY_SETTINGS_KEY);
+
+    Object.keys(roles).forEach(role => {
+      if (!settings[role] && legacySettings[role]) settings[role] = legacySettings[role];
+      if (!settings[role]) {
+        const legacyId = localStorage.getItem(roles[role].legacyKey);
+        if (legacyId) settings[role] = { id: legacyId, name: roles[role].label };
+      }
+    });
+
+    return settings;
   }
 
   function writeSettings(settings) {
@@ -36,19 +52,16 @@
 
   function getSaved(role) {
     const settings = readSettings();
-    if (settings[role] && settings[role].id) return settings[role];
-
-    const legacyId = localStorage.getItem(roles[role].legacyKey);
-    if (!legacyId) return null;
-
-    settings[role] = { id: legacyId, name: roles[role].label };
-    writeSettings(settings);
-    return settings[role];
+    return settings[role] && settings[role].id ? settings[role] : null;
   }
 
   function saveRole(role, device) {
     const settings = readSettings();
-    settings[role] = { id: device.id, name: device.name || roles[role].label };
+    settings[role] = {
+      id: device.id,
+      name: device.name || roles[role].label,
+      savedAt: new Date().toISOString()
+    };
     writeSettings(settings);
     localStorage.setItem(roles[role].legacyKey, device.id);
   }
@@ -70,13 +83,54 @@
     refreshStatus();
   }
 
-  function refreshStatus() {
+  function rppDevices(devices) {
+    return devices.filter(device => (device.name || "").toUpperCase().indexOf("RPP") === 0);
+  }
+
+  async function getPermittedDevices() {
+    if (!canRestorePermission()) return [];
+    return navigator.bluetooth.getDevices();
+  }
+
+  async function repairSettingsFromPermissions() {
+    if (!canRestorePermission()) return readSettings();
+
+    const devices = rppDevices(await getPermittedDevices());
+    if (!devices.length) return readSettings();
+
+    const settings = readSettings();
+    const usedIds = new Set(Object.values(settings).filter(Boolean).map(item => item.id));
+
     Object.keys(roles).forEach(role => {
-      const saved = getSaved(role);
+      if (settings[role] && devices.some(device => device.id === settings[role].id)) return;
+
+      const preferred = devices[roles[role].order] || devices.find(device => !usedIds.has(device.id));
+      if (preferred) {
+        settings[role] = {
+          id: preferred.id,
+          name: preferred.name || roles[role].label,
+          savedAt: new Date().toISOString(),
+          repaired: true
+        };
+        usedIds.add(preferred.id);
+      }
+    });
+
+    writeSettings(settings);
+    return settings;
+  }
+
+  async function refreshStatus() {
+    const settings = await repairSettingsFromPermissions().catch(() => readSettings());
+
+    Object.keys(roles).forEach(role => {
+      const saved = settings[role];
       if (state[role].device && state[role].device.gatt && state[role].device.gatt.connected) {
         status(role, state[role].device.name || "connected", true);
-      } else if (saved) {
+      } else if (saved && saved.id) {
         status(role, `saved (${saved.name || "ready"})`, false);
+      } else if (!canRestorePermission()) {
+        status(role, "browser cannot restore saved devices", false);
       } else {
         status(role, "not configured", false);
       }
@@ -84,13 +138,15 @@
   }
 
   async function findSavedDevice(role) {
-    const saved = getSaved(role);
-    if (!saved) return null;
+    const settings = await repairSettingsFromPermissions();
+    const saved = settings[role];
+    if (!saved || !saved.id) return null;
+
     if (!canRestorePermission()) {
-      throw new Error("This browser cannot reuse saved Bluetooth permissions. Use latest Chrome/Edge Android, or keep printing from the same page after connecting.");
+      throw new Error("This browser cannot restore saved Bluetooth devices. Use Chrome/Edge Android with Web Bluetooth getDevices support.");
     }
 
-    const devices = await navigator.bluetooth.getDevices();
+    const devices = await getPermittedDevices();
     return devices.find(device => device.id === saved.id) || null;
   }
 
@@ -99,9 +155,11 @@
       throw new Error("Web Bluetooth requires Chrome/Edge on Android over HTTPS.");
     }
 
+    if (!roles[role]) throw new Error(`Unknown printer role: ${role}`);
+
     status(role, "select printer", false);
     const device = await navigator.bluetooth.requestDevice({
-      filters: [{ namePrefix: "RPP" }, { services: [SERVICE_UUID] }],
+      filters: [{ namePrefix: "RPP" }],
       optionalServices: [SERVICE_UUID]
     });
 
@@ -109,7 +167,13 @@
     state[role].characteristic = null;
     saveRole(role, device);
     await connect(role);
+    await refreshStatus();
     return state[role];
+  }
+
+  async function setupCashierAndKitchen() {
+    await setup("cashier");
+    await setup("kitchen");
   }
 
   async function connect(role) {
@@ -120,12 +184,10 @@
     if (!roles[role]) throw new Error(`Unknown printer role: ${role}`);
 
     let device = state[role].device;
-    if (!device) {
-      device = await findSavedDevice(role);
-    }
+    if (!device) device = await findSavedDevice(role);
 
     if (!device) {
-      throw new Error(`${roles[role].label} printer is not configured. Click Connect ${roles[role].label} Printer once in printer settings.`);
+      throw new Error(`${roles[role].label} printer is not saved. Use Connect ${roles[role].label} Printer once, then print again.`);
     }
 
     state[role].device = device;
@@ -143,9 +205,7 @@
     }
 
     status(role, "connecting", false);
-    if (!device.gatt.connected) {
-      await device.gatt.connect();
-    }
+    if (!device.gatt.connected) await device.gatt.connect();
 
     const service = await device.gatt.getPrimaryService(SERVICE_UUID);
     state[role].characteristic = await service.getCharacteristic(CHARACTERISTIC_UUID);
@@ -175,15 +235,41 @@
     }
   }
 
+  function forget(role) {
+    const settings = readSettings();
+    if (role) {
+      delete settings[role];
+      localStorage.removeItem(roles[role].legacyKey);
+      state[role].device = null;
+      state[role].characteristic = null;
+    } else {
+      Object.keys(roles).forEach(item => {
+        localStorage.removeItem(roles[item].legacyKey);
+        state[item].device = null;
+        state[item].characteristic = null;
+      });
+      localStorage.removeItem(SETTINGS_KEY);
+      localStorage.removeItem(LEGACY_SETTINGS_KEY);
+      refreshStatus();
+      return;
+    }
+    writeSettings(settings);
+    refreshStatus();
+  }
+
   window.DejatiBluetoothPrinter = {
     supported,
     canRestorePermission,
     bindStatus,
     refreshStatus,
     setup,
+    setupCashierAndKitchen,
     connect,
     write,
     writeSequential,
-    getSaved
+    getSaved,
+    getPermittedDevices,
+    repairSettingsFromPermissions,
+    forget
   };
 })(window);
