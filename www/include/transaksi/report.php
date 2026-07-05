@@ -14,6 +14,7 @@ $result = mysqli_query($conn, $sql);
 <!-- Flatpickr DateTime Picker -->
 <link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/flatpickr/dist/flatpickr.min.css">
 <script src="https://cdn.jsdelivr.net/npm/flatpickr"></script>
+<script src="/assets/js/bluetooth-printer-manager.js?v=2026070501"></script>
 
 <!-- Content Wrapper -->
 <section class="content">
@@ -410,88 +411,27 @@ function applyDateFilter(start, end) {
 </script>
 <script>
 $(function () {
-  const REPORT_BT_SERVICE = "000018f0-0000-1000-8000-00805f9b34fb";
-  const REPORT_BT_CHARACTERISTIC = "00002af1-0000-1000-8000-00805f9b34fb";
-  const REPORT_BT_CHUNK_SIZE = 180;
-  const reportPrinters = {
-    cashier: { label: "Cashier", storageKey: "bt_cashier_printer_id", device: null, characteristic: null },
-    kitchen: { label: "Kitchen", storageKey: "bt_kitchen_printer_id", device: null, characteristic: null }
-  };
+  if (!window.DejatiBluetoothPrinter) {
+    throw new Error("Bluetooth printer manager is not loaded.");
+  }
+
+  window.DejatiBluetoothPrinter.bindStatus({
+    cashier: "#reportCashierPrinterStatus",
+    kitchen: "#reportKitchenPrinterStatus"
+  });
 
   function reportMoney(value) {
     return parseInt(value || 0, 10).toLocaleString("id-ID");
   }
 
-  function reportBluetoothSupported() {
-    return !!(navigator.bluetooth && navigator.bluetooth.requestDevice);
-  }
-
-  function setReportPrinterStatus(role, status) {
-    const printer = reportPrinters[role];
-    const statusId = role === "cashier" ? "#reportCashierPrinterStatus" : "#reportKitchenPrinterStatus";
-    $(statusId)
-      .text(`${printer.label}: ${status}`)
-      .toggleClass("text-success", status === "connected")
-      .toggleClass("text-muted", status !== "connected");
-  }
-
   async function getReportPrinter(role, forceChooser = false) {
-    if (!reportBluetoothSupported()) {
-      throw new Error("Web Bluetooth requires Chrome/Edge on Android over HTTPS.");
-    }
-
-    const printer = reportPrinters[role];
-    if (printer.characteristic && printer.device && printer.device.gatt.connected && !forceChooser) {
-      setReportPrinterStatus(role, "connected");
-      return printer;
-    }
-
-    let device = forceChooser ? null : printer.device;
-    const savedId = localStorage.getItem(printer.storageKey);
-
-    if (!device && savedId && navigator.bluetooth.getDevices) {
-      const devices = await navigator.bluetooth.getDevices();
-      device = devices.find(item => item.id === savedId) || null;
-    }
-
-    if (!device) {
-      device = await navigator.bluetooth.requestDevice({
-        filters: [{ namePrefix: "RPP" }, { services: [REPORT_BT_SERVICE] }],
-        optionalServices: [REPORT_BT_SERVICE]
-      });
-      localStorage.setItem(printer.storageKey, device.id);
-    }
-
-    printer.device = device;
-    printer.device.addEventListener("gattserverdisconnected", function () {
-      printer.characteristic = null;
-      setReportPrinterStatus(role, "disconnected");
-    }, { once: true });
-
-    if (!printer.device.gatt.connected) {
-      setReportPrinterStatus(role, "connecting");
-      await printer.device.gatt.connect();
-    }
-
-    const service = await printer.device.gatt.getPrimaryService(REPORT_BT_SERVICE);
-    printer.characteristic = await service.getCharacteristic(REPORT_BT_CHARACTERISTIC);
-    setReportPrinterStatus(role, "connected");
-    return printer;
+    return forceChooser
+      ? window.DejatiBluetoothPrinter.setup(role)
+      : window.DejatiBluetoothPrinter.connect(role);
   }
 
   async function writeReportPrinter(role, escpos) {
-    const printer = await getReportPrinter(role);
-    const bytes = new TextEncoder().encode(escpos);
-
-    for (let offset = 0; offset < bytes.length; offset += REPORT_BT_CHUNK_SIZE) {
-      const chunk = bytes.slice(offset, offset + REPORT_BT_CHUNK_SIZE);
-      if (printer.characteristic.writeValueWithoutResponse) {
-        await printer.characteristic.writeValueWithoutResponse(chunk);
-      } else {
-        await printer.characteristic.writeValue(chunk);
-      }
-      await new Promise(resolve => setTimeout(resolve, 50));
-    }
+    await window.DejatiBluetoothPrinter.write(role, escpos);
   }
 
   function normalizeReportItems(data) {
@@ -525,13 +465,7 @@ $(function () {
 
   window.getReportPrinter = getReportPrinter;
   window.writeReportPrinter = writeReportPrinter;
-
-  if (localStorage.getItem(reportPrinters.cashier.storageKey)) {
-    setReportPrinterStatus("cashier", "saved");
-  }
-  if (localStorage.getItem(reportPrinters.kitchen.storageKey)) {
-    setReportPrinterStatus("kitchen", "saved");
-  }
+  window.DejatiBluetoothPrinter.refreshStatus();
 
   $("#reportConnectCashierPrinter").off("click").on("click", async function () {
     try {

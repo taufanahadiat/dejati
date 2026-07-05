@@ -531,5 +531,6 @@ if (!empty($imported_order_json)):
 </script>
 <?php endif; ?>
 
+<script src="/assets/js/bluetooth-printer-manager.js?v=2026070501"></script>
 <!-- Script -->
 <?php include 'include/transaksi/script.php'; ?>

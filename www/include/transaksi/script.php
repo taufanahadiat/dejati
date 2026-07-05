@@ -493,9 +493,8 @@ $(function () {
 
     try {
       await connectBluetoothPrinter("cashier");
-      await connectBluetoothPrinter("kitchen");
     } catch (error) {
-      Swal.fire({ icon: "warning", title: "Printers Required", text: error.message || "Please connect both Cashier and Kitchen Bluetooth printers before printing." });
+      Swal.fire({ icon: "warning", title: "Cashier Printer Required", text: error.message || "Please connect and save the Cashier printer before payment." });
       return;
     }
     if (discountPercent > 100) {
@@ -539,89 +538,35 @@ $(function () {
     });
   });
 
-  const BLUETOOTH_PRINTER_SERVICE = "000018f0-0000-1000-8000-00805f9b34fb";
-  const BLUETOOTH_PRINTER_CHARACTERISTIC = "00002af1-0000-1000-8000-00805f9b34fb";
-  const BLUETOOTH_WRITE_CHUNK_SIZE = 180;
-  const bluetoothPrinters = {
-    cashier: { label: "Cashier", device: null, characteristic: null, storageKey: "bt_cashier_printer_id", statusSelector: "#cashierPrinterStatus" },
-    kitchen: { label: "Kitchen", device: null, characteristic: null, storageKey: "bt_kitchen_printer_id", statusSelector: "#kitchenPrinterStatus" }
-  };
-
-  function setPrinterStatus(role, message, connected = false) {
-    const printer = bluetoothPrinters[role];
-    $(printer.statusSelector)
-      .text(`${printer.label}: ${message}`)
-      .toggleClass("text-success", connected)
-      .toggleClass("text-muted", !connected);
+  if (!window.DejatiBluetoothPrinter) {
+    throw new Error("Bluetooth printer manager is not loaded.");
   }
 
-  function bluetoothSupported() {
-    return !!(navigator.bluetooth && navigator.bluetooth.requestDevice);
+  window.DejatiBluetoothPrinter.bindStatus({
+    cashier: "#cashierPrinterStatus",
+    kitchen: "#kitchenPrinterStatus"
+  });
+
+  function showPrinterSetupError(error) {
+    Swal.fire({
+      icon: "warning",
+      title: "Printer Setting Required",
+      text: error.message || "Connect and save the Cashier and Kitchen printers once before printing."
+    });
   }
 
   async function connectBluetoothPrinter(role, forceChooser = false) {
-    if (!bluetoothSupported()) {
-      Swal.fire({ icon: "error", title: "Bluetooth Unsupported", text: "Use Chrome/Edge on Android over HTTPS to print with Web Bluetooth." });
-      return null;
-    }
-
-    const printer = bluetoothPrinters[role];
-    let device = printer.device;
-
-    if (!device && !forceChooser && navigator.bluetooth.getDevices) {
-      const savedId = localStorage.getItem(printer.storageKey);
-      const devices = await navigator.bluetooth.getDevices();
-      device = devices.find(item => item.id === savedId) || null;
-    }
-
-    if (!device) {
-      device = await navigator.bluetooth.requestDevice({
-        filters: [{ namePrefix: "RPP" }, { services: [BLUETOOTH_PRINTER_SERVICE] }],
-        optionalServices: [BLUETOOTH_PRINTER_SERVICE]
-      });
-      localStorage.setItem(printer.storageKey, device.id);
-    }
-
-    printer.device = device;
-    device.addEventListener("gattserverdisconnected", function () {
-      printer.characteristic = null;
-      setPrinterStatus(role, "disconnected");
-    });
-
-    if (!device.gatt.connected) {
-      setPrinterStatus(role, "connecting...");
-      await device.gatt.connect();
-    }
-
-    const service = await device.gatt.getPrimaryService(BLUETOOTH_PRINTER_SERVICE);
-    printer.characteristic = await service.getCharacteristic(BLUETOOTH_PRINTER_CHARACTERISTIC);
-    setPrinterStatus(role, device.name || "connected", true);
-    return printer;
+    return forceChooser
+      ? window.DejatiBluetoothPrinter.setup(role)
+      : window.DejatiBluetoothPrinter.connect(role);
   }
 
   async function writeEscposToPrinter(role, escpos) {
-    const printer = await connectBluetoothPrinter(role);
-    if (!printer || !printer.characteristic) {
-      throw new Error(`${printer ? printer.label : role} printer is not connected.`);
-    }
-
-    const bytes = new TextEncoder().encode(escpos);
-    for (let offset = 0; offset < bytes.length; offset += BLUETOOTH_WRITE_CHUNK_SIZE) {
-      const chunk = bytes.slice(offset, offset + BLUETOOTH_WRITE_CHUNK_SIZE);
-      if (printer.characteristic.writeValueWithoutResponse) {
-        await printer.characteristic.writeValueWithoutResponse(chunk);
-      } else {
-        await printer.characteristic.writeValue(chunk);
-      }
-      await new Promise(resolve => setTimeout(resolve, 50));
-    }
+    await window.DejatiBluetoothPrinter.write(role, escpos);
   }
 
   async function printBluetoothJobsSequentially(jobs) {
-    for (const job of jobs) {
-      await writeEscposToPrinter(job.role, job.escpos);
-      await new Promise(resolve => setTimeout(resolve, 500));
-    }
+    await window.DejatiBluetoothPrinter.writeSequential(jobs);
   }
 
   function buildCashierReceipt(tableNumber, items, subtotal, discountPercent, discount, grandTotal, paid, change, method) {
@@ -703,27 +648,26 @@ $(function () {
 
 
   $("#connectCashierPrinter").off("click").on("click", async function () {
-    try { await connectBluetoothPrinter("cashier", true); }
-    catch (error) { Swal.fire({ icon: "error", title: "Cashier Printer", text: error.message || "Unable to connect printer." }); }
+    try {
+      await connectBluetoothPrinter("cashier", true);
+      Swal.fire({ icon: "success", title: "Saved", text: "Cashier printer saved for future prints." });
+    } catch (error) {
+      Swal.fire({ icon: "error", title: "Cashier Printer", text: error.message || "Unable to connect printer." });
+    }
   });
 
   $("#connectKitchenPrinter").off("click").on("click", async function () {
-    try { await connectBluetoothPrinter("kitchen", true); }
-    catch (error) { Swal.fire({ icon: "error", title: "Kitchen Printer", text: error.message || "Unable to connect printer." }); }
+    try {
+      await connectBluetoothPrinter("kitchen", true);
+      Swal.fire({ icon: "success", title: "Saved", text: "Kitchen printer saved for future prints." });
+    } catch (error) {
+      Swal.fire({ icon: "error", title: "Kitchen Printer", text: error.message || "Unable to connect printer." });
+    }
   });
 
-  if (bluetoothSupported() && navigator.bluetooth.getDevices) {
-    if (localStorage.getItem(bluetoothPrinters.cashier.storageKey)) {
-      setPrinterStatus("cashier", "saved");
-      connectBluetoothPrinter("cashier").catch(() => setPrinterStatus("cashier", "saved"));
-    }
-    if (localStorage.getItem(bluetoothPrinters.kitchen.storageKey)) {
-      setPrinterStatus("kitchen", "saved");
-      connectBluetoothPrinter("kitchen").catch(() => setPrinterStatus("kitchen", "saved"));
-    }
-  }
+  window.DejatiBluetoothPrinter.refreshStatus();
 
-  $('#clearCart').on('click', function() {
+$('#clearCart').on('click', function() {
     if (confirm('Hapus Transaksi Ini?')) {
         localStorage.removeItem('cart');
         cart = [];
