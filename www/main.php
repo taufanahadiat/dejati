@@ -1,5 +1,6 @@
 <?php
 //cek session
+require_once __DIR__ . '/config/session.php';
 session_start();
 
 require_once 'config/config.php';
@@ -87,12 +88,12 @@ if ($role === 'Kasir') {
       const breadcrumbEl = document.createElement('ol');
       breadcrumbEl.className = 'breadcrumb bg-transparent mb-0 pl-2 p-0 d-flex align-items-center';
 
-      // ðŸŸ© Add the sidebar toggle button FIRST
+      // ÃƒÂ°Ã…Â¸Ã…Â¸Ã‚Â© Add the sidebar toggle button FIRST
       const toggleLi = document.createElement('li');
       toggleLi.className = 'nav-item mr-2';
     
 
-      // ðŸŸ¦ Then, loop through breadcrumb items
+      // ÃƒÂ°Ã…Â¸Ã…Â¸Ã‚Â¦ Then, loop through breadcrumb items
       arr.forEach((label, index) => {
         const li = document.createElement('li');
         li.classList.add('breadcrumb-item');
@@ -126,7 +127,7 @@ if ($role === 'Kasir') {
       renderBreadcrumb(labels);
     }
 
-    // âœ… jQuery way for Bootstrap 4 tabs
+    // ÃƒÂ¢Ã…â€œÃ¢â‚¬Â¦ jQuery way for Bootstrap 4 tabs
     $('[data-toggle="pill"][data-breadcrumb]').on('shown.bs.tab', function(e) {
       try {
         const breadcrumbData = JSON.parse(this.dataset.breadcrumb);
@@ -142,8 +143,8 @@ if ($role === 'Kasir') {
   if ('serviceWorker' in navigator) {
     window.addEventListener('load', () => {
       navigator.serviceWorker.register('/service-worker.js')
-        .then(reg => console.log('âœ… Service worker registered:', reg.scope))
-        .catch(err => console.error('âŒ SW registration failed:', err));
+        .then(reg => console.log('ÃƒÂ¢Ã…â€œÃ¢â‚¬Â¦ Service worker registered:', reg.scope))
+        .catch(err => console.error('ÃƒÂ¢Ã‚ÂÃ…â€™ SW registration failed:', err));
     });
   }
   </script>
