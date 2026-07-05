@@ -187,9 +187,9 @@ function formatPrice($number)
                                 </div>
 
                                 <div class="form-group">
-                                    <label for="payment-discount">Discount</label>
+                                    <label for="payment-discount">Discount (%)</label>
                                     <input type="text" class="form-control" id="payment-discount" inputmode="numeric" placeholder="0">
-                                    <small class="form-text text-muted">Discount is applied to the final payment only.</small>
+                                    <small class="form-text text-muted">Example: enter 10 for 10% discount.</small>
                                 </div>
 
                                 <div class="form-group">
@@ -514,7 +514,7 @@ if (!empty($imported_order_json)):
 
   // Save to localStorage exactly as script.php expects
   localStorage.setItem('cart', JSON.stringify(importedCart));
-  console.log('Ã¢Å“â€¦ Imported cart written to localStorage:', importedCart);
+  console.log('ÃƒÆ’Ã‚Â¢Ãƒâ€¦Ã¢â‚¬Å“ÃƒÂ¢Ã¢â€šÂ¬Ã‚Â¦ Imported cart written to localStorage:', importedCart);
 
   // We DO NOT directly modify table HTML here.
   // include/transaksi/script.php will call updateCartDisplay() on DOM ready

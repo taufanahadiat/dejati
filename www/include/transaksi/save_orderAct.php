@@ -11,7 +11,7 @@ $tableNumber = trim($_POST['tableNumber'] ?? '');
 $paymentMethod = strtolower(trim($_POST['paymentMethod'] ?? ''));
 $status = $_POST['status'] ?? '';
 $postedPaid = parse_money_value($_POST['paid'] ?? '0');
-$postedDiscount = parse_money_value($_POST['discount'] ?? '0');
+$postedDiscountPercent = max(0, parse_money_value($_POST['discountPercent'] ?? $_POST['discount'] ?? '0'));
 $items = json_decode($_POST['items'] ?? '[]', true);
 
 if ($tableNumber === '' || $paymentMethod === '' || empty($items) || !is_array($items)) {
@@ -39,11 +39,12 @@ if ($subtotal <= 0) {
     exit;
 }
 
-if ($postedDiscount > $subtotal) {
-    echo json_encode(['status' => 'error', 'message' => 'Discount cannot be greater than subtotal']);
+if ($postedDiscountPercent > 100) {
+    echo json_encode(['status' => 'error', 'message' => 'Discount percentage cannot be greater than 100%']);
     exit;
 }
 
+$postedDiscount = (int)floor($subtotal * $postedDiscountPercent / 100);
 $total = max(0, $subtotal - $postedDiscount);
 $isOpenBill = $status === 'open_bill';
 $isNonCash = in_array($paymentMethod, ['credit_card', 'qris'], true);
@@ -134,6 +135,7 @@ echo json_encode([
     'order_id' => $orderId,
     'subtotal' => $subtotal,
     'discount' => $postedDiscount,
+    'discountPercent' => $postedDiscountPercent,
     'total' => $total,
     'paid' => $paid,
     'change' => $change

@@ -188,7 +188,7 @@
     }
 
     // Variant selection continues here
-    // ketika pilih varian ÃƒÆ’Ã†â€™Ãƒâ€ Ã¢â‚¬â„¢ÃƒÆ’Ã¢â‚¬Å¡Ãƒâ€šÃ‚Â¢ÃƒÆ’Ã†â€™Ãƒâ€šÃ‚Â¢ÃƒÆ’Ã‚Â¢ÃƒÂ¢Ã¢â€šÂ¬Ã…Â¡Ãƒâ€šÃ‚Â¬ÃƒÆ’Ã¢â‚¬Å¡Ãƒâ€šÃ‚Â ÃƒÆ’Ã†â€™Ãƒâ€šÃ‚Â¢ÃƒÆ’Ã‚Â¢ÃƒÂ¢Ã¢â€šÂ¬Ã…Â¡Ãƒâ€šÃ‚Â¬ÃƒÆ’Ã‚Â¢ÃƒÂ¢Ã¢â€šÂ¬Ã…Â¾Ãƒâ€šÃ‚Â¢ lanjut ke buy query modal
+    // ketika pilih varian ÃƒÆ’Ã†â€™Ãƒâ€ Ã¢â‚¬â„¢ÃƒÆ’Ã¢â‚¬Â ÃƒÂ¢Ã¢â€šÂ¬Ã¢â€žÂ¢ÃƒÆ’Ã†â€™ÃƒÂ¢Ã¢â€šÂ¬Ã‚Â ÃƒÆ’Ã‚Â¢ÃƒÂ¢Ã¢â‚¬Å¡Ã‚Â¬ÃƒÂ¢Ã¢â‚¬Å¾Ã‚Â¢ÃƒÆ’Ã†â€™Ãƒâ€ Ã¢â‚¬â„¢ÃƒÆ’Ã‚Â¢ÃƒÂ¢Ã¢â‚¬Å¡Ã‚Â¬Ãƒâ€šÃ‚Â ÃƒÆ’Ã†â€™Ãƒâ€šÃ‚Â¢ÃƒÆ’Ã‚Â¢ÃƒÂ¢Ã¢â€šÂ¬Ã…Â¡Ãƒâ€šÃ‚Â¬ÃƒÆ’Ã‚Â¢ÃƒÂ¢Ã¢â€šÂ¬Ã…Â¾Ãƒâ€šÃ‚Â¢ÃƒÆ’Ã†â€™Ãƒâ€ Ã¢â‚¬â„¢ÃƒÆ’Ã¢â‚¬Â ÃƒÂ¢Ã¢â€šÂ¬Ã¢â€žÂ¢ÃƒÆ’Ã†â€™Ãƒâ€šÃ‚Â¢ÃƒÆ’Ã‚Â¢ÃƒÂ¢Ã¢â€šÂ¬Ã…Â¡Ãƒâ€šÃ‚Â¬ÃƒÆ’Ã¢â‚¬Â¦Ãƒâ€šÃ‚Â¡ÃƒÆ’Ã†â€™Ãƒâ€ Ã¢â‚¬â„¢ÃƒÆ’Ã‚Â¢ÃƒÂ¢Ã¢â‚¬Å¡Ã‚Â¬Ãƒâ€¦Ã‚Â¡ÃƒÆ’Ã†â€™ÃƒÂ¢Ã¢â€šÂ¬Ã…Â¡ÃƒÆ’Ã¢â‚¬Å¡Ãƒâ€šÃ‚Â¢ÃƒÆ’Ã†â€™Ãƒâ€ Ã¢â‚¬â„¢ÃƒÆ’Ã¢â‚¬Â ÃƒÂ¢Ã¢â€šÂ¬Ã¢â€žÂ¢ÃƒÆ’Ã†â€™ÃƒÂ¢Ã¢â€šÂ¬Ã‚Â ÃƒÆ’Ã‚Â¢ÃƒÂ¢Ã¢â‚¬Å¡Ã‚Â¬ÃƒÂ¢Ã¢â‚¬Å¾Ã‚Â¢ÃƒÆ’Ã†â€™Ãƒâ€ Ã¢â‚¬â„¢ÃƒÆ’Ã‚Â¢ÃƒÂ¢Ã¢â‚¬Å¡Ã‚Â¬Ãƒâ€¦Ã‚Â¡ÃƒÆ’Ã†â€™ÃƒÂ¢Ã¢â€šÂ¬Ã…Â¡ÃƒÆ’Ã¢â‚¬Å¡Ãƒâ€šÃ‚Â¢ÃƒÆ’Ã†â€™Ãƒâ€ Ã¢â‚¬â„¢ÃƒÆ’Ã¢â‚¬Â ÃƒÂ¢Ã¢â€šÂ¬Ã¢â€žÂ¢ÃƒÆ’Ã†â€™ÃƒÂ¢Ã¢â€šÂ¬Ã…Â¡ÃƒÆ’Ã¢â‚¬Å¡Ãƒâ€šÃ‚Â¢ÃƒÆ’Ã†â€™Ãƒâ€ Ã¢â‚¬â„¢ÃƒÆ’Ã¢â‚¬Å¡Ãƒâ€šÃ‚Â¢ÃƒÆ’Ã†â€™Ãƒâ€šÃ‚Â¢ÃƒÆ’Ã‚Â¢ÃƒÂ¢Ã¢â‚¬Å¡Ã‚Â¬Ãƒâ€¦Ã‚Â¡ÃƒÆ’Ã¢â‚¬Å¡Ãƒâ€šÃ‚Â¬ÃƒÆ’Ã†â€™ÃƒÂ¢Ã¢â€šÂ¬Ã‚Â¦ÃƒÆ’Ã¢â‚¬Å¡Ãƒâ€šÃ‚Â¡ÃƒÆ’Ã†â€™Ãƒâ€ Ã¢â‚¬â„¢ÃƒÆ’Ã‚Â¢ÃƒÂ¢Ã¢â‚¬Å¡Ã‚Â¬Ãƒâ€¦Ã‚Â¡ÃƒÆ’Ã†â€™ÃƒÂ¢Ã¢â€šÂ¬Ã…Â¡ÃƒÆ’Ã¢â‚¬Å¡Ãƒâ€šÃ‚Â¬ÃƒÆ’Ã†â€™Ãƒâ€ Ã¢â‚¬â„¢ÃƒÆ’Ã¢â‚¬Â ÃƒÂ¢Ã¢â€šÂ¬Ã¢â€žÂ¢ÃƒÆ’Ã†â€™Ãƒâ€šÃ‚Â¢ÃƒÆ’Ã‚Â¢ÃƒÂ¢Ã¢â€šÂ¬Ã…Â¡Ãƒâ€šÃ‚Â¬ÃƒÆ’Ã¢â‚¬Â¦Ãƒâ€šÃ‚Â¡ÃƒÆ’Ã†â€™Ãƒâ€ Ã¢â‚¬â„¢ÃƒÆ’Ã‚Â¢ÃƒÂ¢Ã¢â‚¬Å¡Ã‚Â¬Ãƒâ€¦Ã‚Â¡ÃƒÆ’Ã†â€™ÃƒÂ¢Ã¢â€šÂ¬Ã…Â¡ÃƒÆ’Ã¢â‚¬Å¡Ãƒâ€šÃ‚Â ÃƒÆ’Ã†â€™Ãƒâ€ Ã¢â‚¬â„¢ÃƒÆ’Ã¢â‚¬Â ÃƒÂ¢Ã¢â€šÂ¬Ã¢â€žÂ¢ÃƒÆ’Ã†â€™ÃƒÂ¢Ã¢â€šÂ¬Ã‚Â ÃƒÆ’Ã‚Â¢ÃƒÂ¢Ã¢â‚¬Å¡Ã‚Â¬ÃƒÂ¢Ã¢â‚¬Å¾Ã‚Â¢ÃƒÆ’Ã†â€™Ãƒâ€ Ã¢â‚¬â„¢ÃƒÆ’Ã‚Â¢ÃƒÂ¢Ã¢â‚¬Å¡Ã‚Â¬Ãƒâ€¦Ã‚Â¡ÃƒÆ’Ã†â€™ÃƒÂ¢Ã¢â€šÂ¬Ã…Â¡ÃƒÆ’Ã¢â‚¬Å¡Ãƒâ€šÃ‚Â¢ÃƒÆ’Ã†â€™Ãƒâ€ Ã¢â‚¬â„¢ÃƒÆ’Ã¢â‚¬Â ÃƒÂ¢Ã¢â€šÂ¬Ã¢â€žÂ¢ÃƒÆ’Ã†â€™ÃƒÂ¢Ã¢â€šÂ¬Ã…Â¡ÃƒÆ’Ã¢â‚¬Å¡Ãƒâ€šÃ‚Â¢ÃƒÆ’Ã†â€™Ãƒâ€ Ã¢â‚¬â„¢ÃƒÆ’Ã¢â‚¬Å¡Ãƒâ€šÃ‚Â¢ÃƒÆ’Ã†â€™Ãƒâ€šÃ‚Â¢ÃƒÆ’Ã‚Â¢ÃƒÂ¢Ã¢â‚¬Å¡Ã‚Â¬Ãƒâ€¦Ã‚Â¡ÃƒÆ’Ã¢â‚¬Å¡Ãƒâ€šÃ‚Â¬ÃƒÆ’Ã†â€™ÃƒÂ¢Ã¢â€šÂ¬Ã‚Â¦ÃƒÆ’Ã¢â‚¬Å¡Ãƒâ€šÃ‚Â¡ÃƒÆ’Ã†â€™Ãƒâ€ Ã¢â‚¬â„¢ÃƒÆ’Ã‚Â¢ÃƒÂ¢Ã¢â‚¬Å¡Ã‚Â¬Ãƒâ€¦Ã‚Â¡ÃƒÆ’Ã†â€™ÃƒÂ¢Ã¢â€šÂ¬Ã…Â¡ÃƒÆ’Ã¢â‚¬Å¡Ãƒâ€šÃ‚Â¬ÃƒÆ’Ã†â€™Ãƒâ€ Ã¢â‚¬â„¢ÃƒÆ’Ã¢â‚¬Â ÃƒÂ¢Ã¢â€šÂ¬Ã¢â€žÂ¢ÃƒÆ’Ã†â€™ÃƒÂ¢Ã¢â€šÂ¬Ã…Â¡ÃƒÆ’Ã¢â‚¬Å¡Ãƒâ€šÃ‚Â¢ÃƒÆ’Ã†â€™Ãƒâ€ Ã¢â‚¬â„¢ÃƒÆ’Ã¢â‚¬Å¡Ãƒâ€šÃ‚Â¢ÃƒÆ’Ã†â€™Ãƒâ€šÃ‚Â¢ÃƒÆ’Ã‚Â¢ÃƒÂ¢Ã¢â‚¬Å¡Ã‚Â¬Ãƒâ€¦Ã‚Â¡ÃƒÆ’Ã¢â‚¬Å¡Ãƒâ€šÃ‚Â¬ÃƒÆ’Ã†â€™ÃƒÂ¢Ã¢â€šÂ¬Ã‚Â¦ÃƒÆ’Ã¢â‚¬Å¡Ãƒâ€šÃ‚Â¾ÃƒÆ’Ã†â€™Ãƒâ€ Ã¢â‚¬â„¢ÃƒÆ’Ã‚Â¢ÃƒÂ¢Ã¢â‚¬Å¡Ã‚Â¬Ãƒâ€¦Ã‚Â¡ÃƒÆ’Ã†â€™ÃƒÂ¢Ã¢â€šÂ¬Ã…Â¡ÃƒÆ’Ã¢â‚¬Å¡Ãƒâ€šÃ‚Â¢ lanjut ke buy query modal
     function addVariantToCart(id, name, variant, price) {
         const displayName = `${name} (${variant})`;
         $('#variantModal').modal('hide');
@@ -380,6 +380,14 @@ $(function () {
     return `Rp ${Math.max(0, parseInt(value || 0, 10)).toLocaleString('id-ID')}`;
   }
 
+
+  function parsePercent(value) {
+    return Math.min(100, Math.max(0, parseMoney(value)));
+  }
+
+  function discountAmount(subtotal, percent) {
+    return Math.floor(subtotal * percent / 100);
+  }
   function cartSubtotal() {
     return (JSON.parse(localStorage.getItem('cart')) || []).reduce((sum, item) => {
       const price = parseInt(item.finalPrice || item.unitPrice || 0, 10) || 0;
@@ -394,30 +402,31 @@ $(function () {
 
   function updatePaymentSummary() {
     const subtotal = cartSubtotal();
-    let discount = parseMoney($('#payment-discount').val());
-    const method = $('#payment-method').val();
+    let discountPercent = parsePercent($("#payment-discount").val());
+    const method = $("#payment-method").val();
 
-    if (discount > subtotal) {
-      discount = subtotal;
-      $('#payment-discount').val(discount.toLocaleString('id-ID'));
+    if (discountPercent > 100) {
+      discountPercent = 100;
+      $("#payment-discount").val("100");
     }
 
+    const discount = discountAmount(subtotal, discountPercent);
     const grandTotal = Math.max(0, subtotal - discount);
-    $('#modal-subtotal').val(formatMoney(subtotal));
-    $('#modal-total').val(formatMoney(grandTotal));
+    $("#modal-subtotal").val(formatMoney(subtotal));
+    $("#modal-total").val(formatMoney(grandTotal));
 
     if (isNonCash(method)) {
-      $('#customer-pay').val(grandTotal.toLocaleString('id-ID'));
-      $('#customer-pay').prop('readonly', true);
-      $('.quick-pay').prop('disabled', true);
+      $("#customer-pay").val(grandTotal.toLocaleString("id-ID"));
+      $("#customer-pay").prop("readonly", true);
+      $(".quick-pay").prop("disabled", true);
     } else {
-      $('#customer-pay').prop('readonly', false);
-      $('.quick-pay').prop('disabled', false);
+      $("#customer-pay").prop("readonly", false);
+      $(".quick-pay").prop("disabled", false);
     }
 
-    let paid = parseMoney($('#customer-pay').val());
+    let paid = parseMoney($("#customer-pay").val());
     const change = Math.max(0, paid - grandTotal);
-    $('#change-amount').val(formatMoney(change));
+    $("#change-amount").val(formatMoney(change));
   }
 
   $('#payNow').off('click').on('click', function () {
@@ -436,7 +445,18 @@ $(function () {
     $('#payModal').modal('show');
   });
 
-  $('#payment-discount, #customer-pay').off('input').on('input', updatePaymentSummary);
+  $("#payment-discount").off("input").on("input", function () {
+    const percent = parsePercent($(this).val());
+    $(this).val(percent ? String(percent) : "");
+    updatePaymentSummary();
+  });
+
+  $("#customer-pay").off("input").on("input", function () {
+    if (isNonCash($("#payment-method").val())) return;
+    const paid = parseMoney($(this).val());
+    $(this).val(paid ? paid.toLocaleString("id-ID") : "");
+    updatePaymentSummary();
+  });
   $('#payment-method').off('change').on('change', updatePaymentSummary);
 
   $('.quick-pay').off('click').on('click', function () {
@@ -453,7 +473,8 @@ $(function () {
     const tableNumber = $('#table-number').val().trim();
     const paymentMethod = $('#payment-method').val();
     const subtotal = cartSubtotal();
-    const discount = parseMoney($('#payment-discount').val());
+    const discountPercent = parsePercent($("#payment-discount").val());
+    const discount = discountAmount(subtotal, discountPercent);
     const grandTotal = Math.max(0, subtotal - discount);
     let paid = parseMoney($('#customer-pay').val());
     const change = Math.max(0, paid - grandTotal);
@@ -469,8 +490,8 @@ $(function () {
       return;
     }
 
-    if (discount > subtotal) {
-      Swal.fire({ icon: 'warning', title: 'Invalid Discount', text: 'Discount cannot be greater than subtotal.' });
+    if (discountPercent > 100) {
+      Swal.fire({ icon: 'warning', title: 'Invalid Discount', text: 'Discount percentage cannot be greater than 100%.' });
       return;
     }
 
@@ -490,13 +511,14 @@ $(function () {
       paymentMethod,
       subtotal,
       discount,
+      discountPercent,
       total: grandTotal,
       paid,
       change,
       items: JSON.stringify(orderItems)
     }, function (response) {
       if (response && response.status === 'success') {
-        printInvoice(tableNumber, orderItems, subtotal, discount, grandTotal, paid, change, paymentMethod);
+        printInvoice(tableNumber, orderItems, subtotal, discountPercent, discount, grandTotal, paid, change, paymentMethod);
         localStorage.removeItem('cart');
         cart = [];
         updateCartDisplay();
@@ -509,7 +531,7 @@ $(function () {
     });
   });
 
-  function printInvoice(tableNumber, items, subtotal, discount, grandTotal, paid, change, method) {
+  function printInvoice(tableNumber, items, subtotal, discountPercent, discount, grandTotal, paid, change, method) {
     let escpos = '\x1B\x40\x1B\x61\x01';
     escpos += 'Dejati Coffee Garden\nIG: instagram.com/dejati.coffee\nWifi: dejati37/';
     escpos += '-----------------------------\n';
@@ -525,7 +547,7 @@ $(function () {
 
     escpos += '-----------------------------\n';
     escpos += `Subtotal: Rp ${parseInt(subtotal).toLocaleString('id-ID')}\n`;
-    escpos += `Discount: Rp ${parseInt(discount).toLocaleString('id-ID')}\n`;
+    escpos += `Discount (${parseInt(discountPercent)}%): Rp ${parseInt(discount).toLocaleString('id-ID')}\n`;
     escpos += `Total: Rp ${parseInt(grandTotal).toLocaleString('id-ID')}\n`;
     escpos += `Bayar: Rp ${parseInt(paid).toLocaleString('id-ID')}\n`;
     escpos += `Kembali: Rp ${parseInt(change).toLocaleString('id-ID')}\n`;
@@ -576,6 +598,7 @@ $(function () {
       paymentMethod,
       subtotal,
       discount: 0,
+      discountPercent: 0,
       paid: 0,
       change: 0,
       total: subtotal,
