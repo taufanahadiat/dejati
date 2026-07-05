@@ -5,6 +5,9 @@
   <meta http-equiv="Content-Type" content="text/html; charset=utf-8" />
   <link rel="manifest" href="/manifest.json">
   <meta name="theme-color" content="#1f2937">
+  <meta name="mobile-web-app-capable" content="yes">
+  <meta name="apple-mobile-web-app-capable" content="yes">
+  <meta name="apple-mobile-web-app-status-bar-style" content="black-translucent">
   <link rel="apple-touch-icon" href="/assets/img/512.png">
   <link rel="shortcut icon" href="<?= CDN_BASE ?>favicon_carwash.ico">
   <title>De'Jati Universe</title>

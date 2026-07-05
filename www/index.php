@@ -77,6 +77,9 @@ if (isset($_POST['login'])) {
   <!-- manifest -->
   <link rel="manifest" href="/manifest.json">
   <meta name="theme-color" content="#1f2937">
+  <meta name="mobile-web-app-capable" content="yes">
+  <meta name="apple-mobile-web-app-capable" content="yes">
+  <meta name="apple-mobile-web-app-status-bar-style" content="black-translucent">
   <link rel="apple-touch-icon" href="/assets/img/512.png">
   <title>Sistem Kasir - Dejati Coffee Garden & Carwash</title>
   <!-- Tell the browser to be responsive to screen width -->
@@ -180,6 +183,15 @@ if (isset($_POST['login'])) {
   <script src="bower_components/jquery/dist/jquery.min.js"></script>
   <!-- Bootstrap 3.3.7 -->
   <script src="bower_components/bootstrap/dist/js/bootstrap.min.js"></script>
+  <script>
+    if ('serviceWorker' in navigator) {
+      window.addEventListener('load', function () {
+        navigator.serviceWorker.register('/service-worker.js').catch(function (error) {
+          console.error('Service worker registration failed:', error);
+        });
+      });
+    }
+  </script>
 </body>
 
 </html>

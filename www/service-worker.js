@@ -1,20 +1,18 @@
-// service-worker.js
-const CACHE_NAME = 'dejati-cache-v1';
+const CACHE_NAME = 'dejati-cache-v2';
 const OFFLINE_URL = '/offline.html';
-
-// ✅ List of core files to cache (add your own assets)
 const ASSETS_TO_CACHE = [
-  '/',
-  '/index.php',
+  OFFLINE_URL,
+  '/manifest.json',
+  '/assets/img/192.png',
+  '/assets/img/512.png',
+  '/assets/img/logo-dejati-black.png',
   '/dist/css/adminlte.min.css',
+  '/dist/css/style.css',
   '/plugins/jquery/jquery.min.js',
   '/plugins/bootstrap/js/bootstrap.bundle.min.js',
-  '/dist/js/adminlte.min.js',
-  '/img/logo-only-white.png',
-  OFFLINE_URL
+  '/dist/js/adminlte.min.js'
 ];
 
-// ✅ Install event: cache core assets
 self.addEventListener('install', (event) => {
   event.waitUntil(
     caches.open(CACHE_NAME)
@@ -23,34 +21,42 @@ self.addEventListener('install', (event) => {
   );
 });
 
-// ✅ Activate event: cleanup old caches
 self.addEventListener('activate', (event) => {
   event.waitUntil(
-    caches.keys().then((keys) =>
-      Promise.all(
-        keys.map((key) => key !== CACHE_NAME && caches.delete(key))
-      )
-    )
+    caches.keys()
+      .then((keys) => Promise.all(keys.map((key) => key !== CACHE_NAME && caches.delete(key))))
+      .then(() => self.clients.claim())
   );
-  self.clients.claim();
 });
 
-// ✅ Fetch handler: cache-first fallback
 self.addEventListener('fetch', (event) => {
-  const url = new URL(event.request.url);
+  if (event.request.method !== 'GET') return;
 
-  // Force HTTPS
-  if (url.protocol === 'http:') {
-    const httpsUrl = url.href.replace('http:', 'https:');
-    event.respondWith(Response.redirect(httpsUrl));
+  const requestUrl = new URL(event.request.url);
+  if (requestUrl.origin !== self.location.origin) return;
+
+  if (event.request.mode === 'navigate') {
+    event.respondWith(
+      fetch(event.request)
+        .then((response) => response)
+        .catch(() => caches.match(OFFLINE_URL))
+    );
     return;
   }
 
-  if (event.request.method !== 'GET') return;
-
   event.respondWith(
-    caches.match(event.request).then((cached) =>
-      cached || fetch(event.request).catch(() => caches.match(OFFLINE_URL))
-    )
+    caches.match(event.request).then((cached) => {
+      if (cached) return cached;
+
+      return fetch(event.request).then((response) => {
+        if (!response || response.status !== 200 || response.type !== 'basic') {
+          return response;
+        }
+
+        const responseToCache = response.clone();
+        caches.open(CACHE_NAME).then((cache) => cache.put(event.request, responseToCache));
+        return response;
+      });
+    })
   );
 });
