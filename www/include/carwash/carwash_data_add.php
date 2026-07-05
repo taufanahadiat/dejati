@@ -44,7 +44,7 @@ $breadcrumb = [
           <h3 class="card-title"><?= $isEdit ? 'Edit Produk Carwash' : 'Tambah Produk Carwash'; ?></h3>
         </div>
 
-        <form method="post" action="include/carwash/<?= $isEdit ? 'paket_edit_process.php' : 'paket_add_process.php'; ?>">
+        <form method="post" action="include/carwash/<?= $isEdit ? 'paket_edit_process' : 'paket_add_process'; ?>">
           <div class="card-body">
             <?php if ($isEdit): ?>
               <input type="hidden" name="id_produk" value="<?= (int)$product['id_produk']; ?>">

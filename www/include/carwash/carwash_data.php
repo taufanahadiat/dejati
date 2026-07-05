@@ -67,7 +67,7 @@ $breadcrumb = [
                         <a href="main.php?id=carwashData_edit&id_produk=<?= (int)$row['id_produk']; ?>" class="btn btn-success btn-sm">
                           <i class="fas fa-edit"></i> Edit
                         </a>
-                        <a href="include/carwash/paket_delete.php?id_produk=<?= (int)$row['id_produk']; ?>" onclick="return confirmDialog();" class="btn btn-danger btn-sm">
+                        <a href="include/carwash/paket_delete?id_produk=<?= (int)$row['id_produk']; ?>" onclick="return confirmDialog();" class="btn btn-danger btn-sm">
                           <i class="fas fa-trash"></i> Delete
                         </a>
                       </td>

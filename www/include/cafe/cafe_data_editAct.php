@@ -9,8 +9,6 @@ if (!isset($conn)) {
 }
 require_once __DIR__ . '/cafe_image_helper.php';
 
-file_put_contents(__DIR__ . "/debug_edit.log", "[" . date('Y-m-d H:i:s') . "] " . json_encode($_POST) . PHP_EOL, FILE_APPEND);
-
 // Handle Dropzone image upload
 if (isset($_POST['upload_only']) && $_POST['upload_only']) {
     $tmpName = cafe_sanitize_filename(pathinfo($_POST['foto'] ?? '', PATHINFO_FILENAME));
