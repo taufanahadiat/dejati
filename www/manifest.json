@@ -9,12 +9,12 @@
     "description":  "Dejati Cashier System",
     "icons":  [
                   {
-                      "src":  "/assets/img/192.png",
+                      "src":  "/dist/img/192.png",
                       "sizes":  "192x192",
                       "type":  "image/png"
                   },
                   {
-                      "src":  "/assets/img/512.png",
+                      "src":  "/dist/img/512.png",
                       "sizes":  "512x512",
                       "type":  "image/png"
                   }

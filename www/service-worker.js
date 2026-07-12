@@ -3,10 +3,10 @@ const OFFLINE_URL = '/offline.html';
 const ASSETS_TO_CACHE = [
   OFFLINE_URL,
   '/manifest.json',
-  '/assets/img/192.png',
-  '/assets/img/512.png',
-  '/assets/img/logo-dejati-black.png',
-  '/assets/js/bluetooth-printer-manager.js',
+  '/dist/img/192.png',
+  '/dist/img/512.png',
+  '/dist/img/logo-dejati-black.png',
+  '/dist/js/bluetooth-printer-manager.js',
   '/dist/css/adminlte.min.css',
   '/dist/css/style.css',
   '/plugins/jquery/jquery.min.js',
@@ -15,8 +15,7 @@ const ASSETS_TO_CACHE = [
 ];
 
 function isStaticAsset(url) {
-  return url.pathname.startsWith('/assets/') ||
-    url.pathname.startsWith('/dist/') ||
+  return url.pathname.startsWith('/dist/') ||
     url.pathname.startsWith('/plugins/') ||
     url.pathname === '/manifest.json' ||
     url.pathname === OFFLINE_URL;

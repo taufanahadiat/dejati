@@ -1,0 +1,3 @@
+http://pos.dejaticoffee.com {
+    reverse_proxy lampp_web:80
+}

@@ -1,0 +1,152 @@
+<?php
+$appPage = 'main.php';
+?>
+<aside class="main-sidebar sidebar-dark-primary elevation-4">
+  <div class="brand-link d-flex align-items-center">
+    <img src="dist/img/logo-only-white.png" class="brand-image img-circle elevation-3" style="opacity: .8">
+    <span class="brand-text font-weight-light"><b>De'</b>Jati</span>
+  </div>
+
+  <div class="sidebar">
+    <div class="user-panel mt-3 pb-3 mb-3 d-flex">
+      <div class="image">
+        <img src="dist/img/user-no-image-gray.png" class="img img-circle elevation-2" alt="User Image">
+      </div>
+      <div class="info">
+        <a href="#" class="d-block"><?= $_SESSION["nama_user"]; ?></a>
+      </div>
+    </div>
+
+    <div class="form-inline">
+      <div class="input-group" data-widget="sidebar-search">
+        <input class="form-control form-control-sidebar" type="search" placeholder="Search" aria-label="Search">
+        <div class="input-group-append">
+          <button class="btn btn-sidebar">
+            <i class="fas fa-search fa-fw"></i>
+          </button>
+        </div>
+      </div>
+    </div>
+
+    <nav class="mt-2">
+      <ul class="nav nav-pills nav-sidebar nav-legacy nav-flat nav-child-indent flex-column" data-widget="treeview" role="menu" data-accordion="false">
+        <li class="nav-item">
+          <a href="<?= $appPage; ?>?id=dashboard" class="nav-link">
+            <i class="nav-icon fas fa-tachometer-alt"></i>
+            <p>Dashboard</p>
+          </a>
+        </li>
+        <li class="nav-item">
+          <a href="#" class="nav-link">
+            <i class="nav-icon fas fa-database"></i>
+            <p>
+              Data Master
+              <i class="fas fa-angle-left right"></i>
+            </p>
+          </a>
+          <ul class="nav nav-treeview nav-child-indent">
+            <li class="nav-item">
+              <a href="main.php?id=cafeData" class="nav-link">
+                <i class="fas fa-utensils nav-icon"></i>
+                <p>Produk Cafe</p>
+              </a>
+            </li>
+            <li class="nav-item">
+              <a href="main.php?id=carwashData" class="nav-link">
+                <i class="fas fa-car-side nav-icon"></i>
+                <p>Produk Carwash</p>
+              </a>
+            </li>
+          </ul>
+        </li>
+        <li class="nav-item">
+          <a href="main.php?id=transaksi" class="nav-link">
+            <i class="nav-icon fas fa-cash-register"></i>
+            <p>Transaksi</p>
+          </a>
+        </li>
+        <li class="nav-item has-treeview">
+          <a href="#" class="nav-link">
+            <i class="nav-icon fas fa-receipt"></i>
+            <p>
+              Report
+              <i class="right fas fa-angle-left"></i>
+            </p>
+          </a>
+          <ul class="nav nav-treeview">
+            <li class="nav-item">
+              <a href="main.php?id=report" class="nav-link">
+                <i class="nav-icon fas fa-history"></i>
+                <p>History</p>
+              </a>
+            </li>
+            <li class="nav-item">
+              <a href="main.php?id=dailyReport" class="nav-link">
+                <i class="nav-icon fas fa-calendar-day"></i>
+                <p>Daily Report</p>
+              </a>
+            </li>
+          </ul>
+        </li>
+        <li class="nav-item has-treeview">
+          <a href="#" class="nav-link">
+            <i class="nav-icon fas fa-warehouse"></i>
+            <p>
+              Utility
+              <i class="right fas fa-angle-left"></i>
+            </p>
+          </a>
+          <ul class="nav nav-treeview">
+            <li class="nav-item">
+              <a href="main.php?id=utility" class="nav-link">
+                <i class="nav-icon fas fa-list-check"></i>
+                <p>Utility Management</p>
+              </a>
+            </li>
+          </ul>
+        </li>
+      </ul>
+    </nav>
+  </div>
+</aside>
+<script>
+  document.addEventListener('DOMContentLoaded', function() {
+    const urlParams = new URLSearchParams(window.location.search);
+    const currentId = urlParams.get('id') || 'dashboard';
+    const sidebar = document.querySelector('.nav-sidebar');
+    if (!sidebar) return;
+
+    sidebar.querySelectorAll('.nav-link').forEach(function(link) {
+      link.classList.remove('active');
+    });
+    sidebar.querySelectorAll('.nav-item').forEach(function(item) {
+      item.classList.remove('menu-open');
+    });
+
+    let activeLink = null;
+    sidebar.querySelectorAll('.nav-link[href]').forEach(function(link) {
+      const href = link.getAttribute('href');
+      if (href && href.indexOf('id=' + currentId) !== -1) {
+        activeLink = link;
+      }
+    });
+
+    if (!activeLink) {
+      return;
+    }
+
+    activeLink.classList.add('active');
+
+    const treeview = activeLink.closest('.nav-treeview');
+    if (treeview) {
+      const parentItem = treeview.closest('.nav-item');
+      if (parentItem) {
+        parentItem.classList.add('menu-open');
+        const parentLink = parentItem.querySelector(':scope > .nav-link');
+        if (parentLink) {
+          parentLink.classList.add('active');
+        }
+      }
+    }
+  });
+</script>

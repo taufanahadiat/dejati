@@ -42,7 +42,8 @@ if ($result->num_rows > 0) {
             'nama_var' => $row['nama_var'] ?? '',
             'biaya_var' => $row['biaya_var'] ?? 0,
             'category' => $row['id_cat'],
-            'image'    => cafe_product_image_url($row['foto'] ?? ''),
+            'image'    => cafe_product_thumb_url($row['foto'] ?? ''),
+            'image_full' => cafe_product_image_url($row['foto'] ?? ''),
         ];
     }
 }
@@ -111,13 +112,6 @@ function formatPrice($number)
                                 <button class="btn btn-success btn-block mt-2" id="payNow">Pay Now</button>
                                 <button class="btn btn-info btn-block mb-2" id="openBill">Open Bill</button>
                                 <button class="btn btn-danger btn-block mt-2" id="clearCart">Clear Transaction</button>
-                                <div class="border-top pt-2 mt-2">
-                                    <small class="text-muted d-block mb-1">Bluetooth Printers</small>
-                                    <button type="button" class="btn btn-outline-primary btn-sm btn-block" id="connectCashierPrinter">Connect Cashier Printer</button>
-                                    <small class="d-block text-muted mb-1" id="cashierPrinterStatus">Cashier: not connected</small>
-                                    <button type="button" class="btn btn-outline-primary btn-sm btn-block" id="connectKitchenPrinter">Connect Kitchen Printer</button>
-                                    <small class="d-block text-muted" id="kitchenPrinterStatus">Kitchen: not connected</small>
-                                </div>
                             </div>
                         </div>
                     </div>
@@ -277,7 +271,7 @@ function formatPrice($number)
                                                             ? "showVariantModal('{$p['id']}', " . htmlspecialchars(json_encode($p['name'])) . ", " . htmlspecialchars(json_encode($p['nama_var'])) . ", " . htmlspecialchars(json_encode($p['biaya_var'])) . ")"
                                                             : "showBuyQueryModal('{$p['id']}', " . htmlspecialchars(json_encode($p['name'])) . ", {$p['price']})") ?>">
                                         <?php
-                                        $imgSrc = $p['image'];
+                                        $imgSrc = $p['image'] ?? '';
                                         $imgExists = !empty($imgSrc);
                                         $words = preg_split('/\s+/', trim($p['name']));
                                         $initials = strtoupper(implode('', array_map(fn($w) => $w !== '' ? $w[0] : '', $words)));
@@ -286,8 +280,8 @@ function formatPrice($number)
                                         <?php if ($imgExists): ?>
                                             <img class="card-img-top p-1 mx-auto d-block" loading="lazy" decoding="async"
                                                 style="width: 100px; height: 100px; object-fit: cover; border-radius: 10%;"
-                                                src="<?= htmlspecialchars($p['image']) ?>"
-                                                alt="<?= htmlspecialchars($p['name']) ?>"
+                                                src="<?= htmlspecialchars($imgSrc) ?>"
+                                                alt="<?= htmlspecialchars($p['name']) ?>" width="100" height="100"
                                                 onerror="this.style.display='none'; this.insertAdjacentHTML('afterend', '<div class=\'product-no-img card-img-top p-1 d-flex justify-content-center align-items-center bg-secondary text-white\'><?= $initials ?></div>');">
                                         <?php else: ?>
                                             <div class="product-no-img card-img-top p-1 d-flex justify-content-center align-items-center bg-secondary text-white"
@@ -532,6 +526,5 @@ if (!empty($imported_order_json)):
 </script>
 <?php endif; ?>
 
-<script src="/assets/js/bluetooth-printer-manager.js?v=2026070502"></script>
 <!-- Script -->
 <?php include 'include/transaksi/script.php'; ?>

@@ -8,108 +8,67 @@
   <meta name="mobile-web-app-capable" content="yes">
   <meta name="apple-mobile-web-app-capable" content="yes">
   <meta name="apple-mobile-web-app-status-bar-style" content="black-translucent">
-  <link rel="apple-touch-icon" href="/assets/img/512.png">
-  <link rel="shortcut icon" href="<?= CDN_BASE ?>favicon_carwash.ico">
+  <link rel="apple-touch-icon" href="/dist/img/512.png">
+  <link rel="shortcut icon" href="dist/img/logo-only-white.png" type="image/x-icon">
   <title>De'Jati Universe</title>
+  <?php
+  $requestIsHttps = (!empty($_SERVER['HTTPS']) && $_SERVER['HTTPS'] !== 'off')
+    || (isset($_SERVER['SERVER_PORT']) && (int) $_SERVER['SERVER_PORT'] == 443)
+    || (!empty($_SERVER['HTTP_X_FORWARDED_PROTO']) && $_SERVER['HTTP_X_FORWARDED_PROTO'] === 'https');
+  if ($requestIsHttps):
+  ?>
   <meta http-equiv="Content-Security-Policy" content="upgrade-insecure-requests">
-  <!-- Tell the browser to be responsive to screen width -->
+  <?php endif; ?>
   <meta content="width=device-width, initial-scale=1, maximum-scale=1, user-scalable=no" name="viewport">
-  <!-- Tempusdominus Bootstrap 4 -->
+  <script>
+    (function() {
+      var storageKey = 'adminlte-theme-mode';
+      var mode = null;
+
+      try {
+        mode = localStorage.getItem(storageKey);
+      } catch (error) {
+        mode = null;
+      }
+
+      if (mode !== 'dark' && mode !== 'light') {
+        mode = window.matchMedia && window.matchMedia('(prefers-color-scheme: dark)').matches ? 'dark' : 'light';
+      }
+
+      var isDark = mode === 'dark';
+      document.documentElement.setAttribute('data-theme-mode', mode);
+      document.documentElement.classList.add('theme-preload');
+      document.documentElement.classList.toggle('theme-preload-dark', isDark);
+      document.documentElement.classList.toggle('theme-preload-light', !isDark);
+      document.documentElement.classList.toggle('dark-mode', isDark);
+    })();
+  </script>
   <link rel="stylesheet" href="plugins/tempusdominus-bootstrap-4/css/tempusdominus-bootstrap-4.min.css">
-  <!-- Font Awesome -->
   <link rel="stylesheet" href="plugins/fontawesome-free/css/all.min.css">
-  <!-- Ionicons -->
-  <link rel="stylesheet" type="text/css" href="bower_components/Ionicons/css/ionicons.min.css">
-  <!-- Select2 -->
+  <link rel="stylesheet" href="plugins/ionicons/css/ionicons.min.css">
   <link rel="stylesheet" href="plugins/select2/css/select2.min.css">
   <link rel="stylesheet" href="plugins/select2-bootstrap4-theme/select2-bootstrap4.min.css">
-  <!-- Bootstrap4 Duallistbox -->
   <link rel="stylesheet" href="plugins/bootstrap4-duallistbox/bootstrap-duallistbox.min.css">
-  <!-- DataTables -->
   <link rel="stylesheet" href="plugins/datatables-bs4/css/dataTables.bootstrap4.min.css">
   <link rel="stylesheet" href="plugins/datatables-responsive/css/responsive.bootstrap4.min.css">
   <link rel="stylesheet" href="plugins/datatables-buttons/css/buttons.bootstrap4.min.css">
-  <!-- Toastr -->
   <link rel="stylesheet" href="plugins/toastr/toastr.min.css">
-  <!-- SweetAlert2 -->
   <link rel="stylesheet" href="plugins/sweetalert2/sweetalert2.min.css">
-  <!-- Dropzone CSS -->
   <link rel="stylesheet" href="plugins/dropzone/min/dropzone.min.css">
-  <!-- Theme style -->
   <link rel="stylesheet" href="dist/css/adminlte.min.css">
-  <!-- overlayScrollbars -->
+  <link rel="stylesheet" href="dist/css/theme.css">
   <link rel="stylesheet" href="plugins/overlayScrollbars/css/OverlayScrollbars.min.css">
-  <!-- uploadify CSS -->
   <link rel="stylesheet" href="plugins/uploadify/uploadify.css">
   <link rel="stylesheet" href="plugins/uploadify/uploadify.jGrowl.css">
   <link rel="stylesheet" href="plugins/uploadify/uploadify.styling.css">
-  <!-- autocomplete CSS -->
   <link rel="stylesheet" href="plugins/autocomplete/autocomp.css">
-  <!-- iCheck for checkboxes and radio inputs -->
   <link rel="stylesheet" href="plugins/icheck-bootstrap/icheck-bootstrap.min.css">
-
-
-
-  <!-- HTML5 Shim and Respond.js IE8 support of HTML5 elements and media queries -->
-  <!-- WARNING: Respond.js doesn't work if you view the page via file:// -->
   <!--[if lt IE 9]>
   <script src="https://oss.maxcdn.com/html5shiv/3.7.3/html5shiv.min.js"></script>
   <script src="https://oss.maxcdn.com/respond/1.4.2/respond.min.js"></script>
   <![endif]-->
-
-  <!-- Google Font -->
-  <link rel="stylesheet" type="text/css" href="assets/css/fontsgoogleapis.css">
-
-  <!-- Custom CSS -->
+  <link rel="stylesheet" type="text/css" href="dist/css/fontsgoogleapis.css">
   <link rel="stylesheet" type="text/css" href="dist/css/style.css">
-
-  <style type="text/css">
-    @media print {
-
-      #tombol,
-      .noprint {
-        display: none;
-      }
-    }
-
-    .navbar-custom-menu:hover {
-      background-color: #e9ecef;
-      color: #007bff;
-      border-radius: 0.25rem;
-      /* Optional: round corners */
-
-    }
-#nav-header .breadcrumb .nav-toggle {
-  display: inline-flex;
-  align-items: center;
-  margin-left: 0.75rem; 
-  margin-right: 0.5rem; 
-}
-
-#nav-header .breadcrumb .nav-link {
-  display: inline-flex;
-  align-items: center;
-  padding: 0 !important;
-}
-
-#nav-header .breadcrumb .nav-link i {
-  font-size: 1.1rem;
-  vertical-align: middle;
-}
-
-#nav-header .breadcrumb {
-  padding-left: 0 !important;
-  margin-bottom: 0;
-  display: flex;
-  align-items: center;
-}
-
-#nav-header .breadcrumb-item {
-  display: inline-flex;
-  align-items: center;
-  margin-bottom: 0;
-}
-  </style>
-  <!-- jQuery -->
   <script src="plugins/jquery/jquery.min.js"></script>
+  <script src="/dist/js/bluetooth-printer-manager.js?v=2026071206"></script>
 </head>

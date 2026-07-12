@@ -5,7 +5,6 @@ session_start();
 
 require_once 'config/config.php';
 
-// cek session
 if (isset($_SESSION['loggedin'])) {
   if ($_SESSION['level'] === 'Administrator') {
     header("Location: ./main.php");
@@ -16,29 +15,41 @@ if (isset($_SESSION['loggedin'])) {
   }
   die();
 }
-if (isset($_POST['login'])) {
 
+if (isset($_POST['login'])) {
   $username = filter_input(INPUT_POST, 'username', FILTER_SANITIZE_SPECIAL_CHARS);
   $password = filter_input(INPUT_POST, 'password', FILTER_SANITIZE_SPECIAL_CHARS);
 
+  $stmt = mysqli_prepare($conn, "SELECT * FROM tb_user WHERE username = ? LIMIT 1");
+  if (!$stmt) {
+    $_SESSION['errLog'] = 'Login gagal diproses. Silahkan coba lagi.';
+    header("Refresh: 0; url=./");
+    die();
+  }
 
-  $sql = "SELECT * FROM tb_user WHERE username='$username'";
-  $query = mysqli_query($conn, $sql);
-  $cek = mysqli_num_rows($query);
-  $data  = mysqli_fetch_array($query);
+  mysqli_stmt_bind_param($stmt, 's', $username);
+  mysqli_stmt_execute($stmt);
+  $query = mysqli_stmt_get_result($stmt);
+  $cek = $query ? mysqli_num_rows($query) : 0;
+  $data = $query ? mysqli_fetch_array($query) : [];
+  mysqli_stmt_close($stmt);
 
-  // jika user terdaftar
   if ($cek > 0) {
-    // verifikasi password
-    if (password_verify($password, $data["password"])) {
-      $_SESSION["loggedin"] = TRUE;
-      $_SESSION["id_user"] = $data["id_user"];
-      $_SESSION["username"] = $data["username"];
-      $_SESSION["nama_user"] = $data["nama_user"];
-      $_SESSION["level"] = $data["level"];
-      $_SESSION["status"] = $data["status"];
-      if (isset($data["created_at"])) {
-        $_SESSION["created_at"] = $data["created_at"];
+    if (password_verify($password, $data['password'])) {
+      if (isset($data['status']) && strtolower((string) $data['status']) !== 'aktif') {
+        $_SESSION['errLog'] = 'Akun Anda sedang nonaktif. Silahkan hubungi administrator.';
+        header("Refresh: 0; url=./");
+        die();
+      }
+
+      $_SESSION['loggedin'] = TRUE;
+      $_SESSION['id_user'] = $data['id_user'];
+      $_SESSION['username'] = $data['username'];
+      $_SESSION['nama_user'] = $data['nama_user'];
+      $_SESSION['level'] = $data['level'];
+      $_SESSION['status'] = $data['status'];
+      if (isset($data['created_at'])) {
+        $_SESSION['created_at'] = $data['created_at'];
       }
 
       $date = date('Y-m-d H:i:s');
@@ -46,153 +57,230 @@ if (isset($_POST['login'])) {
       $s_username = $_SESSION['username'];
       mysqli_query($conn, "UPDATE tb_user SET last_logged_in = '$date', ip_address = '$ip_address' WHERE username = '$s_username'");
 
-      // login sukses, alihkan ke halaman dashboard atau home
-      if ($data["level"] === 'Administrator') {
+      if ($data['level'] === 'Administrator') {
         header("Refresh: 0; url=./main.php");
-      } elseif ($data["level"] === 'Kasir') {
+      } elseif ($data['level'] === 'Kasir') {
         header("Refresh: 0; url=./main.php");
-      } elseif ($data["level"] === 'Karyawan') {
+      } elseif ($data['level'] === 'Karyawan') {
         header("Refresh: 0; url=./main.php");
       }
       die();
-    } else {
-      //session error
-      $_SESSION['errLog'] = 'Username dan Password yang Anda masukkan salah, silahkan coba lagi.';
-      header("Refresh: 0; url=./");
-      die();
     }
-  } else {
-    //session error
+
     $_SESSION['errLog'] = 'Username dan Password yang Anda masukkan salah, silahkan coba lagi.';
     header("Refresh: 0; url=./");
     die();
   }
+
+  $_SESSION['errLog'] = 'Username dan Password yang Anda masukkan salah, silahkan coba lagi.';
+  header("Refresh: 0; url=./");
+  die();
 }
-?><!DOCTYPE html>
+?>
+<!DOCTYPE html>
 <html>
 
 <head>
   <meta charset="utf-8">
   <meta http-equiv="X-UA-Compatible" content="IE=edge">
-  <link rel="shortcut icon" href="<?= CDN_BASE ?>favicon_carwash.ico">
-  <!-- manifest -->
-  <link rel="manifest" href="/manifest.json">
-  <meta name="theme-color" content="#1f2937">
-  <meta name="mobile-web-app-capable" content="yes">
-  <meta name="apple-mobile-web-app-capable" content="yes">
-  <meta name="apple-mobile-web-app-status-bar-style" content="black-translucent">
-  <link rel="apple-touch-icon" href="/assets/img/512.png">
+  <link rel="shortcut icon" href="dist/img/favicon_carwash.ico">
   <title>Sistem Kasir - Dejati Coffee Garden & Carwash</title>
-  <!-- Tell the browser to be responsive to screen width -->
   <meta content="width=device-width, initial-scale=1, maximum-scale=1, user-scalable=no" name="viewport">
-  <!-- Bootstrap 3.3.7 -->
-  <link rel="stylesheet" type="text/css" href="bower_components/bootstrap/dist/css/bootstrap.min.css">
-  <!-- Font Awesome -->
-  <link rel="stylesheet" type="text/css" href="bower_components/font-awesome/css/font-awesome.min.css">
-  <!-- Ionicons -->
-  <link rel="stylesheet" type="text/css" href="bower_components/Ionicons/css/ionicons.min.css">
-  <!-- Theme style -->
-  <link rel="stylesheet" type="text/css" href="assets/css/AdminLTE.min.css">
+  <script>
+    (function() {
+      var storageKey = 'adminlte-theme-mode';
+      var mode = null;
+
+      try {
+        mode = localStorage.getItem(storageKey);
+      } catch (error) {
+        mode = null;
+      }
+
+      if (mode !== 'dark' && mode !== 'light') {
+        mode = window.matchMedia && window.matchMedia('(prefers-color-scheme: dark)').matches ? 'dark' : 'light';
+      }
+
+      var isDark = mode === 'dark';
+      document.documentElement.setAttribute('data-theme-mode', mode);
+      document.documentElement.classList.add('theme-preload');
+      document.documentElement.classList.toggle('theme-preload-dark', isDark);
+      document.documentElement.classList.toggle('theme-preload-light', !isDark);
+      document.documentElement.classList.toggle('dark-mode', isDark);
+    })();
+  </script>
+  <link rel="stylesheet" type="text/css" href="plugins/fontawesome-free/css/all.min.css">
+  <link rel="stylesheet" type="text/css" href="plugins/icheck-bootstrap/icheck-bootstrap.min.css">
+  <link rel="stylesheet" type="text/css" href="dist/css/adminlte.min.css">
+  <link rel="stylesheet" type="text/css" href="dist/css/theme.css">
   <style type="text/css">
     body {
-      background: #fff;
+      min-height: 100vh;
+      background: #f4f1ea;
+      color: #2f2a24;
     }
 
     .bg::before {
       content: '';
-      background-image: url('<?= CDN_BASE ?>background.jpg');
-      background-repeat: no-repeat;
-      background-size: cover;
-      background-attachment: fixed;
-      position: absolute;
+      background-image: url('./dist/img/background.jpg');
+      background-repeat: repeat;
+      background-size: 760px;
+      position: fixed;
+      inset: 0;
+      z-index: -2;
+      opacity: 0.12;
+    }
+
+    .bg::after {
+      content: '';
+      position: fixed;
+      inset: 0;
       z-index: -1;
-      top: 0;
-      bottom: 0;
-      left: 0;
-      right: 0;
-      opacity: 0.15;
-      filter: alpha(opacity=15);
-      height: 100%;
-      width: 100%;
+      background: linear-gradient(180deg, rgba(250, 248, 244, 0.92), rgba(248, 245, 239, 0.97));
+    }
+
+    .login-box {
+      width: 420px;
+      max-width: calc(100vw - 2rem);
+    }
+
+    .login-card {
+      border: 0;
+      border-top: 4px solid #8c6a43;
+      border-radius: 0.85rem;
+      box-shadow: 0 1rem 2.5rem rgba(66, 44, 20, 0.12);
+      overflow: hidden;
+      backdrop-filter: blur(3px);
+    }
+
+    .login-card-body {
+      padding: 2.25rem 2rem 1.75rem;
+      background: rgba(255, 255, 255, 0.95);
+    }
+
+    .login-logo img {
+      width: 152px;
+      margin-bottom: 0.75rem;
+    }
+
+    .login-title {
+      margin: 0;
+      font-size: 1.75rem;
+      font-weight: 700;
+    }
+
+    .login-subtitle {
+      margin: 0.5rem 0 0;
+      color: #6c757d;
+      font-size: 0.98rem;
+    }
+
+    .brand-caption {
+      margin: 1.5rem 0 1.25rem;
+      text-align: center;
+      color: #7a5a38;
+      font-size: 0.82rem;
+      font-weight: 600;
+      letter-spacing: 0.08em;
+      text-transform: uppercase;
+    }
+
+    .input-group-text {
+      background: #f7f4ef;
+      border-color: #d8cfc2;
+      color: #7a5a38;
+    }
+
+    .form-control {
+      border-color: #d8cfc2;
+      height: calc(2.6rem + 2px);
+    }
+
+    .form-control:focus {
+      border-color: #8c6a43;
+      box-shadow: 0 0 0 0.2rem rgba(140, 106, 67, 0.12);
+    }
+
+    .btn-login {
+      background: #8c6a43;
+      border-color: #8c6a43;
+      font-weight: 600;
+      padding-top: 0.65rem;
+      padding-bottom: 0.65rem;
+    }
+
+    .btn-login:hover,
+    .btn-login:focus {
+      background: #755434;
+      border-color: #755434;
+    }
+
+    .login-help {
+      margin-top: 1rem;
+      text-align: center;
+      color: #8b8f94;
+      font-size: 0.9rem;
     }
   </style>
-
-  <!-- HTML5 Shim and Respond.js IE8 support of HTML5 elements and media queries -->
-  <!-- WARNING: Respond.js doesn't work if you view the page via file:// -->
   <!--[if lt IE 9]>
   <script src="https://oss.maxcdn.com/html5shiv/3.7.3/html5shiv.min.js"></script>
   <script src="https://oss.maxcdn.com/respond/1.4.2/respond.min.js"></script>
-<![endif]-->
-
-  <!-- Google Font -->
-  <link rel="stylesheet" type="text/css" href="assets/css/fontsgoogleapis.css">
+  <![endif]-->
+  <link rel="stylesheet" type="text/css" href="dist/css/fontsgoogleapis.css">
 </head>
 
-<body class="hold-transition login-page shadow-3 bg">
+<body class="hold-transition login-page bg">
   <div class="login-box">
-    <div class="login-box-body">
-      <div class="login-logo">
-        <img width="160px" title="De Jati" src="<?= CDN_BASE ?>logo-dejati-black.png" style="margin: 5px auto;vertical-align:middle;" />
-        <div style="margin:10px;font-size:18px;">
-          <strong>LOGIN KASIR</strong>
+    <div class="card login-card">
+      <div class="card-body login-card-body">
+        <div class="login-logo">
+          <img title="De Jati" src="dist/img/logo-dejati-black.PNG" alt="Logo De Jati" />
+          <p class="login-title">Login Kasir</p>
+          <p class="login-subtitle">De'Jati Coffee Garden & Carwash</p>
         </div>
+
+        <div class="brand-caption">Sistem Kasir De'Jati</div>
+
+        <form action="" method="post">
+          <?php
+          if (isset($_SESSION['errLog'])) {
+            $errLog = $_SESSION['errLog'];
+          ?>
+            <div class="alert alert-danger" role="alert">
+              <button type="button" class="close" data-dismiss="alert">&times;</button>
+              <?= $errLog; ?>
+            </div>
+          <?php
+            unset($_SESSION['errLog']);
+          }
+          ?>
+          <div class="input-group mb-3">
+            <input type="text" class="form-control" name="username" placeholder="Username" autofocus="autofocus" autocomplete="username">
+            <div class="input-group-append">
+              <div class="input-group-text">
+                <span class="fas fa-user"></span>
+              </div>
+            </div>
+          </div>
+          <div class="input-group mb-4">
+            <input type="password" class="form-control" name="password" placeholder="Password" autocomplete="current-password">
+            <div class="input-group-append">
+              <div class="input-group-text">
+                <span class="fas fa-lock"></span>
+              </div>
+            </div>
+          </div>
+          <button type="submit" name="login" class="btn btn-primary btn-block btn-login">Log In</button>
+        </form>
+
+        <div class="login-help">Masukkan akun kasir yang aktif untuk mulai transaksi.</div>
       </div>
-      <!-- /.login-logo -->
-
-      <div class="login-box-msg">De'Jati Cofee Garden & Carwash</div>
-
-      <form action="" method="post">
-        <?php
-        if (isset($_SESSION['errLog'])) {
-          $errLog = $_SESSION['errLog'];
-        ?>
-          <div class="alert alert-danger" role="alert">
-            <button type="button" class="close" data-dismiss="alert">&times;</button>
-            <?= $errLog; ?>
-          </div>
-        <?php
-          unset($_SESSION['errLog']);
-        }
-        ?>
-        <div class="form-group has-feedback">
-          <input type="username" class="form-control" name="username" placeholder="Username" autofocus="autofocus">
-          <span class="glyphicon glyphicon-envelope form-control-feedback"></span>
-        </div>
-        <div class="form-group has-feedback">
-          <input type="password" class="form-control" name="password" placeholder="Password">
-          <span class="glyphicon glyphicon-lock form-control-feedback"></span>
-        </div>
-        <div class="row">
-          <div class="col-xs-8">
-          </div>
-          <!-- /.col -->
-          <div class="col-xs-4">
-            <button type="submit" name="login" class="btn btn-primary btn-block btn-flat">Log In</button>
-          </div>
-          <!-- /.col -->
-        </div>
-      </form>
-
-      <br />
-
     </div>
-    <!-- /.login-box-body -->
   </div>
-  <!-- /.login-box -->
 
-  <!-- jQuery 3 -->
-  <script src="bower_components/jquery/dist/jquery.min.js"></script>
-  <!-- Bootstrap 3.3.7 -->
-  <script src="bower_components/bootstrap/dist/js/bootstrap.min.js"></script>
-  <script>
-    if ('serviceWorker' in navigator) {
-      window.addEventListener('load', function () {
-        navigator.serviceWorker.register('/service-worker.js').catch(function (error) {
-          console.error('Service worker registration failed:', error);
-        });
-      });
-    }
-  </script>
+  <script src="plugins/jquery/jquery.min.js"></script>
+  <script src="plugins/bootstrap/js/bootstrap.bundle.min.js"></script>
+  <script src="dist/js/theme.js"></script>
 </body>
 
 </html>

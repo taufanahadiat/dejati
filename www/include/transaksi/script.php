@@ -513,7 +513,7 @@ $(function () {
       return;
     }
 
-    $.post('/transaksi_post/', {
+    $.post('/include/transaksi/save_order.php', {
       tableNumber,
       paymentMethod,
       subtotal,
@@ -538,15 +538,8 @@ $(function () {
     });
   });
 
-  if (window.DejatiBluetoothPrinter) {
-    window.DejatiBluetoothPrinter.bindStatus({
-      cashier: "#cashierPrinterStatus",
-      kitchen: "#kitchenPrinterStatus"
-    });
-  } else {
+  if (!window.DejatiBluetoothPrinter) {
     console.error("Bluetooth printer manager is not loaded.");
-    $("#cashierPrinterStatus").text("Cashier: printer script not loaded");
-    $("#kitchenPrinterStatus").text("Kitchen: printer script not loaded");
   }
 
   function showPrinterSetupError(error) {
@@ -575,6 +568,10 @@ $(function () {
 
   async function printBluetoothJobsSequentially(jobs) {
     await requirePrinterManager().writeSequential(jobs);
+  }
+
+  function waitForPrinter(ms) {
+    return new Promise(resolve => setTimeout(resolve, ms));
   }
 
   function buildCashierReceipt(tableNumber, items, subtotal, discountPercent, discount, grandTotal, paid, change, method) {
@@ -626,11 +623,29 @@ $(function () {
   }
 
   async function printChitCopies(tableNumber, items) {
-    const jobs = [
-      { role: "cashier", escpos: buildChitReceipt("CASHIER CHIT", tableNumber, items) },
-      { role: "kitchen", escpos: buildChitReceipt("KITCHEN CHIT", tableNumber, items) }
-    ];
-    await printBluetoothJobsSequentially(jobs);
+    const results = [];
+
+    try {
+      await writeEscposToPrinter("cashier", buildChitReceipt("CASHIER CHIT", tableNumber, items));
+      results.push("Cashier OK");
+    } catch (error) {
+      results.push(`Cashier failed: ${error.message || "unknown error"}`);
+    }
+
+    await waitForPrinter(1000);
+
+    try {
+      await writeEscposToPrinter("kitchen", buildChitReceipt("KITCHEN CHIT", tableNumber, items));
+      results.push("Kitchen OK");
+    } catch (error) {
+      results.push(`Kitchen failed: ${error.message || "unknown error"}`);
+    }
+
+    if (results.some(result => result.indexOf("failed") !== -1)) {
+      throw new Error(results.join(" | "));
+    }
+
+    return results;
   }
 
   async function printInvoice(tableNumber, items, subtotal, discountPercent, discount, grandTotal, paid, change, method) {
@@ -648,30 +663,13 @@ $(function () {
 
       if (result.isConfirmed) {
         await printChitCopies(tableNumber, items);
+        Swal.fire({ icon: "success", title: "Chit Printed", text: "Chit sent to cashier and kitchen printers." });
       }
     } catch (error) {
       Swal.fire({ icon: "error", title: "Print Failed", text: error.message || "Unable to print to Bluetooth printer." });
     }
   }
 
-
-  $("#connectCashierPrinter").off("click").on("click", async function () {
-    try {
-      await connectBluetoothPrinter("cashier", true);
-      Swal.fire({ icon: "success", title: "Saved", text: "Cashier printer saved for future prints." });
-    } catch (error) {
-      Swal.fire({ icon: "error", title: "Cashier Printer", text: error.message || "Unable to connect printer." });
-    }
-  });
-
-  $("#connectKitchenPrinter").off("click").on("click", async function () {
-    try {
-      await connectBluetoothPrinter("kitchen", true);
-      Swal.fire({ icon: "success", title: "Saved", text: "Kitchen printer saved for future prints." });
-    } catch (error) {
-      Swal.fire({ icon: "error", title: "Kitchen Printer", text: error.message || "Unable to connect printer." });
-    }
-  });
 
   if (window.DejatiBluetoothPrinter) window.DejatiBluetoothPrinter.refreshStatus();
 
@@ -708,7 +706,7 @@ $('#clearCart').on('click', function() {
       return;
     }
 
-    $.post('/transaksi_post/', {
+    $.post('/include/transaksi/save_order.php', {
       tableNumber,
       paymentMethod,
       subtotal,
