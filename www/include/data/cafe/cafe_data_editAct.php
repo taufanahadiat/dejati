@@ -10,6 +10,11 @@ if (!isset($conn)) {
 }
 require_once __DIR__ . '/cafe_image_helper.php';
 
+function cafe_decode_form_text($value)
+{
+    return trim(html_entity_decode((string)$value, ENT_QUOTES | ENT_HTML5, 'UTF-8'));
+}
+
 // Handle Dropzone image upload
 if (isset($_POST['upload_only']) && $_POST['upload_only']) {
     $tmpName = cafe_sanitize_filename(pathinfo($_POST['foto'] ?? '', PATHINFO_FILENAME));
@@ -30,15 +35,49 @@ if ($_SERVER['REQUEST_METHOD'] !== 'POST') {
 }
 
 $id_prod    = (int)($_POST['id_prod'] ?? 0);
-$nama_prod  = trim($_POST['nama_prod'] ?? '');
+$nama_prod  = cafe_decode_form_text($_POST['nama_prod'] ?? '');
 $id_cat     = (int)($_POST['id_cat'] ?? 0);
-$variant    = (int)($_POST['variant'] ?? 0);
-$nama_var   = $variant === 1 ? trim($_POST['nama_var'] ?? '') : null;
-$biaya_var  = $variant === 1 ? trim($_POST['biaya_var'] ?? '') : null;
-$biaya      = $variant === 1 ? null : (int)preg_replace('/\D+/', '', (string)($_POST['biaya'] ?? ''));
+$variantRaw = $_POST['variant'] ?? 0;
+$variant    = ($variantRaw === 'yes' || $variantRaw === '1' || $variantRaw === 1) ? 1 : 0;
+$nama_var   = null;
+$biaya_var  = null;
+$biaya      = null;
 $temp_foto  = basename($_POST['foto'] ?? '');
 $updated_by = $_SESSION['id_user'] ?? 0;
 $updated_at = date('Y-m-d H:i:s');
+
+if ($variant === 1) {
+    $variantNames = array_map(
+        'cafe_decode_form_text',
+        array_filter((array)($_POST['variant_name'] ?? []), static function ($value) {
+            return trim((string)$value) !== '';
+        })
+    );
+    $variantPrices = array_map(
+        static function ($value) {
+            return preg_replace('/\D+/', '', (string)$value);
+        },
+        array_filter((array)($_POST['variant_price'] ?? []), static function ($value) {
+            return trim((string)$value) !== '';
+        })
+    );
+
+    if (!$variantNames && isset($_POST['nama_var'])) {
+        $variantNames = array_map('cafe_decode_form_text', explode(';', (string)$_POST['nama_var']));
+    }
+
+    if (!$variantPrices && isset($_POST['biaya_var'])) {
+        $variantPrices = array_map(static function ($value) {
+            return preg_replace('/\D+/', '', (string)$value);
+        }, explode(';', (string)$_POST['biaya_var']));
+    }
+
+    $nama_var = implode(';', $variantNames);
+    $biaya_var = implode(';', $variantPrices);
+} else {
+    $biayaInput = $_POST['biaya'] ?? ($_POST['harga_toko'] ?? '');
+    $biaya = (int)preg_replace('/\D+/', '', (string)$biayaInput);
+}
 
 if ($id_prod <= 0 || $nama_prod === '' || $id_cat <= 0 || !in_array($variant, [0, 1], true)) {
     http_response_code(422);

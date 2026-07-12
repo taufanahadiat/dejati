@@ -1,5 +1,3 @@
-version: "3.9"
-
 services:
   # --- PHP + Apache web app ---
   web:
@@ -28,6 +26,21 @@ services:
     volumes:
       - db_data:/var/lib/mysql
       - ./database:/docker-entrypoint-initdb.d
+    networks:
+      - proxy
+
+  # --- phpMyAdmin ---
+  phpmyadmin:
+    image: phpmyadmin:latest
+    container_name: lampp_phpmyadmin
+    restart: unless-stopped
+    depends_on:
+      - db
+    environment:
+      PMA_HOST: db
+      PMA_PORT: 3306
+      PMA_ABSOLUTE_URI: http://192.168.100.161/phpmyadmin/
+      UPLOAD_LIMIT: 64M
     networks:
       - proxy
 

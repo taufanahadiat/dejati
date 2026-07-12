@@ -1,3 +1,7 @@
 http://pos.dejaticoffee.com, http://192.168.100.161 {
+    handle_path /phpmyadmin* {
+        reverse_proxy phpmyadmin:80
+    }
+
     reverse_proxy lampp_web:80
 }

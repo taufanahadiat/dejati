@@ -1,7 +1,7 @@
 <link rel="stylesheet" href="dist/css/material-symbols.css">
 <link rel="stylesheet" href="include/transaksi/custom.css">
 <?php
-require_once __DIR__ . '/../cafe/cafe_image_helper.php';
+require_once __DIR__ . '/../data/cafe/cafe_image_helper.php';
 $breadcrumb = [
     ['label' => 'Transaksi Kasir', 'link' => '#'],
 ];

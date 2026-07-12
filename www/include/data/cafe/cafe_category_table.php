@@ -51,9 +51,6 @@ if ($result->num_rows > 0) {
 }
 ?>
 
-<link rel="stylesheet" href="dist/css/material-symbols.css">
-<link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/bootstrap@4.6.2/dist/css/bootstrap.min.css">
-
 <style>
 #iconModal {
     z-index: 1061 !important;
@@ -193,9 +190,6 @@ if ($result->num_rows > 0) {
   </div>
 </div>
 
-<script src="https://code.jquery.com/jquery-3.6.0.min.js"></script>
-<script src="https://cdn.jsdelivr.net/npm/bootstrap@4.6.2/dist/js/bootstrap.bundle.min.js"></script>
-
 <script>
 const materialIcons = [
     "restaurant", "local_cafe", "store", "category", "shopping_cart", "fastfood",
@@ -207,6 +201,7 @@ const materialIcons = [
     "restaurant_menu", "home", "cottage", "apartment", "local_pharmacy"
 ];
 let iconSelectContext = "add";
+let iconsInitialized = false;
 
 function populateIcons(filter = "") {
   const $grid = $("#iconGrid").empty();
@@ -224,11 +219,17 @@ function populateIcons(filter = "") {
 }
 
 $(function(){
-  populateIcons();
   $("#iconSearch").on("input", function(){ populateIcons($(this).val()); });
 
   $("#addIconPickerBtn").click(() => iconSelectContext = "add");
   $("#editIconPickerBtn").click(() => iconSelectContext = "edit");
+
+  $("#iconModal").on("show.bs.modal", function() {
+    if (!iconsInitialized) {
+      populateIcons();
+      iconsInitialized = true;
+    }
+  });
 
   $("#iconGrid").on("click", ".icon-option", function(){
     const icon = $(this).data("icon");

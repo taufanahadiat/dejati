@@ -5,6 +5,26 @@
     </a>
 </div>
 
+<style>
+    #cafe_dataTable_wrapper .dt-buttons .btn {
+        border-radius: 0;
+    }
+
+    #cafe_dataTable_wrapper .dt-buttons.btn-group,
+    #cafe_dataTable_wrapper .dt-buttons.btn-group .btn,
+    #cafe_dataTable_wrapper .dt-buttons .btn,
+    #cafe_dataTable_wrapper .dt-button-collection,
+    #cafe_dataTable_wrapper .dt-button-collection .dropdown-item,
+    #cafe_dataTable_wrapper .dt-button-collection .dt-button,
+    #cafe_dataTable_wrapper .dt-button-collection .buttons-columnVisibility,
+    #cafe_dataTable_wrapper .pagination .page-link,
+    #cafe_dataTable_wrapper .pagination .page-item:first-child .page-link,
+    #cafe_dataTable_wrapper .pagination .page-item:last-child .page-link,
+    #cafe_dataTable_wrapper .col-md-7 .pagination .page-link {
+        border-radius: 0 !important;
+    }
+</style>
+
 <div class="table-responsive">
     <table id="cafe_dataTable" class="table table-bordered table-striped table-hover" width="100%">
         <thead class="thead-light">
@@ -13,6 +33,8 @@
                 <th>Foto</th>
                 <th>Produk</th>
                 <th>Kategori</th>
+                <th>Pajak</th>
+                <th>Service</th>
                 <th>Variant</th>
                 <th>Harga Produk</th>
                 <th>Action</th>
@@ -21,7 +43,7 @@
         <tbody>
             <?php
             $query = mysqli_query($conn, "
-                SELECT dc.id_prod, dc.nama_prod, dc.variant, dc.nama_var, dc.biaya, dc.biaya_var, dc.foto, cat.name_cat
+                SELECT dc.id_prod, dc.nama_prod, dc.variant, dc.nama_var, dc.biaya, dc.biaya_var, dc.foto, dc.tax_free_item, dc.non_service_charge, cat.name_cat
                 FROM tb_datacafe dc
                 LEFT JOIN tb_category cat ON dc.id_cat = cat.id_cat
                 ORDER BY dc.nama_prod ASC
@@ -35,13 +57,14 @@
                     $variantPrices = $isVariant ? explode(';', $row['biaya_var']) : [];
 
                     $imageUrl = cafe_product_image_url($row['foto'] ?? '');
+                    $thumbUrl = cafe_product_thumb_url($row['foto'] ?? '');
             ?>
                     <tr>
                         <td><?= $no++; ?></td>
                         <td>
                             <a href="<?= htmlspecialchars($imageUrl) ?>" target="_blank">
                                 <div style="width: 80px; height: 80px; overflow: hidden;">
-                                    <img src="<?= htmlspecialchars($imageUrl) ?>" alt="Foto Produk" loading="lazy" decoding="async"
+                                    <img src="<?= htmlspecialchars($thumbUrl) ?>" alt="Foto Produk" loading="lazy" decoding="async" width="80" height="80" fetchpriority="low"
                                         class="img-thumbnail elevation-2"
                                         style="width: 100%; height: 100%; object-fit: cover; border-radius: 20%;">
                                 </div>
@@ -49,6 +72,12 @@
                         </td>
                         <td><?= htmlspecialchars($row['nama_prod']); ?></td>
                         <td><?= htmlspecialchars($row['name_cat'] ?? '-'); ?></td>
+                        <td>
+                            <?= (int)($row['tax_free_item'] ?? 0) === 1 ? '<span class="badge badge-info">YES</span>' : '<span class="badge badge-warning">NO</span>' ?>
+                        </td>
+                        <td>
+                            <?= (int)($row['non_service_charge'] ?? 0) === 1 ? '<span class="badge badge-info">YES</span>' : '<span class="badge badge-warning">NO</span>' ?>
+                        </td>
                         <td>
                             <?php
                             if ($isVariant) {
@@ -71,21 +100,21 @@
                             }
                             ?>
                         </td>
-                        <td>
-                            <a href="main.php?id=cafeData_edit&id_produk=<?= $row['id_prod']; ?>" class="btn btn-success btn-sm">
-                                <i class="fas fa-edit"></i> Edit
+                        <td class="text-nowrap">
+                            <a href="main.php?id=cafeData_edit&id_produk=<?= $row['id_prod']; ?>" class="btn btn-success btn-sm" title="Edit" aria-label="Edit">
+                                <i class="fas fa-edit"></i>
                             </a>
                             <a href="/include/data/cafe/cafe_data_handler.php?id_produk=<?= $row['id_prod']; ?>"
                                 onclick="return confirm('Yakin ingin menghapus produk ini?');"
-                                class="btn btn-danger btn-sm">
-                                <i class="fas fa-trash"></i> Delete
+                                class="btn btn-danger btn-sm" title="Delete" aria-label="Delete">
+                                <i class="fas fa-trash"></i>
                             </a>
                         </td>
                     </tr>
             <?php
                 }
             } else {
-                echo '<tr><td colspan="7" class="text-center"><b>Tidak ada data yang tersedia.</b></td></tr>';
+                echo '<tr><td colspan="9" class="text-center"><b>Tidak ada data yang tersedia.</b></td></tr>';
             }
             ?>
         </tbody>

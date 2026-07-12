@@ -35,6 +35,22 @@ $result = $stmt->get_result();
 <link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/flatpickr/dist/flatpickr.min.css">
 <script src="https://cdn.jsdelivr.net/npm/flatpickr"></script>
 
+<style>
+    #ordersTable_wrapper .dt-buttons.btn-group,
+    #ordersTable_wrapper .dt-buttons.btn-group .btn,
+    #ordersTable_wrapper .dt-buttons .btn,
+    #ordersTable_wrapper .dt-button-collection,
+    #ordersTable_wrapper .dt-button-collection .dropdown-item,
+    #ordersTable_wrapper .dt-button-collection .dt-button,
+    #ordersTable_wrapper .dt-button-collection .buttons-columnVisibility,
+    #ordersTable_wrapper .pagination .page-link,
+    #ordersTable_wrapper .pagination .page-item:first-child .page-link,
+    #ordersTable_wrapper .pagination .page-item:last-child .page-link,
+    #ordersTable_wrapper .col-md-7 .pagination .page-link {
+        border-radius: 0 !important;
+    }
+</style>
+
 <!-- Content Wrapper -->
 <section class="content">
     <div class="row">

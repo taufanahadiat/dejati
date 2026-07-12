@@ -10,6 +10,10 @@ if ($isEdit) {
     $stmt->execute();
     $query = $stmt->get_result();
     $product = mysqli_fetch_assoc($query);
+    if ($product) {
+        $product['nama_prod'] = html_entity_decode((string)$product['nama_prod'], ENT_QUOTES | ENT_HTML5, 'UTF-8');
+        $product['nama_var'] = html_entity_decode((string)($product['nama_var'] ?? ''), ENT_QUOTES | ENT_HTML5, 'UTF-8');
+    }
 }
 
 $breadcrumb = [
