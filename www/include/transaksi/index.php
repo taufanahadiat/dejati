@@ -500,14 +500,14 @@ if (!empty($imported_order_json)):
   if (Array.isArray(IMPORTED.items)) {
     IMPORTED.items.forEach(it => {
       importedCart.push({
-        id: it.id_tr || it.item_id || 0,
+        id: it.id_prod || it.item_id || 0,
         name: (it.item_name || it.name || '').trim(),
         unitPrice: toInt(it.item_price || it.price || 0),
         finalPrice: toInt(it.item_price || it.price || 0), // assume no discount imported
         discountValue: 0,
         discountType: 'amount', // or 'percent' if you want
         qty: toInt(it.quantity || it.qty || 1),
-        orderType: it.order_type || 'dine-in',
+        orderType: it.order_type ?? null,
         cartType: 'product',
         notes: it.notes || ''
       });

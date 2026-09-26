@@ -19,7 +19,7 @@ $orderResult = $stmt->get_result();
 $orderData = $orderResult ? $orderResult->fetch_assoc() : null;
 $stmt->close();
 
-$stmt = $conn->prepare('SELECT id_prod, item_name, item_price, quantity, total FROM order_items WHERE id_tr = ?');
+$stmt = $conn->prepare('SELECT id_prod, item_name, item_price, quantity, total, order_type FROM order_items WHERE id_tr = ?');
 $stmt->bind_param('i', $id);
 $stmt->execute();
 $itemsResult = $stmt->get_result();

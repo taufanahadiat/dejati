@@ -40,13 +40,6 @@ $result = $stmt->get_result();
 <script src="https://cdn.jsdelivr.net/npm/flatpickr"></script>
 
 <style>
-    #ordersTable_wrapper .dt-buttons.btn-group,
-    #ordersTable_wrapper .dt-buttons.btn-group .btn,
-    #ordersTable_wrapper .dt-buttons .btn,
-    #ordersTable_wrapper .dt-button-collection,
-    #ordersTable_wrapper .dt-button-collection .dropdown-item,
-    #ordersTable_wrapper .dt-button-collection .dt-button,
-    #ordersTable_wrapper .dt-button-collection .buttons-columnVisibility,
     #ordersTable_wrapper .pagination .page-link,
     #ordersTable_wrapper .pagination .page-item:first-child .page-link,
     #ordersTable_wrapper .pagination .page-item:last-child .page-link,
@@ -59,7 +52,7 @@ $result = $stmt->get_result();
 <section class="content">
     <div class="row">
         <div class="col-12">
-            <div class="card card-outline card-dark">
+            <div class="card card-outline card-dark mt-2">
                 <div class="card-body">
                     <small class="text-muted d-block mb-2">Showing transactions from <?= htmlspecialchars($startFilter) ?> to <?= htmlspecialchars($endFilter) ?>.</small>
 
@@ -73,25 +66,11 @@ $result = $stmt->get_result();
                                 <option value="custom" <?= $reportRange === 'custom' ? 'selected' : '' ?>>Custom</option>
                             </select>
                         </div>
-                        <div class="col-md-2">
-                            <label for="startDate"><strong>Start Date</strong></label>
-                            <input type="text" id="startDate" class="form-control" value="<?= htmlspecialchars($startFilter) ?>">
+                        <div class="col-md-5">
+                            <label for="reportDateRange"><strong>Date Range</strong></label>
+                            <input type="text" id="reportDateRange" class="form-control" placeholder="Pilih rentang tanggal" aria-label="Rentang tanggal transaksi">
                         </div>
-                        <div class="col-md-2">
-                            <label for="endDate"><strong>End Date</strong></label>
-                            <input type="text" id="endDate" class="form-control" value="<?= htmlspecialchars($endFilter) ?>">
-                        </div>
-                        <div class="col-md-2">
-                            <button id="applyDateFilter" class="btn btn-primary btn-block mt-4">
-                                <i class="fas fa-filter"></i> Apply
-                            </button>
-                        </div>
-                        <div class="col-md-1">
-                            <button id="resetFilter" class="btn btn-outline-secondary btn-block mt-4">
-                                <i class="fas fa-undo"></i> Today
-                            </button>
-                        </div>
-                        <div class="col-md-2 text-right">
+                        <div class="col-md-4 text-md-right">
                             <button id="printClosinganBtn" class="btn btn-info mt-4">
                                 <i class="fas fa-cash-register"></i> Closing Hari Ini
                             </button>
@@ -124,6 +103,10 @@ $result = $stmt->get_result();
   </div>
 </div>
 
+                    <div class="mb-3" role="group" aria-label="Export laporan">
+                        <button type="button" class="btn btn-success btn-sm export-report" data-format="excel"><i class="fas fa-file-excel"></i> Export Excel</button>
+                        <button type="button" class="btn btn-danger btn-sm export-report" data-format="pdf"><i class="fas fa-file-pdf"></i> Export PDF</button>
+                    </div>
                     <!-- Orders table -->
                     <table id="ordersTable" class="table table-bordered table-striped">
                         <thead>
@@ -169,6 +152,49 @@ $result = $stmt->get_result();
         </div>
     </div>
 </section>
+
+<div class="modal fade" id="exportReportModal" tabindex="-1" role="dialog" aria-labelledby="exportReportTitle" aria-hidden="true">
+    <div class="modal-dialog" role="document"><div class="modal-content">
+        <div class="modal-header">
+            <h5 class="modal-title" id="exportReportTitle">Export Laporan</h5>
+            <button type="button" class="close" data-dismiss="modal" aria-label="Tutup">&times;</button>
+        </div>
+        <form id="exportReportForm">
+            <div class="modal-body">
+                <div class="form-group">
+                    <label for="exportDateRange">Rentang Tanggal</label>
+                    <input type="text" id="exportDateRange" class="form-control" aria-describedby="exportDateHelp">
+                    <small id="exportDateHelp" class="form-text text-muted">Pilih satu tanggal untuk laporan sehari, atau dua tanggal untuk rentang.</small>
+                </div>
+                <div class="form-group">
+                    <label for="exportReportType">Jenis Laporan</label>
+                    <select id="exportReportType" class="form-control">
+                        <option value="overview">Keseluruhan penjualan</option>
+                        <option value="transactions">Rincian penjualan per transaksi</option>
+                        <option value="items">Penjualan per item</option>
+                        <option value="categories">Penjualan per kategori</option>
+                    </select>
+                </div>
+                <fieldset class="form-group">
+                    <legend class="col-form-label font-weight-bold">Data yang Disertakan</legend>
+                    <?php foreach (['cafe' => 'Cafe', 'carwash' => 'Carwash', 'detailing' => 'Detailing'] as $value => $label): ?>
+                        <div class="form-check form-check-inline">
+                            <input type="checkbox" class="form-check-input export-division" id="export-<?= $value ?>" value="<?= $value ?>" checked>
+                            <label class="form-check-label" for="export-<?= $value ?>"><?= $label ?></label>
+                        </div>
+                    <?php endforeach; ?>
+                </fieldset>
+                <small class="text-muted d-block">Penjualan menghitung pesanan PAID. Pembatalan dilaporkan terpisah. Diskon transaksi campuran dibagi proporsional untuk layanan yang dipilih.</small>
+                <div id="exportReportError" class="alert alert-danger mt-3 mb-0 d-none" role="alert"></div>
+                <div id="exportReportProgress" class="text-info mt-3 d-none" role="status">Menyiapkan laporan…</div>
+            </div>
+            <div class="modal-footer">
+                <button type="button" class="btn btn-secondary" data-dismiss="modal">Tutup</button>
+                <button type="submit" class="btn btn-primary" id="confirmExportReport">Export</button>
+            </div>
+        </form>
+    </div></div>
+</div>
 
 <!-- Details modal -->
 <div class="modal fade" id="detailsModal" tabindex="-1">
@@ -265,12 +291,10 @@ $result = $stmt->get_result();
 <script src="../../plugins/datatables/jquery.dataTables.min.js"></script>
 <script src="../../plugins/datatables-bs4/js/dataTables.bootstrap4.min.js"></script>
 <script src="../../plugins/datatables-responsive/js/dataTables.responsive.min.js"></script>
-<script src="../../plugins/datatables-buttons/js/dataTables.buttons.min.js"></script>
-<script src="../../plugins/datatables-buttons/js/buttons.bootstrap4.min.js"></script>
-<script src="../../plugins/jszip/jszip.min.js"></script>
+<script src="/dist/js/exceljs.min.js"></script>
 <script src="../../plugins/pdfmake/pdfmake.min.js"></script>
 <script src="../../plugins/pdfmake/vfs_fonts.js"></script>
-<script src="../../plugins/datatables-buttons/js/buttons.html5.min.js"></script>
+<script src="/include/report/export.js?v=<?= filemtime(__DIR__ . '/export.js') ?>"></script>
 
 
 <script>
@@ -405,10 +429,6 @@ $(function(){
         const reportRange = <?= json_encode($reportRange) ?>;
         const reportStartDate = <?= json_encode($startFilter) ?>;
         const reportEndDate = <?= json_encode($endFilter) ?>;
-        const reportTitle = `History Transaksi ${reportStartDate} to ${reportEndDate}`;
-        const reportFileName = `History_Transaksi_${reportStartDate}_to_${reportEndDate}`;
-        const exportOptions = { columns: [0, 1, 2, 3, 4] };
-
         let table = $("#ordersTable").DataTable({
             responsive: true,
             lengthChange: true,
@@ -416,16 +436,11 @@ $(function(){
             pageLength: 25,
             lengthMenu: [[10, 25, 50, 100], [10, 25, 50, 100]],
             autoWidth: false,
-            buttons: [
-                { extend: "csv", text: "CSV", title: reportTitle, filename: reportFileName, exportOptions },
-                { extend: "excel", text: "Excel", title: reportTitle, filename: reportFileName, exportOptions },
-                { extend: "pdf", text: "PDF", title: reportTitle, filename: reportFileName, exportOptions }
-            ],
             columnDefs: [{ targets: 5, orderable: false, searchable: false }],
             order: [[0, "desc"]]
         });
 
-        table.buttons().container().appendTo('#ordersTable_wrapper .col-md-6:eq(0)');
+        window.SalesReportExport.init(reportStartDate, reportEndDate);
 
         function formatReportDate(date) {
             const year = date.getFullYear();
@@ -455,44 +470,62 @@ $(function(){
             return [formatReportDate(today), formatReportDate(today)];
         }
 
-        flatpickr("#startDate", { dateFormat: "Y-m-d", locale: { firstDayOfWeek: 1 } });
-        flatpickr("#endDate", { dateFormat: "Y-m-d", locale: { firstDayOfWeek: 1 } });
-
-        function syncPresetDates(force = false) {
-            const preset = $('#reportPreset').val();
-            const isCustom = preset === "custom";
-            $('#startDate, #endDate').prop('readonly', !isCustom);
-
-            if (!isCustom && force) {
-                const [start, end] = getPresetRange(preset);
-                $('#startDate').val(start);
-                $('#endDate').val(end);
-            }
+        function applyReportFilter(preset, start, end) {
+            window.location.href = `main.php?id=report&range=${encodeURIComponent(preset)}&start=${encodeURIComponent(start)}&end=${encodeURIComponent(end)}`;
         }
 
-        $('#reportPreset').val(reportRange);
-        syncPresetDates(false);
+        let applySingleDateButton;
+        const dateRangePicker = flatpickr("#reportDateRange", {
+            mode: "range",
+            dateFormat: "Y-m-d",
+            altInput: true,
+            altFormat: "d M Y",
+            defaultDate: [reportStartDate, reportEndDate],
+            locale: { firstDayOfWeek: 1, rangeSeparator: " — " },
+            onReady: function(selectedDates, dateStr, instance) {
+                const footer = document.createElement('div');
+                footer.className = 'border-top p-2 text-right';
+                applySingleDateButton = document.createElement('button');
+                applySingleDateButton.type = 'button';
+                applySingleDateButton.className = 'btn btn-primary btn-sm';
+                applySingleDateButton.textContent = 'Apply';
+                applySingleDateButton.disabled = selectedDates.length !== 1;
+                applySingleDateButton.addEventListener('click', function() {
+                    if (instance.selectedDates.length !== 1) return;
+                    const date = formatReportDate(instance.selectedDates[0]);
+                    $('#reportPreset').val('custom');
+                    applyReportFilter('custom', date, date);
+                });
+                footer.appendChild(applySingleDateButton);
+                instance.calendarContainer.appendChild(footer);
+            },
+            onOpen: function(selectedDates) {
+                applySingleDateButton.disabled = selectedDates.length !== 1;
+            },
+            onChange: function(selectedDates) {
+                applySingleDateButton.disabled = selectedDates.length !== 1;
+                // Two dates apply immediately; one date can be applied with the popup button.
+                if (selectedDates.length !== 2) return;
+                $('#reportPreset').val('custom');
+                applyReportFilter('custom', formatReportDate(selectedDates[0]), formatReportDate(selectedDates[1]));
+            },
+            onClose: function(selectedDates, dateStr, instance) {
+                // Restore the active filter if the user leaves a range incomplete.
+                if (selectedDates.length !== 2) {
+                    instance.setDate([reportStartDate, reportEndDate], false);
+                    $('#reportPreset').val(reportRange);
+                }
+            }
+        });
 
         $('#reportPreset').on('change', function() {
-            syncPresetDates(true);
-        });
-
-        $('#applyDateFilter').on('click', function() {
-            const preset = $('#reportPreset').val();
-            const start = $('#startDate').val();
-            const end = $('#endDate').val();
-
-            if (!start || !end) {
-                alert('Please select a valid start and end date.');
+            const preset = $(this).val();
+            if (preset === 'custom') {
+                dateRangePicker.open();
                 return;
             }
-
-            window.location.href = `main.php?id=report&range=${encodeURIComponent(preset)}&start=${encodeURIComponent(start)}&end=${encodeURIComponent(end)}`;
-        });
-
-        $('#resetFilter').on('click', function() {
-            const [start, end] = getPresetRange("today");
-            window.location.href = `main.php?id=report&range=today&start=${encodeURIComponent(start)}&end=${encodeURIComponent(end)}`;
+            const [start, end] = getPresetRange(preset);
+            applyReportFilter(preset, start, end);
         });
         let detailRequest = null;
         $(document).on("click", ".view-details", function() {
@@ -589,8 +622,8 @@ $(function () {
         qty: parseInt(item.quantity || 1, 10) || 1,
         unitPrice: parseInt(item.item_price || 0, 10) || 0,
         finalPrice: parseInt(item.item_price || 0, 10) || 0,
-        notes: "",
-        orderType: ""
+        notes: item.order_type === "take-away" ? "Take Away" : (item.order_type === "dine-in" ? "Dine In" : ""),
+        orderType: item.order_type || ""
       });
     });
 

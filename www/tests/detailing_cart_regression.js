@@ -59,3 +59,13 @@ vm.runInContext("addVariantToCart('1', 'Coffee', 'Hot', 20000)", context);
 events['#variantModal:hidden.bs.modal']();
 assert.deepEqual(modalCalls.at(-1), ['#buyQueryModal', 'show']);
 console.log('PASS: both vehicle variants wait for selection before service modal; chosen price/name persisted; Cafe variant flow preserved');
+
+vm.runInContext("showBuyQueryModal('111', 'Order Type Coffee', 15000); saveBuyQuery()", context);
+vm.runInContext("showBuyQueryModal('111', 'Order Type Coffee', 15000)", context);
+values['#orderTypeSwitch'] = 'take-away';
+vm.runInContext('saveBuyQuery()', context);
+const cafeTypes = JSON.parse(storage.cart).filter(item => item.name === 'Order Type Coffee');
+assert.equal(cafeTypes.length, 2);
+assert.deepEqual(cafeTypes.map(item => item.orderType), ['dine-in', 'take-away']);
+assert.equal(imported.find(item => item.cartType === 'product').orderType, null);
+console.log('PASS: dine-in and take-away stay separate in cart; unknown imported type stays null');

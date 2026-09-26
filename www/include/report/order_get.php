@@ -1,5 +1,6 @@
 <?php
 require_once __DIR__ . '/../../config/config.php';
+require_once __DIR__ . '/../../config/order_type.php';
 
 $id = (int) ($_GET['id'] ?? 0);
 $orderResult = $id > 0 ? mysqli_query($conn, "SELECT *, COALESCE(NULLIF(status_order, ''), CASE WHEN paid_amount = 0 THEN 'OPEN BILL' ELSE 'PAID' END) AS status_order FROM orders WHERE id=$id LIMIT 1") : false;
@@ -52,6 +53,7 @@ $discount = max(0, $subtotal - (float) $order['total_amount']);
                         <tr>
                             <td>
                                 <?= $escape($item['item_name']) ?>
+                                <?php if ($isCafe): ?><small class="d-block text-muted"><?= $escape(transactionOrderTypeLabel($item['order_type'])) ?></small><?php endif; ?>
                                 <?php if (!$isCafe): ?>
                                     <small class="d-block text-muted">
                                         <?php if (!empty($item['variant_name'])): ?>Varian: <?= $escape($item['variant_name']) ?> | <?php endif; ?>

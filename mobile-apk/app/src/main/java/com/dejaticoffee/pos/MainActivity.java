@@ -381,7 +381,10 @@ public class MainActivity extends Activity {
         EditText qty = input("Qty"); qty.setText("1");
         EditText discount = input("Discount Rp"); discount.setText("0");
         EditText notes = input("Notes");
-        form.addView(qty); form.addView(discount); form.addView(notes);
+        Spinner orderType = new Spinner(this);
+        orderType.setAdapter(new ArrayAdapter<>(this, android.R.layout.simple_spinner_dropdown_item, new String[]{"Dine In", "Take Away"}));
+        form.addView(qty); form.addView(discount);
+        form.addView(small("Jenis Pesanan")); form.addView(orderType); form.addView(notes);
         new AlertDialog.Builder(this).setTitle(name).setView(form).setPositiveButton("Add", (d, w) -> {
             try {
                 int finalPrice = Math.max(0, price - intValue(discount));
@@ -389,6 +392,7 @@ public class MainActivity extends Activity {
                 row.put("type", "product"); row.put("productId", id); row.put("name", name);
                 row.put("unitPrice", price); row.put("finalPrice", finalPrice); row.put("qty", Math.max(1, intValue(qty)));
                 row.put("notes", notes.getText().toString());
+                row.put("orderType", orderType.getSelectedItemPosition() == 1 ? "take-away" : "dine-in");
                 cart.put(row); renderTransaksi();
             } catch (Exception e) { toast(e.getMessage()); }
         }).setNegativeButton("Cancel", null).show();
@@ -427,6 +431,10 @@ public class MainActivity extends Activity {
             TextView row = tv(item.optString("name") + " x" + item.optInt("qty") + "  " + rupiah(line), 14, Typeface.NORMAL);
             row.setOnClickListener(v -> toast("Long press remove coming next build"));
             panel.addView(row);
+            if (item.optString("type").equals("product")) {
+                String orderType = item.optString("orderType");
+                panel.addView(small(orderType.equals("take-away") ? "Take Away" : orderType.equals("dine-in") ? "Dine In" : "Belum tercatat"));
+            }
             if (!item.optString("notes").isEmpty()) panel.addView(small(item.optString("notes")));
         }
         panel.addView(tv("Total: " + rupiah(total), 22, Typeface.BOLD));
@@ -748,6 +756,10 @@ public class MainActivity extends Activity {
         for (int i = 0; items != null && i < items.length(); i++) {
             JSONObject item = items.optJSONObject(i);
             b.append(item.optString("name")).append(" x").append(item.optInt("qty")).append(" ").append(rupiah(item.optInt("total"))).append("\n");
+            String orderType = item.optString("orderType");
+            if (orderType.equals("dine-in") || orderType.equals("take-away")) {
+                b.append("  ").append(orderType.equals("take-away") ? "Take Away" : "Dine In").append("\n");
+            }
         }
         b.append("-----------------------------\n");
         b.append("Total: ").append(rupiah(t.optInt("totalAmount"))).append("\n");

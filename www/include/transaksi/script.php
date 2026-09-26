@@ -46,6 +46,11 @@
                 itemName = `<span class="text-danger">${itemName}</span>`;
             }
 
+            if ((item.cartType || 'product') === 'product') {
+                const orderTypeLabel = item.orderType === 'take-away' ? 'Take Away' : (item.orderType === 'dine-in' ? 'Dine In' : 'Belum tercatat');
+                itemName += ` <small class="d-block text-muted">${orderTypeLabel}</small>`;
+            }
+
             if (item.notes && item.notes.trim() !== '') {
                 itemName += ` <small class="text-muted">**${item.notes}</small>`;
             }
@@ -78,6 +83,7 @@
         $('#buyQueryTitle').text(item.name);
         $('#buyQty').val(item.qty);
         $('#buyNotes').val(item.notes || '');
+        $('#orderTypeSwitch').bootstrapSwitch('state', item.orderType !== 'take-away', true);
         $('#orderTypeSwitch').val(item.orderType || 'dine-in');
 
 
@@ -102,6 +108,7 @@
         $('#buyQueryTitle').text(name);
         $('#buyQty').val(1);
         $('#buyNotes').val('');
+        $('#orderTypeSwitch').bootstrapSwitch('state', true, true);
         $('#orderTypeSwitch').val('dine-in');
 
         $('#buyQueryModal').removeData('edit-index');

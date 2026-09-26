@@ -1,5 +1,6 @@
 <?php
 declare(strict_types=1);
+require_once __DIR__ . '/order-type.php';
 
 session_start();
 date_default_timezone_set('Asia/Jakarta');
@@ -306,6 +307,17 @@ if ($resource === 'transactions') {
         $payload = input();
         $items = $payload['items'] ?? [];
         if (!is_array($items) || count($items) === 0) out(['error' => 'Transaction requires items'], 422);
+        try {
+            foreach ($items as &$item) {
+                if (($item['type'] ?? $item['cartType'] ?? 'product') === 'product') {
+                    $item['orderType'] = transactionItemOrderType($item);
+                }
+            }
+            unset($item);
+        } catch (InvalidArgumentException $e) {
+            out(['error' => $e->getMessage()], 422);
+        }
+
         $normalized = [];
         $total = 0;
         foreach ($items as $item) {
@@ -320,6 +332,7 @@ if ($resource === 'transactions') {
                 'unitPrice' => (int) ($item['unitPrice'] ?? $finalPrice),
                 'finalPrice' => $finalPrice,
                 'total' => $lineTotal,
+                'orderType' => $item['orderType'] ?? null,
                 'notes' => $item['notes'] ?? '',
             ];
             if ($row['type'] === 'carwash') {

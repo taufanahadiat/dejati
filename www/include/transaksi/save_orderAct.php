@@ -2,6 +2,7 @@
 header('Content-Type: application/json');
 date_default_timezone_set("Asia/Jakarta");
 require_once __DIR__ . '/../../config/config.php';
+require_once __DIR__ . '/../../config/order_type.php';
 
 function parse_money_value($value)
 {
@@ -17,6 +18,18 @@ $items = json_decode($_POST['items'] ?? '[]', true);
 
 if ($tableNumber === '' || empty($items) || !is_array($items)) {
     echo json_encode(['status' => 'error', 'message' => 'Missing required fields']);
+    exit;
+}
+
+// Validate types before writing the order header or any items.
+try {
+    foreach ($items as &$item) {
+        if (!in_array($item['cartType'] ?? 'product', ['carwash', 'detailing'], true)) $item['orderType'] = transactionItemOrderType($item);
+    }
+    unset($item);
+} catch (InvalidArgumentException $e) {
+    http_response_code(422);
+    echo json_encode(['status' => 'error', 'message' => $e->getMessage()]);
     exit;
 }
 
@@ -143,10 +156,11 @@ foreach ($items as $item) {
     } else {
         $itemTotal = $unitPrice * $qty;
 
-        $sql = "INSERT INTO order_items (id_tr, id_prod, item_name, item_price, quantity, total)
-                VALUES (?, ?, ?, ?, ?, ?)";
+        $sql = "INSERT INTO order_items (id_tr, id_prod, item_name, item_price, quantity, total, order_type)
+                VALUES (?, ?, ?, ?, ?, ?, ?)";
         $stmt = mysqli_prepare($conn, $sql);
-        mysqli_stmt_bind_param($stmt, "issiii", $orderId, $productId, $itemName, $unitPrice, $qty, $itemTotal);
+        $orderType = $item['orderType'] ?? null;
+        mysqli_stmt_bind_param($stmt, "issiiis", $orderId, $productId, $itemName, $unitPrice, $qty, $itemTotal, $orderType);
         mysqli_stmt_execute($stmt);
     }
 }

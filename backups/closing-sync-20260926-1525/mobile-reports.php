@@ -13,18 +13,17 @@ function reportPaidSql(): string {
     return "UPPER(COALESCE(NULLIF(o.status_order, ''), CASE WHEN o.paid_amount = 0 THEN 'OPEN BILL' ELSE 'PAID' END)) = 'PAID'";
 }
 
-function reportClosing(mysqli $conn, ?string $date = null): array {
-    $date ??= date('Y-m-d');
+function reportClosing(mysqli $conn): array {
     $paid = reportPaidSql();
-    $row = reportQuery($conn,"SELECT ? tanggal, COALESCE(SUM(o.total_amount),0) total_penjualan,
+    $row = $conn->query("SELECT CURDATE() tanggal, COALESCE(SUM(o.total_amount),0) total_penjualan,
         COALESCE(SUM(IF(o.payment_method='cash',o.total_amount,0)),0) cash,
         COALESCE(SUM(IF(o.payment_method='qris',o.total_amount,0)),0) qris,
         COALESCE(SUM(IF(o.payment_method='credit_card',o.total_amount,0)),0) card
-        FROM orders o WHERE DATE(o.created_at)=? AND $paid",'ss',[$date,$date])->get_result()->fetch_assoc();
+        FROM orders o WHERE DATE(o.created_at)=CURDATE() AND $paid")->fetch_assoc();
     foreach (['cafe'=>'order_items','carwash'=>'order_carwash','detailing'=>'order_detailing'] as $key=>$table) {
-        $row[$key] = (int)reportQuery($conn,"SELECT COALESCE(SUM(i.total),0) total FROM $table i JOIN orders o ON o.id=i.id_tr WHERE DATE(o.created_at)=? AND $paid",'s',[$date])->get_result()->fetch_assoc()['total'];
+        $row[$key] = (int)$conn->query("SELECT COALESCE(SUM(i.total),0) total FROM $table i JOIN orders o ON o.id=i.id_tr WHERE DATE(o.created_at)=CURDATE() AND $paid")->fetch_assoc()['total'];
     }
-    $row['expenses'] = reportQuery($conn,'SELECT keterangan,total,created_at FROM pengeluaran WHERE DATE(created_at)=? ORDER BY id','s',[$date])->get_result()->fetch_all(MYSQLI_ASSOC);
+    $row['expenses'] = $conn->query('SELECT keterangan,total,created_at FROM pengeluaran WHERE DATE(created_at)=CURDATE() ORDER BY id')->fetch_all(MYSQLI_ASSOC);
     return reportNormalizeClosing($row);
 }
 
@@ -104,22 +103,13 @@ function reportSaveClosing(mysqli $conn, array $input, int $userId): array {
             $conn->commit();
             return json_decode($existing['response_json'],true,512,JSON_THROW_ON_ERROR);
         }
-        $date = (string)($input['date'] ?? '');
-        if (!preg_match('/^\d{4}-\d{2}-\d{2}$/',$date) || !checkdate((int)substr($date,5,2),(int)substr($date,8,2),(int)substr($date,0,4)) || $date > date('Y-m-d')) throw new InvalidArgumentException('Tanggal closing tidak valid.');
-        $sameDate = reportQuery($conn,'SELECT user_id,payload_hash,response_json FROM mobile_report_requests WHERE closing_date=?','s',[$date])->get_result()->fetch_assoc();
-        if ($sameDate) {
-            if ((int)$sameDate['user_id']!==$userId || !hash_equals($sameDate['payload_hash'],$hash)) throw new InvalidArgumentException('Closing tanggal ini sudah tersimpan dengan data berbeda.');
-            $conn->commit();
-            return json_decode($sameDate['response_json'],true,512,JSON_THROW_ON_ERROR);
-        }
-        $savedClosing = reportQuery($conn,'SELECT id FROM tb_closingan WHERE tanggal=? FOR UPDATE','s',[$date])->get_result()->fetch_assoc();
-        if ($savedClosing) throw new InvalidArgumentException('Closing tanggal ini sudah tersimpan di server. Muat ulang history.');
-        foreach ($expenses as $row) reportQuery($conn,'INSERT INTO pengeluaran (keterangan,total,created_at) VALUES (?,?,?)','sis',[$row['keterangan'],$row['total'],$date.' 23:59:59']);
-        $closing = reportClosing($conn,$date);
+        if (($input['date'] ?? '')!==date('Y-m-d')) throw new InvalidArgumentException('Tanggal sudah berubah. Muat ulang preview closing hari ini.');
+        foreach ($expenses as $row) reportQuery($conn,'INSERT INTO pengeluaran (keterangan,total,created_at) VALUES (?,?,NOW())','si',[$row['keterangan'],$row['total']]);
+        $closing = reportClosing($conn);
         reportQuery($conn,'INSERT INTO tb_closingan (tanggal,total_penjualan,cash,qris,card,cafe,carwash,detailing,detail_pengeluaran,created_at) VALUES (?,?,?,?,?,?,?,?,?,NOW()) ON DUPLICATE KEY UPDATE total_penjualan=VALUES(total_penjualan),cash=VALUES(cash),qris=VALUES(qris),card=VALUES(card),cafe=VALUES(cafe),carwash=VALUES(carwash),detailing=VALUES(detailing),detail_pengeluaran=VALUES(detail_pengeluaran),created_at=NOW()',
             'siiiiiiis',[$closing['tanggal'],$closing['total_penjualan'],$closing['cash'],$closing['qris'],$closing['card'],$closing['cafe'],$closing['carwash'],$closing['detailing'],json_encode($closing['expenses'],JSON_UNESCAPED_UNICODE|JSON_THROW_ON_ERROR)]);
         $result = ['closing'=>$closing,'saved'=>true];
-        reportQuery($conn,'INSERT INTO mobile_report_requests (request_id,closing_date,user_id,payload_hash,response_json,created_at) VALUES (?,?,?,?,?,NOW())','ssiss',[$key,$date,$userId,$hash,json_encode($result,JSON_THROW_ON_ERROR)]);
+        reportQuery($conn,'INSERT INTO mobile_report_requests (request_id,user_id,payload_hash,response_json,created_at) VALUES (?,?,?,?,NOW())','siss',[$key,$userId,$hash,json_encode($result,JSON_THROW_ON_ERROR)]);
         $conn->commit();
         return $result;
     } catch (Throwable $e) { $conn->rollback(); throw $e; }
