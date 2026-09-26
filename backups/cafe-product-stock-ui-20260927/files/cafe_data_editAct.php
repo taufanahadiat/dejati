@@ -9,7 +9,6 @@ if (!isset($conn)) {
     include __DIR__ . '/../../../config/config.php';
 }
 require_once __DIR__ . '/cafe_image_helper.php';
-require_once __DIR__ . '/cafe_stock_helper.php';
 
 function cafe_decode_form_text($value)
 {
@@ -46,14 +45,6 @@ $biaya      = null;
 $temp_foto  = basename($_POST['foto'] ?? '');
 $updated_by = $_SESSION['id_user'] ?? 0;
 $updated_at = date('Y-m-d H:i:s');
-
-try {
-    $stockBinding = cafe_parse_stock_binding_input($conn);
-} catch (InvalidArgumentException $error) {
-    http_response_code(422);
-    echo $error->getMessage();
-    exit;
-}
 
 if ($variant === 1) {
     $variantNames = array_map(
@@ -136,9 +127,6 @@ if (isset($_POST['remove_foto']) && $_POST['remove_foto'] === "1" && $temp_foto 
     }
 }
 
-mysqli_report(MYSQLI_REPORT_ERROR | MYSQLI_REPORT_STRICT);
-$conn->begin_transaction();
-try {
 $sql = "UPDATE tb_datacafe
         SET nama_prod = ?, id_cat = ?, variant = ?, nama_var = ?, biaya_var = ?, biaya = ?, foto = ?, updated_at = ?, updated_by = ?
         WHERE id_prod = ?";
@@ -163,13 +151,4 @@ if (!$stmt->execute()) {
 }
 
 $stmt->close();
-cafe_replace_stock_bindings($conn, $id_prod, $stockBinding);
-$conn->commit();
-} catch (Throwable $error) {
-    $conn->rollback();
-    error_log('Edit produk cafe: ' . $error->getMessage());
-    http_response_code(500);
-    echo "Produk gagal diperbarui.";
-    exit;
-}
 echo "success";

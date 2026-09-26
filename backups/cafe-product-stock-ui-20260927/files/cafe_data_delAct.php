@@ -22,25 +22,11 @@ if (isset($_GET['id_produk'])) {
         }
     }
 
-    mysqli_report(MYSQLI_REPORT_ERROR | MYSQLI_REPORT_STRICT);
-    $conn->begin_transaction();
-    try {
-    $stmt = $conn->prepare("DELETE FROM stock_product_bindings WHERE product_id = ?");
-    $stmt->bind_param("i", $id_prod);
-    $stmt->execute();
-    $stmt->close();
-
     // 3. Delete from DB
     $stmt = $conn->prepare("DELETE FROM tb_datacafe WHERE id_prod = ?");
     $stmt->bind_param("i", $id_prod);
     $stmt->execute();
     $stmt->close();
-    $conn->commit();
-    } catch (Throwable $error) {
-        $conn->rollback();
-        http_response_code(500);
-        exit('Produk gagal dihapus.');
-    }
 
     // Redirect back to table page
     header("Location: ../../main.php?id=cafeData&msg=deleted");

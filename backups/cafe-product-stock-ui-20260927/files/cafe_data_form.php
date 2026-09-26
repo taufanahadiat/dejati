@@ -16,20 +16,6 @@ if ($isEdit) {
     }
 }
 
-$stockItems = $conn->query("SELECT id,name FROM stock_items WHERE active=1 ORDER BY name")->fetch_all(MYSQLI_ASSOC);
-$selectedStockIds = [];
-$stockUsage = 1;
-if ($isEdit && $product) {
-    $stmt = $conn->prepare('SELECT stock_item_id,quantity_per_sale FROM stock_product_bindings WHERE product_id=? ORDER BY stock_item_id');
-    $stmt->bind_param('i', $id);
-    $stmt->execute();
-    foreach ($stmt->get_result()->fetch_all(MYSQLI_ASSOC) as $binding) {
-        $selectedStockIds[] = (int)$binding['stock_item_id'];
-        $stockUsage = (float)$binding['quantity_per_sale'];
-    }
-}
-$stockEnabled = count($selectedStockIds) > 0;
-
 $breadcrumb = [
     ['label' => 'Daftar Produk Cafe', 'link' => '#'],
     ['label' => 'Produk', 'link' => ''],
@@ -104,37 +90,6 @@ $breadcrumb = [
                                     }
                                     ?>
                                 </select>
-                            </div>
-                        </div>
-
-                        <!-- Stock Management -->
-                        <div class="form-group row">
-                            <label class="col-md-2 col-form-label">Manajemen Stok</label>
-                            <div class="col-md-6 pt-2">
-                                <div class="icheck-success d-inline mr-3">
-                                    <input type="radio" name="stock_management" id="stockManagementYes" value="yes" <?= $stockEnabled ? 'checked' : '' ?>>
-                                    <label for="stockManagementYes">Ya</label>
-                                </div>
-                                <div class="icheck-danger d-inline">
-                                    <input type="radio" name="stock_management" id="stockManagementNo" value="no" <?= !$stockEnabled ? 'checked' : '' ?>>
-                                    <label for="stockManagementNo">Tidak</label>
-                                </div>
-                            </div>
-                        </div>
-                        <div id="stockManagementDetails" class="<?= $stockEnabled ? '' : 'd-none' ?>">
-                            <div class="form-group row">
-                                <label class="col-md-2 col-form-label" for="stockItemIds">Item Stok<span class="text-danger"> *</span></label>
-                                <div class="col-md-6">
-                                    <select id="stockItemIds" class="form-control select2bs4" name="stock_item_ids[]" multiple data-placeholder="Cari item stok">
-                                        <?php foreach ($stockItems as $stockItem): ?>
-                                            <option value="<?= (int)$stockItem['id'] ?>" <?= in_array((int)$stockItem['id'], $selectedStockIds, true) ? 'selected' : '' ?>><?= htmlspecialchars($stockItem['name']) ?></option>
-                                        <?php endforeach; ?>
-                                    </select>
-                                </div>
-                            </div>
-                            <div class="form-group row">
-                                <label class="col-md-2 col-form-label" for="stockUsage">Pemakaian per Penjualan<span class="text-danger"> *</span></label>
-                                <div class="col-md-6"><input id="stockUsage" class="form-control" type="number" min="0.001" step="0.001" name="stock_usage" value="<?= htmlspecialchars((string)$stockUsage) ?>"></div>
                             </div>
                         </div>
 
@@ -314,28 +269,6 @@ $breadcrumb = [
     });
 
     $(document).ready(function() {
-        const stockSelect = $('#stockItemIds');
-        const initializeStockSelect = () => {
-            const selected = stockSelect.find('option:selected').map(function() { return String(this.value); }).get();
-            if (stockSelect.hasClass('select2-hidden-accessible')) stockSelect.select2('destroy');
-            stockSelect.select2({theme: 'bootstrap4', width: '100%', placeholder: 'Cari item stok', allowClear: true, closeOnSelect: false, minimumResultsForSearch: 0});
-            stockSelect.val(selected).trigger('change.select2');
-        };
-
-        // Run after the global footer initializer so it cannot overwrite this multi-select.
-        window.setTimeout(initializeStockSelect, 0);
-
-        function toggleStockManagement() {
-            const enabled = $('#stockManagementYes').is(':checked');
-            $('#stockManagementDetails').toggleClass('d-none', !enabled);
-            stockSelect.prop('disabled', !enabled).trigger('change.select2');
-            $('#stockUsage').prop('disabled', !enabled).prop('required', enabled);
-            if (enabled) stockSelect.prop('required', true);
-            else stockSelect.prop('required', false);
-        }
-        toggleStockManagement();
-        $("input[name='stock_management']").on('change', toggleStockManagement);
-
         function toggleVariantFields() {
             if ($("#variantYes").is(":checked")) {
                 $("#variantDetails").removeClass("d-none");
@@ -463,8 +396,3 @@ $breadcrumb = [
         });
     });
 </script>
-<style>
-#stockManagementDetails .select2-selection__choice{background:#007bff!important;border-color:#006fe6!important;color:#fff!important;font-size:.9rem;padding:.25rem .5rem!important}
-#stockManagementDetails .select2-selection__choice__remove{color:#fff!important;margin-right:.35rem!important}
-#stockManagementDetails .select2-selection--multiple{min-height:44px}
-</style>

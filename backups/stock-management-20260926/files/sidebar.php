@@ -63,12 +63,6 @@ $appPage = 'main.php';
                 <p>Produk Detailing</p>
               </a>
             </li>
-            <li class="nav-item">
-              <a href="main.php?id=stockManagement" class="nav-link">
-                <i class="fas fa-boxes nav-icon"></i>
-                <p>Stock Management</p>
-              </a>
-            </li>
           </ul>
         </li>
         <li class="nav-item">

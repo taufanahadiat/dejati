@@ -14,24 +14,10 @@ if (isset($_GET['id_produk'])) {
 
     cafe_delete_local_image($foto ?? '');
 
-    mysqli_report(MYSQLI_REPORT_ERROR | MYSQLI_REPORT_STRICT);
-    $conn->begin_transaction();
-    try {
-    $stmt = $conn->prepare("DELETE FROM stock_product_bindings WHERE product_id = ?");
-    $stmt->bind_param("i", $id_prod);
-    $stmt->execute();
-    $stmt->close();
-
     $stmt = $conn->prepare("DELETE FROM tb_datacafe WHERE id_prod = ?");
     $stmt->bind_param("i", $id_prod);
     $stmt->execute();
     $stmt->close();
-    $conn->commit();
-    } catch (Throwable $error) {
-        $conn->rollback();
-        http_response_code(500);
-        exit('Produk gagal dihapus.');
-    }
 
     header("Location: /main.php?id=cafeData&msg=deleted");
     exit;

@@ -9,7 +9,6 @@ if (!isset($conn)) {
     include __DIR__ . '/../../../config/config.php';
 }
 require_once __DIR__ . '/cafe_image_helper.php';
-require_once __DIR__ . '/cafe_stock_helper.php';
 
 // Handle Dropzone image upload
 if (isset($_POST['upload_only']) && $_POST['upload_only']) {
@@ -35,17 +34,6 @@ $temp_foto   = !empty($_POST['foto']) ? basename($_POST['foto']) : '';
 $updated_by  = $_SESSION['id_user'] ?? 0;
 $updated_at  = date('Y-m-d H:i:s');
 
-try {
-    $stockBinding = cafe_parse_stock_binding_input($conn);
-} catch (InvalidArgumentException $error) {
-    http_response_code(422);
-    echo $error->getMessage();
-    exit;
-}
-
-mysqli_report(MYSQLI_REPORT_ERROR | MYSQLI_REPORT_STRICT);
-$conn->begin_transaction();
-try {
 $sql = "INSERT INTO tb_datacafe (
     nama_prod, id_cat, variant, nama_var, biaya_var, biaya, foto, updated_at, updated_by
 ) VALUES (?, ?, ?, ?, ?, ?, '', ?, ?)";
@@ -68,7 +56,6 @@ if (!$stmt->execute()) {
 }
 
 $id_prod = mysqli_insert_id($conn);
-cafe_replace_stock_bindings($conn, $id_prod, $stockBinding);
 
 if ($temp_foto !== '' && cafe_local_image_exists($temp_foto)) {
     $sanitizedName = cafe_sanitize_filename($nama_prod);
@@ -83,15 +70,6 @@ if ($temp_foto !== '' && cafe_local_image_exists($temp_foto)) {
         echo "Failed to update photo.";
         exit;
     }
-}
-
-$conn->commit();
-} catch (Throwable $error) {
-    $conn->rollback();
-    error_log('Tambah produk cafe: ' . $error->getMessage());
-    http_response_code(500);
-    echo "Produk gagal disimpan.";
-    exit;
 }
 
 echo "success";

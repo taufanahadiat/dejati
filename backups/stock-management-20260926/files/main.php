@@ -50,8 +50,6 @@ if ($role === 'Kasir') {
         include_once('include/data/cafe/cafe_data_form.php');
       } elseif ($id == "carwashData_add" || $id == "carwashData_edit") {
         include_once('include/data/carwash/carwash_data_add.php');
-      } elseif ($id == "stockManagement" && $role === 'Administrator') {
-        include_once('include/data/stock/index.php');
       } elseif ($id == "report") {
         include_once('include/report/index.php');
       } elseif ($id == "dailyReport") {

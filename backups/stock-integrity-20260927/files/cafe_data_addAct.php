@@ -43,9 +43,6 @@ try {
     exit;
 }
 
-mysqli_report(MYSQLI_REPORT_ERROR | MYSQLI_REPORT_STRICT);
-$conn->begin_transaction();
-try {
 $sql = "INSERT INTO tb_datacafe (
     nama_prod, id_cat, variant, nama_var, biaya_var, biaya, foto, updated_at, updated_by
 ) VALUES (?, ?, ?, ?, ?, ?, '', ?, ?)";
@@ -83,15 +80,6 @@ if ($temp_foto !== '' && cafe_local_image_exists($temp_foto)) {
         echo "Failed to update photo.";
         exit;
     }
-}
-
-$conn->commit();
-} catch (Throwable $error) {
-    $conn->rollback();
-    error_log('Tambah produk cafe: ' . $error->getMessage());
-    http_response_code(500);
-    echo "Produk gagal disimpan.";
-    exit;
 }
 
 echo "success";

@@ -136,9 +136,6 @@ if (isset($_POST['remove_foto']) && $_POST['remove_foto'] === "1" && $temp_foto 
     }
 }
 
-mysqli_report(MYSQLI_REPORT_ERROR | MYSQLI_REPORT_STRICT);
-$conn->begin_transaction();
-try {
 $sql = "UPDATE tb_datacafe
         SET nama_prod = ?, id_cat = ?, variant = ?, nama_var = ?, biaya_var = ?, biaya = ?, foto = ?, updated_at = ?, updated_by = ?
         WHERE id_prod = ?";
@@ -164,12 +161,4 @@ if (!$stmt->execute()) {
 
 $stmt->close();
 cafe_replace_stock_bindings($conn, $id_prod, $stockBinding);
-$conn->commit();
-} catch (Throwable $error) {
-    $conn->rollback();
-    error_log('Edit produk cafe: ' . $error->getMessage());
-    http_response_code(500);
-    echo "Produk gagal diperbarui.";
-    exit;
-}
 echo "success";

@@ -37,19 +37,13 @@
                 <th>Service</th>
                 <th>Variant</th>
                 <th>Harga Produk</th>
-                <th>Stock Item</th>
                 <th>Action</th>
             </tr>
         </thead>
         <tbody>
             <?php
             $query = mysqli_query($conn, "
-                SELECT dc.id_prod, dc.nama_prod, dc.variant, dc.nama_var, dc.biaya, dc.biaya_var, dc.foto, dc.tax_free_item, dc.non_service_charge, cat.name_cat,
-                  (SELECT GROUP_CONCAT(CONCAT(si.name, '::', CAST(sb.current_quantity AS CHAR), '::', si.unit) ORDER BY si.name SEPARATOR '||')
-                   FROM stock_product_bindings spb
-                   JOIN stock_items si ON si.id=spb.stock_item_id
-                   JOIN vw_stock_balances sb ON sb.id=si.id
-                   WHERE spb.product_id=dc.id_prod) stock_bindings
+                SELECT dc.id_prod, dc.nama_prod, dc.variant, dc.nama_var, dc.biaya, dc.biaya_var, dc.foto, dc.tax_free_item, dc.non_service_charge, cat.name_cat
                 FROM tb_datacafe dc
                 LEFT JOIN tb_category cat ON dc.id_cat = cat.id_cat
                 ORDER BY dc.nama_prod ASC
@@ -106,13 +100,6 @@
                             }
                             ?>
                         </td>
-                        <td>
-                            <?php if (!empty($row['stock_bindings'])): ?>
-                                <?php foreach (explode('||', $row['stock_bindings']) as $binding): [$stockName, $currentQuantity, $unit] = array_pad(explode('::', $binding, 3), 3, ''); ?>
-                                    <span class="badge badge-info cafe-stock-badge"><i class="fas fa-box mr-1"></i><?= htmlspecialchars($stockName) ?>: <strong><?= rtrim(rtrim(number_format((float)$currentQuantity, 3, ',', '.'), '0'), ',') ?><?= $unit !== '' ? ' ' . htmlspecialchars($unit) : '' ?></strong></span>
-                                <?php endforeach; ?>
-                            <?php else: ?><span class="text-muted">Tidak dikelola</span><?php endif; ?>
-                        </td>
                         <td class="text-nowrap">
                             <a href="main.php?id=cafeData_edit&id_produk=<?= $row['id_prod']; ?>" class="btn btn-success btn-sm" title="Edit" aria-label="Edit">
                                 <i class="fas fa-edit"></i>
@@ -127,13 +114,12 @@
             <?php
                 }
             } else {
-                echo '<tr><td colspan="10" class="text-center"><b>Tidak ada data yang tersedia.</b></td></tr>';
+                echo '<tr><td colspan="9" class="text-center"><b>Tidak ada data yang tersedia.</b></td></tr>';
             }
             ?>
         </tbody>
     </table>
 </div>
-<style>.cafe-stock-badge{font-size:.875rem;padding:.4rem .55rem;margin:0 .3rem .3rem 0;white-space:normal;text-align:left}</style>
 <script>
     $(function() {
         let table = $("#cafe_dataTable").DataTable({

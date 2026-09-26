@@ -125,7 +125,7 @@ $breadcrumb = [
                             <div class="form-group row">
                                 <label class="col-md-2 col-form-label" for="stockItemIds">Item Stok<span class="text-danger"> *</span></label>
                                 <div class="col-md-6">
-                                    <select id="stockItemIds" class="form-control select2bs4" name="stock_item_ids[]" multiple data-placeholder="Cari item stok">
+                                    <select id="stockItemIds" class="form-control" name="stock_item_ids[]" multiple data-placeholder="Cari item stok">
                                         <?php foreach ($stockItems as $stockItem): ?>
                                             <option value="<?= (int)$stockItem['id'] ?>" <?= in_array((int)$stockItem['id'], $selectedStockIds, true) ? 'selected' : '' ?>><?= htmlspecialchars($stockItem['name']) ?></option>
                                         <?php endforeach; ?>
@@ -315,20 +315,12 @@ $breadcrumb = [
 
     $(document).ready(function() {
         const stockSelect = $('#stockItemIds');
-        const initializeStockSelect = () => {
-            const selected = stockSelect.find('option:selected').map(function() { return String(this.value); }).get();
-            if (stockSelect.hasClass('select2-hidden-accessible')) stockSelect.select2('destroy');
-            stockSelect.select2({theme: 'bootstrap4', width: '100%', placeholder: 'Cari item stok', allowClear: true, closeOnSelect: false, minimumResultsForSearch: 0});
-            stockSelect.val(selected).trigger('change.select2');
-        };
-
-        // Run after the global footer initializer so it cannot overwrite this multi-select.
-        window.setTimeout(initializeStockSelect, 0);
+        stockSelect.select2({theme: 'bootstrap4', width: '100%', placeholder: 'Cari item stok', allowClear: true, closeOnSelect: false, minimumResultsForSearch: 0});
 
         function toggleStockManagement() {
             const enabled = $('#stockManagementYes').is(':checked');
             $('#stockManagementDetails').toggleClass('d-none', !enabled);
-            stockSelect.prop('disabled', !enabled).trigger('change.select2');
+            stockSelect.prop('disabled', !enabled);
             $('#stockUsage').prop('disabled', !enabled).prop('required', enabled);
             if (enabled) stockSelect.prop('required', true);
             else stockSelect.prop('required', false);
