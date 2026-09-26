@@ -1,0 +1,10 @@
+INSERT INTO tb_datacafe (variant,nama_var,biaya_var,biaya,id_cat,tax_free_item,non_service_charge,nama_prod,updated_at,updated_by) VALUES (0,NULL,NULL,8000,6,1,0,'cookies Dejati',NOW(),1);
+INSERT INTO tb_datacafe (variant,nama_var,biaya_var,biaya,id_cat,tax_free_item,non_service_charge,nama_prod,updated_at,updated_by) VALUES (0,NULL,NULL,5000,6,1,0,'Kacang Matador',NOW(),1);
+INSERT INTO tb_datacafe (variant,nama_var,biaya_var,biaya,id_cat,tax_free_item,non_service_charge,nama_prod,updated_at,updated_by) VALUES (0,NULL,NULL,27000,1,1,0,'Butter Scotch',NOW(),1);
+INSERT INTO tb_datacafe (variant,nama_var,biaya_var,biaya,id_cat,tax_free_item,non_service_charge,nama_prod,updated_at,updated_by) VALUES (0,NULL,NULL,50000,6,1,0,'Pizzaa',NOW(),1);
+UPDATE tb_datacafe SET variant=0,nama_var=NULL,biaya_var=NULL,biaya=15000,id_cat=7,tax_free_item=1,non_service_charge=0,updated_at=NOW(),updated_by=1 WHERE id_prod=130;
+INSERT INTO tb_datacafe (variant,nama_var,biaya_var,biaya,id_cat,tax_free_item,non_service_charge,nama_prod,updated_at,updated_by) VALUES (0,NULL,NULL,27000,8,1,0,'FRENCH PRESS',NOW(),1);
+UPDATE tb_datacafe SET variant=1,nama_var='HOT;ICE',biaya_var='23000;25000',biaya=NULL,id_cat=1,tax_free_item=1,non_service_charge=0,updated_at=NOW(),updated_by=1 WHERE id_prod=233;
+UPDATE tb_datacafe SET variant=0,nama_var=NULL,biaya_var=NULL,biaya=34000,id_cat=5,tax_free_item=1,non_service_charge=0,updated_at=NOW(),updated_by=1 WHERE id_prod=240;
+UPDATE tb_datacafe SET variant=0,nama_var=NULL,biaya_var=NULL,biaya=6000,id_cat=5,tax_free_item=1,non_service_charge=0,updated_at=NOW(),updated_by=1 WHERE id_prod=242;
+INSERT INTO tb_datacarwash (produk,biaya,updated_at,updated_by) VALUES ('BMW X1 - HIDROLIK',50000,NOW(),1);

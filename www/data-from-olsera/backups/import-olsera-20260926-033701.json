@@ -1,0 +1,104 @@
+{
+  "cafe_new": [
+    "cookies Dejati",
+    "Kacang Matador",
+    "Butter Scotch",
+    "Pizzaa",
+    "FRENCH PRESS"
+  ],
+  "cafe_updated": 4,
+  "carwash_new": [
+    "BMW X1 - HIDROLIK"
+  ],
+  "carwash_updated": 0,
+  "name_matches": [
+    [
+      "Paket Hrmat ayam bakar + Ice tea/mineral",
+      "Paket Hemat ayam bakar + Ice tea/mineral"
+    ],
+    [
+      "NASI GORENG KAMPUNG 2 \\n+ ICE TEA",
+      "NASI GORENG KAMPUNG 2 \\\\n+ ICE TEA"
+    ],
+    [
+      "SINGKONG DE&#039;JATI",
+      "SINGKONG DE'JATI"
+    ],
+    [
+      "MIE GORENG SPESIAL DE&#039;JATI",
+      "MIE GORENG SPESIAL DE'JATI"
+    ],
+    [
+      "MIE GODOG DE&#039;JATI",
+      "MIE GODOG DE'JATI"
+    ],
+    [
+      "PAKET SE&#039;I SAPI",
+      "PAKET SE'I SAPI"
+    ],
+    [
+      "YOGHURT PUNCH",
+      "YOGURT PUNCH"
+    ],
+    [
+      "COFFE MOCKTAIL",
+      "COFFEE MOCKTAIL"
+    ],
+    [
+      "CARAMEL MACHIATO",
+      "CARAMEL MACCHIATO"
+    ],
+    [
+      "TELUH MATA SAPI",
+      "TELUR MATA SAPI"
+    ]
+  ],
+  "cafe_changes": [
+    {
+      "name": "BLACK TEA LYCHEE",
+      "changes": {
+        "tax_free_item": {
+          "before": 0,
+          "after": 1
+        }
+      }
+    },
+    {
+      "name": "COFFEE LATTE VANILLA",
+      "changes": {
+        "tax_free_item": {
+          "before": 0,
+          "after": 1
+        }
+      }
+    },
+    {
+      "name": "SEI SAPI ALACARTE",
+      "changes": {
+        "tax_free_item": {
+          "before": 0,
+          "after": 1
+        }
+      }
+    },
+    {
+      "name": "NASI PUTIH",
+      "changes": {
+        "tax_free_item": {
+          "before": 0,
+          "after": 1
+        }
+      }
+    }
+  ],
+  "source_rows": 338,
+  "source_cafe": 196,
+  "source_carwash": 109,
+  "backup": "/home/relia/automated-cafe/www/data-from-olsera/backups/pre-import-olsera-20260926-033701.sql",
+  "verified_products": 305,
+  "final_counts": {
+    "tb_datacafe": 207,
+    "tb_datacarwash": 115,
+    "tb_category": 16
+  }
+}

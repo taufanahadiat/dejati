@@ -93,7 +93,15 @@
     const selectors = state[role].statusSelectors;
     if (!selectors.length || !window.jQuery) return;
 
-    window.jQuery(selectors.join(","))
+    const elements = window.jQuery(selectors.join(","));
+    const buttons = elements.filter("[data-printer-status-button]");
+    buttons
+      .toggleClass("bg-success text-white", !!connected)
+      .attr("title", `${roles[role].label}: ${message}`)
+      .attr("aria-label", `Connect ${roles[role].label}. ${message}`);
+    buttons.find("[data-printer-connected-icon]").toggleClass("d-none", !connected);
+
+    elements.not("[data-printer-status-button]")
       .text(`${roles[role].label}: ${message}`)
       .toggleClass("text-success", !!connected)
       .toggleClass("text-muted", !connected);

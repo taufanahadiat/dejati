@@ -95,7 +95,7 @@ function user_config_find_user($conn, $id)
 
 function user_config_redirect()
 {
-  echo '<script>window.location.href="main.php?id=userConfig";</script>';
+  echo '<script>window.location.href="main?id=userConfig";</script>';
   exit;
 }
 
@@ -248,18 +248,20 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST') {
 
             if ($stmt) {
               mysqli_stmt_bind_param($stmt, $types, ...$values);
-              mysqli_stmt_execute($stmt);
+              $updated = mysqli_stmt_execute($stmt);
               mysqli_stmt_close($stmt);
 
-              if ((int) ($_SESSION['id_user'] ?? 0) === $id) {
+              if ($updated && (int) ($_SESSION['id_user'] ?? 0) === $id) {
                 $_SESSION['username'] = $username;
                 $_SESSION['nama_user'] = $namaUser;
                 $_SESSION['level'] = $level;
                 $_SESSION['status'] = $status;
               }
 
-              $_SESSION['user_config_success'] = 'User berhasil diperbarui.';
-              user_config_redirect();
+              if ($updated) {
+                $_SESSION['user_config_success'] = 'User berhasil diperbarui.';
+                user_config_redirect();
+              }
             }
 
             $errors[] = 'User gagal diperbarui.';
@@ -309,7 +311,7 @@ $users = mysqli_query($conn, "SELECT * FROM tb_user ORDER BY FIELD(level, 'Admin
           <div class="card-header">
             <h3 class="card-title mb-0"><i class="fas fa-user-plus mr-2"></i>Tambah User</h3>
           </div>
-          <form method="post" action="main.php?id=userConfig" autocomplete="off">
+          <form method="post" action="main?id=userConfig" autocomplete="off">
             <input type="hidden" name="csrf_token" value="<?= user_config_h($token); ?>">
             <input type="hidden" name="action" value="add">
             <div class="card-body">
@@ -402,7 +404,7 @@ $users = mysqli_query($conn, "SELECT * FROM tb_user ORDER BY FIELD(level, 'Admin
                           data-status="<?= user_config_h($rowStatus); ?>">
                           <i class="fas fa-edit"></i>
                         </button>
-                        <form method="post" action="main.php?id=userConfig" class="d-inline" onsubmit="return confirm('Hapus user ini?');">
+                        <form method="post" action="main?id=userConfig" class="d-inline" onsubmit="return confirm('Hapus user ini?');">
                           <input type="hidden" name="csrf_token" value="<?= user_config_h($token); ?>">
                           <input type="hidden" name="action" value="delete">
                           <input type="hidden" name="id_user" value="<?= user_config_h($row['id_user'] ?? ''); ?>">
@@ -426,7 +428,7 @@ $users = mysqli_query($conn, "SELECT * FROM tb_user ORDER BY FIELD(level, 'Admin
 <div class="modal fade" id="editUserModal" tabindex="-1" role="dialog" aria-labelledby="editUserModalLabel" aria-hidden="true">
   <div class="modal-dialog" role="document">
     <div class="modal-content">
-      <form method="post" action="main.php?id=userConfig" autocomplete="off">
+      <form method="post" action="main?id=userConfig" autocomplete="off">
         <input type="hidden" name="csrf_token" value="<?= user_config_h($token); ?>">
         <input type="hidden" name="action" value="edit">
         <input type="hidden" name="id_user" id="edit-id-user">

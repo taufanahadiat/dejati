@@ -30,7 +30,7 @@
 
         cart.forEach((item, index) => {
             const unitPrice = parseInt(item.unitPrice || item.finalPrice || 0, 10) || 0;
-            const finalPrice = item.cartType === "carwash" ? (parseInt(item.finalPrice || unitPrice, 10) || 0) : unitPrice;
+            const finalPrice = ["carwash", "detailing"].includes(item.cartType) ? (parseInt(item.finalPrice || unitPrice, 10) || 0) : unitPrice;
             item.unitPrice = unitPrice;
             item.finalPrice = finalPrice;
             item.discountValue = 0;
@@ -42,7 +42,7 @@
 
             let itemName = item.name;
 
-            if (item.cartType === 'carwash' && item.hold) {
+            if (['carwash', 'detailing'].includes(item.cartType) && item.hold) {
                 itemName = `<span class="text-danger">${itemName}</span>`;
             }
 
@@ -165,9 +165,13 @@
         };
 
         if (editIndex !== undefined && editIndex !== null) {
-            cart[editIndex] = cartItem;
+            const previous = cart[editIndex];
+            cart[editIndex] = ['carwash', 'detailing'].includes(previous.cartType)
+                ? { ...previous, qty, notes, orderType }
+                : cartItem;
         } else {
             let existingIndex = cart.findIndex(item =>
+                (item.cartType || "product") === cartItem.cartType &&
                 item.id === cartItem.id &&
                 item.name === cartItem.name &&
                 item.unitPrice === cartItem.unitPrice &&
@@ -187,36 +191,39 @@
         updateCartDisplay();
     }
 
-    // Variant selection continues here
-    // Variant selection handler
-    function addVariantToCart(id, name, variant, price) {
+    function addVariantToCart(id, name, variant, price, cartType = 'product') {
         const displayName = `${name} (${variant})`;
-        $('#variantModal').modal('hide');
-        showBuyQueryModal(id, displayName, price);
+        // Wait until Bootstrap finishes hiding the first modal before opening the next.
+        $('#variantModal').one('hidden.bs.modal', function () {
+            if (['carwash', 'detailing'].includes(cartType)) {
+                showCarwashModal(id, displayName, price, cartType, variant);
+            } else {
+                showBuyQueryModal(id, displayName, price);
+            }
+        }).modal('hide');
     }
 
-
-    function showVariantModal(id, name, namaVar, biayaVar) {
-        const varNames = namaVar.split(';');
-        const varPrices = biayaVar.split(';');
-
-        let html = '';
-        for (let i = 0; i < varNames.length; i++) {
-            const varName = varNames[i].trim();
-            const price = parseInt(varPrices[i].trim());
-            html += `
-            <button class="list-group-item list-group-item-action d-flex justify-content-between align-items-center"
-                onclick="addVariantToCart('${id}', '${name}', '${varName}', ${price}); $('#variantModal').modal('hide');">
-                <span>${name} - ${varName}</span>
-                <strong>${rupiah(price)}</strong>
-            </button>`;
-        }
-
-        $('#variant-options').html(html);
+    function showVariantModal(id, name, namaVar, biayaVar, cartType = 'product') {
+        const varNames = String(namaVar || '').split(';');
+        const varPrices = String(biayaVar || '').split(';');
+        const options = $('#variant-options').empty();
+        varNames.forEach(function (value, i) {
+            const varName = value.trim();
+            const price = parseInt(varPrices[i], 10);
+            if (!varName || !Number.isFinite(price) || price <= 0) return;
+            const button = $('<button type="button" class="list-group-item list-group-item-action d-flex justify-content-between align-items-center">');
+            button.append($('<span>').text(`${name} - ${varName}`));
+            button.append($('<strong>').text(rupiah(price)));
+            button.on('click', function () { addVariantToCart(id, name, varName, price, cartType); });
+            options.append(button);
+        });
         $('#variantModal').modal('show');
     }
 
-    function showCarwashModal(id, name, price) {
+    function showCarwashModal(id, name, price, cartType = 'carwash', variantName = '') {
+        $('#carwash-variant').val(variantName);
+        $('#carwash-type').val(cartType);
+        $('#carwashModalLabel').text(cartType === 'detailing' ? 'Detailing Service' : 'Carwash Service');
         $('#carwash-id').val(id);
         $('#carwash-name').val(name);
         $('#carwash-price').val(price);
@@ -271,11 +278,12 @@
             qty: 1,
             unitPrice: vacuum ? finalPrice : price,
             finalPrice: finalPrice,
+            variantName: $('#carwash-variant').val() || '',
             nopol: nopol,
             service: service,
             ukuran: ukuran,
             vacuum: vacuum,
-            cartType: 'carwash'
+            cartType: $('#carwash-type').val() === 'detailing' ? 'detailing' : 'carwash'
         };
 
         if (isHold) {
@@ -436,7 +444,8 @@ $(function () {
       return;
     }
 
-    $('#table-number').val('');
+    const activeTableNumber = localStorage.getItem('activeTableNumber') || '';
+    $('#table-number').val(activeTableNumber);
     $('#payment-method').val('cash');
     $('#payment-discount').val('');
     $('#customer-pay').val('');
@@ -513,7 +522,7 @@ $(function () {
       return;
     }
 
-    $.post('/include/transaksi/save_order.php', {
+    $.post('/include/transaksi/save_order', {
       tableNumber,
       paymentMethod,
       subtotal,
@@ -673,23 +682,28 @@ $(function () {
 
   if (window.DejatiBluetoothPrinter) window.DejatiBluetoothPrinter.refreshStatus();
 
+  function clearCurrentTransaction() {
+    localStorage.removeItem('cart');
+    localStorage.removeItem('activeTableNumber');
+    cart = [];
+    $('#order-table tbody').empty();
+    $('#total-amount').text('Rp 0');
+    $('#table-number').val('');
+    $('#payment-method').val('');
+    $('#payment-discount').val('');
+    $('#customer-pay').val('');
+    $('#change-amount').val('');
+    $('#open-table-number').val('');
+  }
+
 $('#clearCart').on('click', function() {
     if (confirm('Hapus Transaksi Ini?')) {
-        localStorage.removeItem('cart');
-        cart = [];
-        $('#order-table tbody').empty();
-        $('#total-amount').text('Rp 0');
-        $('#table-number').val('');
-        $('#payment-method').val('');
-        $('#payment-discount').val('');
-        $('#customer-pay').val('');
-        $('#change-amount').val('');
+        clearCurrentTransaction();
     }
   });
 
   $('#openBill').off('click').on('click', function () {
     $('#open-table-number').val('');
-    $('#open-payment-method').val('Cash');
     $('#openBillModal').modal('show');
   });
 
@@ -697,7 +711,6 @@ $('#clearCart').on('click', function() {
     e.preventDefault();
 
     const tableNumber = $('#open-table-number').val().trim();
-    const paymentMethod = 'cash';
     const subtotal = cartSubtotal();
     const orderItems = JSON.parse(localStorage.getItem('cart')) || [];
 
@@ -706,9 +719,8 @@ $('#clearCart').on('click', function() {
       return;
     }
 
-    $.post('/include/transaksi/save_order.php', {
+    $.post('/include/transaksi/save_order', {
       tableNumber,
-      paymentMethod,
       subtotal,
       discount: 0,
       discountPercent: 0,
@@ -721,6 +733,7 @@ $('#clearCart').on('click', function() {
       if (response && response.status === 'success') {
         Swal.fire({ icon: 'success', title: 'Bill Opened!', text: `Table ${tableNumber} has been saved.`, confirmButtonColor: '#17a2b8' });
         $('#openBillModal').modal('hide');
+        clearCurrentTransaction();
       } else {
         Swal.fire({ icon: 'error', title: 'Failed', text: (response && response.message) || 'Unable to save open bill.' });
       }
@@ -730,5 +743,10 @@ $('#clearCart').on('click', function() {
   });
 
   console.log('Cart loaded:', JSON.parse(localStorage.getItem('cart')));
+  const activeTableNumber = localStorage.getItem('activeTableNumber') || '';
+  if (activeTableNumber) {
+    $('#table-number').val(activeTableNumber);
+    $('#open-table-number').val(activeTableNumber);
+  }
 });
 </script>

@@ -1,4 +1,7 @@
 http://pos.dejaticoffee.com, http://192.168.100.161 {
+    # Keep relative phpMyAdmin assets under the /phpmyadmin/ subpath.
+    redir /phpmyadmin /phpmyadmin/ permanent
+
     handle_path /phpmyadmin* {
         reverse_proxy phpmyadmin:80
     }

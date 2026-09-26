@@ -1,147 +1,217 @@
 <?php
-// Default: no filter
-$filter_sql = "";
-$selected_month = "";
+$breadcrumb = [
+    ['label' => 'Riwayat Closing Harian', 'link' => '#'],
+];
 
-if (isset($_GET['month']) && $_GET['month'] !== "") {
-    $selected_month = $_GET['month']; // e.g., "11"
-    $filter_sql = "WHERE MONTH(tanggal) = '$selected_month'";
+$selectedMonth = (string) ($_GET['month'] ?? '');
+$selectedYear = (string) ($_GET['year'] ?? '');
+
+if ($selectedMonth !== '' && !preg_match('/^(0[1-9]|1[0-2])$/', $selectedMonth)) {
+    $selectedMonth = '';
+}
+if ($selectedYear !== '' && !preg_match('/^\d{4}$/', $selectedYear)) {
+    $selectedYear = '';
 }
 
-$records = mysqli_query($conn, "SELECT * FROM tb_closingan $filter_sql ORDER BY tanggal DESC");
+$years = [];
+$yearResult = mysqli_query($conn, 'SELECT DISTINCT YEAR(tanggal) AS year FROM tb_closingan ORDER BY year DESC');
+if ($yearResult) {
+    while ($yearRow = mysqli_fetch_assoc($yearResult)) {
+        $years[] = (string) $yearRow['year'];
+    }
+}
 
-// Months
+$where = [];
+$params = [];
+$types = '';
+if ($selectedMonth !== '') {
+    $where[] = 'MONTH(c.tanggal) = ?';
+    $params[] = (int) $selectedMonth;
+    $types .= 'i';
+}
+if ($selectedYear !== '') {
+    $where[] = 'YEAR(c.tanggal) = ?';
+    $params[] = (int) $selectedYear;
+    $types .= 'i';
+}
+
+$sql = 'SELECT c.*
+        FROM tb_closingan c
+        INNER JOIN (
+            SELECT tanggal, MAX(id) AS latest_id
+            FROM tb_closingan
+            GROUP BY tanggal
+        ) latest ON latest.latest_id = c.id';
+if ($where) {
+    $sql .= ' WHERE ' . implode(' AND ', $where);
+}
+$sql .= ' ORDER BY c.tanggal DESC';
+
+$stmt = $conn->prepare($sql);
+if ($params) {
+    $stmt->bind_param($types, ...$params);
+}
+$stmt->execute();
+$result = $stmt->get_result();
+
+$records = [];
+$summary = [
+    'sales' => 0,
+    'expenses' => 0,
+    'net' => 0,
+];
+
+while ($row = $result->fetch_assoc()) {
+    $detail = json_decode((string) ($row['detail_pengeluaran'] ?? ''), true);
+    $detail = is_array($detail) ? $detail : [];
+    $totalExpenses = 0;
+    foreach ($detail as $expense) {
+        $totalExpenses += (int) ($expense['total'] ?? 0);
+    }
+
+    $row['expense_detail'] = $detail;
+    $row['total_expenses'] = $totalExpenses;
+    $records[] = $row;
+    $summary['sales'] += (int) $row['total_penjualan'];
+    $summary['expenses'] += $totalExpenses;
+}
+$stmt->close();
+$summary['net'] = $summary['sales'] - $summary['expenses'];
+
 $months = [
-    '01'=>'January','02'=>'February','03'=>'March','04'=>'April',
-    '05'=>'May','06'=>'June','07'=>'July','08'=>'August',
-    '09'=>'September','10'=>'October','11'=>'November','12'=>'December'
+    '01' => 'Januari', '02' => 'Februari', '03' => 'Maret', '04' => 'April',
+    '05' => 'Mei', '06' => 'Juni', '07' => 'Juli', '08' => 'Agustus',
+    '09' => 'September', '10' => 'Oktober', '11' => 'November', '12' => 'Desember',
 ];
 ?>
 
-<div class="card">
-  <div class="card-header d-flex justify-content-between align-items-center">
-    <h4>Daily Report (Closingan)</h4>
-    <!-- Month filter inside header -->
-    <form method="GET" class="form-inline mb-0">
-      <input type="hidden" name="id" value="dailyReport">
-      <div class="input-group input-group-sm">
-        <select name="month" class="form-control">
-          <option value="">-- All Months --</option>
-          <?php foreach($months as $num => $name): ?>
-            <option value="<?= $num ?>" <?= ($selected_month === $num ? 'selected' : '') ?>>
-              <?= $name ?>
-            </option>
-          <?php endforeach; ?>
-        </select>
-        <div class="input-group-append">
-          <button class="btn btn-primary">Filter</button>
-          <a href="main.php?id=dailyReport" class="btn btn-secondary">Reset</a>
+<section class="content">
+  <div class="card card-outline card-dark">
+    <div class="card-header">
+      <div class="d-flex flex-wrap justify-content-between align-items-center">
+        <div>
+          <h4 class="mb-1">Riwayat Closing Harian</h4>
+          <small class="text-muted">Satu rekap terbaru untuk setiap tanggal closing.</small>
+        </div>
+        <form method="GET" class="form-inline mt-2 mt-md-0">
+          <input type="hidden" name="id" value="dailyReport">
+          <select name="month" class="form-control form-control-sm mr-2" aria-label="Filter bulan">
+            <option value="">Semua Bulan</option>
+            <?php foreach ($months as $number => $name): ?>
+              <option value="<?= $number ?>" <?= $selectedMonth === $number ? 'selected' : '' ?>>
+                <?= $name ?>
+              </option>
+            <?php endforeach; ?>
+          </select>
+          <select name="year" class="form-control form-control-sm mr-2" aria-label="Filter tahun">
+            <option value="">Semua Tahun</option>
+            <?php foreach ($years as $year): ?>
+              <option value="<?= htmlspecialchars($year, ENT_QUOTES, 'UTF-8') ?>" <?= $selectedYear === $year ? 'selected' : '' ?>>
+                <?= htmlspecialchars($year, ENT_QUOTES, 'UTF-8') ?>
+              </option>
+            <?php endforeach; ?>
+          </select>
+          <button class="btn btn-primary btn-sm mr-2" type="submit"><i class="fas fa-filter"></i> Filter</button>
+          <a href="main.php?id=dailyReport" class="btn btn-outline-secondary btn-sm">Reset</a>
+        </form>
+      </div>
+    </div>
+
+    <div class="card-body">
+      <div class="row mb-3">
+        <div class="col-md-4 mb-2 mb-md-0">
+          <div class="small-box bg-info mb-0">
+            <div class="inner"><h4>Rp <?= number_format($summary['sales'], 0, ',', '.') ?></h4><p>Total Penjualan</p></div>
+          </div>
+        </div>
+        <div class="col-md-4 mb-2 mb-md-0">
+          <div class="small-box bg-danger mb-0">
+            <div class="inner"><h4>Rp <?= number_format($summary['expenses'], 0, ',', '.') ?></h4><p>Total Pengeluaran</p></div>
+          </div>
+        </div>
+        <div class="col-md-4">
+          <div class="small-box bg-success mb-0">
+            <div class="inner"><h4>Rp <?= number_format($summary['net'], 0, ',', '.') ?></h4><p>Saldo Bersih</p></div>
+          </div>
         </div>
       </div>
-    </form>
-  </div>
 
-  <div class="card-body table-responsive">
-    <table class="table table-bordered table-striped table-hover">
-      <thead class="thead-dark">
-        <tr>
-          <th>Tanggal</th>
-          <th>Total Penjualan</th>
-          <th>Cash</th>
-          <th>QRIS</th>
-          <th>Kartu</th>
-          <th>Cafe</th>
-          <th>Carwash</th>
-          <th>Total Pengeluaran</th>
-          <th>Detail</th>
-        </tr>
-      </thead>
-
-      <tbody>
-        <?php 
-        $modal_list = ""; // store modals here
-
-        while ($row = mysqli_fetch_assoc($records)) :
-          $detail = json_decode($row['detail_pengeluaran'], true) ?? [];
-
-          // total pengeluaran
-          $total_pengeluaran = 0;
-          foreach ($detail as $d) {
-            $total_pengeluaran += intval($d['total']);
-          }
-        ?>
-
-          <tr>
-            <td><?= $row['tanggal'] ?></td>
-            <td>Rp <?= number_format($row['total_penjualan']) ?></td>
-            <td>Rp <?= number_format($row['cash']) ?></td>
-            <td>Rp <?= number_format($row['qris']) ?></td>
-            <td>Rp <?= number_format($row['card']) ?></td>
-            <td>Rp <?= number_format($row['cafe']) ?></td>
-            <td>Rp <?= number_format($row['carwash']) ?></td>
-
-            <td><span class="badge badge-danger">Rp <?= number_format($total_pengeluaran) ?></span></td>
-
-            <td>
-              <?php if ($detail) : ?>
-                <button class="btn btn-sm btn-info" data-toggle="modal" data-target="#detailModal<?= $row['id'] ?>">
-                  Lihat
-                </button>
-              <?php else : ?>
-                <span class="text-muted">-</span>
-              <?php endif; ?>
-            </td>
-          </tr>
-
-          <?php
-          // BUILD MODAL HTML (OUTSIDE THE TABLE)
-          $modal_list .= '
-          <div class="modal fade" id="detailModal'.$row['id'].'">
-            <div class="modal-dialog modal-lg">
-              <div class="modal-content">
-                <div class="modal-header">
-                  <h5 class="modal-title">Detail Pengeluaran ('.$row['tanggal'].')</h5>
-                  <button class="close" data-dismiss="modal">&times;</button>
-                </div>
-
-                <div class="modal-body">
-                  <table class="table table-bordered">
-                    <thead>
-                      <tr>
-                        <th>Keterangan</th>
-                        <th>Total</th>
-                        <th>Tanggal Input</th>
-                      </tr>
-                    </thead>
-                    <tbody>';
-          
-          foreach ($detail as $d) {
-            $modal_list .= '
+      <div class="table-responsive">
+        <table class="table table-bordered table-striped table-hover">
+          <thead class="thead-dark">
+            <tr>
+              <th>Tanggal</th>
+              <th>Total Penjualan</th>
+              <th>Cash</th>
+              <th>QRIS</th>
+              <th>Kartu</th>
+              <th>Cafe</th>
+              <th>Carwash</th>
+              <th>Detailing</th>
+              <th>Pengeluaran</th>
+              <th>Saldo Bersih</th>
+              <th>Detail</th>
+            </tr>
+          </thead>
+          <tbody>
+            <?php if (!$records): ?>
+              <tr><td colspan="11" class="text-center text-muted py-4">Belum ada data closing untuk filter ini.</td></tr>
+            <?php endif; ?>
+            <?php foreach ($records as $row): ?>
+              <?php $net = (int) $row['total_penjualan'] - (int) $row['total_expenses']; ?>
               <tr>
-                <td>'.htmlspecialchars($d['keterangan']).'</td>
-                <td>Rp '.number_format($d['total']).'</td>
-                <td>'.$d['created_at'].'</td>
-              </tr>';
-          }
-
-          $modal_list .= '
-                    </tbody>
-                  </table>
-                </div>
-
-                <div class="modal-footer">
-                  <button class="btn btn-secondary" data-dismiss="modal">Close</button>
-                </div>
-              </div>
-            </div>
-          </div>';
-          ?>
-
-        <?php endwhile; ?>
-      </tbody>
-    </table>
+                <td><?= htmlspecialchars(date('d-m-Y', strtotime($row['tanggal'])), ENT_QUOTES, 'UTF-8') ?></td>
+                <td>Rp <?= number_format((int) $row['total_penjualan'], 0, ',', '.') ?></td>
+                <td>Rp <?= number_format((int) $row['cash'], 0, ',', '.') ?></td>
+                <td>Rp <?= number_format((int) $row['qris'], 0, ',', '.') ?></td>
+                <td>Rp <?= number_format((int) $row['card'], 0, ',', '.') ?></td>
+                <td>Rp <?= number_format((int) $row['cafe'], 0, ',', '.') ?></td>
+                <td>Rp <?= number_format((int) $row['carwash'], 0, ',', '.') ?></td>
+                <td>Rp <?= number_format((int) ($row['detailing'] ?? 0), 0, ',', '.') ?></td>
+                <td><span class="badge badge-danger">Rp <?= number_format((int) $row['total_expenses'], 0, ',', '.') ?></span></td>
+                <td><strong>Rp <?= number_format($net, 0, ',', '.') ?></strong></td>
+                <td>
+                  <?php if ($row['expense_detail']): ?>
+                    <button class="btn btn-sm btn-info" data-toggle="modal" data-target="#detailModal<?= (int) $row['id'] ?>">Lihat</button>
+                  <?php else: ?>
+                    <span class="text-muted">-</span>
+                  <?php endif; ?>
+                </td>
+              </tr>
+            <?php endforeach; ?>
+          </tbody>
+        </table>
+      </div>
+    </div>
   </div>
-</div>
+</section>
 
-<!-- PRINT ALL MODALS HERE -->
-<?= $modal_list ?>
+<?php foreach ($records as $row): ?>
+  <?php if ($row['expense_detail']): ?>
+    <div class="modal fade" id="detailModal<?= (int) $row['id'] ?>" tabindex="-1" role="dialog" aria-hidden="true">
+      <div class="modal-dialog modal-lg" role="document">
+        <div class="modal-content">
+          <div class="modal-header">
+            <h5 class="modal-title">Detail Pengeluaran (<?= htmlspecialchars(date('d-m-Y', strtotime($row['tanggal'])), ENT_QUOTES, 'UTF-8') ?>)</h5>
+            <button type="button" class="close" data-dismiss="modal" aria-label="Tutup"><span aria-hidden="true">&times;</span></button>
+          </div>
+          <div class="modal-body table-responsive">
+            <table class="table table-bordered mb-0">
+              <thead><tr><th>Keterangan</th><th>Total</th><th>Waktu Input</th></tr></thead>
+              <tbody>
+                <?php foreach ($row['expense_detail'] as $expense): ?>
+                  <tr>
+                    <td><?= htmlspecialchars((string) ($expense['keterangan'] ?? '-'), ENT_QUOTES, 'UTF-8') ?></td>
+                    <td>Rp <?= number_format((int) ($expense['total'] ?? 0), 0, ',', '.') ?></td>
+                    <td><?= htmlspecialchars((string) ($expense['created_at'] ?? '-'), ENT_QUOTES, 'UTF-8') ?></td>
+                  </tr>
+                <?php endforeach; ?>
+              </tbody>
+            </table>
+          </div>
+          <div class="modal-footer"><button type="button" class="btn btn-secondary" data-dismiss="modal">Tutup</button></div>
+        </div>
+      </div>
+    </div>
+  <?php endif; ?>
+<?php endforeach; ?>

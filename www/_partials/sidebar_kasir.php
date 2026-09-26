@@ -27,7 +27,7 @@
         <li class="nav-item">
           <a href="main.php?id=report" class="nav-link <?= (isset($id) && $id === 'report') ? 'active' : '' ?>">
             <i class="nav-icon fas fa-receipt"></i>
-            <p>History</p>
+            <p>History Transaksi</p>
           </a>
         </li>
       </ul>

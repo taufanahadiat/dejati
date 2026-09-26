@@ -45,8 +45,8 @@
 
       if (window.DejatiBluetoothPrinter) {
         window.DejatiBluetoothPrinter.bindStatus({
-          cashier: "#navbarCashierPrinterStatus",
-          kitchen: "#navbarKitchenPrinterStatus"
+          cashier: "#navbarConnectCashierPrinter",
+          kitchen: "#navbarConnectKitchenPrinter"
         });
 
         const printerTestText = role => {
@@ -79,8 +79,8 @@
         $("#navbarTestCashierPrinter").off("click").on("click", () => testPrinter("cashier"));
         $("#navbarTestKitchenPrinter").off("click").on("click", () => testPrinter("kitchen"));
       } else {
-        $("#navbarCashierPrinterStatus").text("Cashier: printer script not loaded");
-        $("#navbarKitchenPrinterStatus").text("Kitchen: printer script not loaded");
+        $("#navbarConnectCashierPrinter, #navbarConnectKitchenPrinter")
+          .attr("title", "Printer script not loaded");
       }
     });
   </script>

@@ -40,6 +40,10 @@ if ($role === 'Kasir') {
         include_once('include/dashboard.php');
       } elseif ($id == "carwashData") {
         include_once('include/data/carwash/carwash_data.php');
+      } elseif ($id == "detailingData") {
+        include_once('include/data/detailing/detailing_data.php');
+      } elseif ($id == "detailingData_add" || $id == "detailingData_edit") {
+        include_once('include/data/detailing/detailing_data_add.php');
       } elseif ($id == "cafeData") {
         include_once('include/data/cafe/cafe_data.php');
       } elseif ($id == "cafeData_add" || $id == "cafeData_edit") {

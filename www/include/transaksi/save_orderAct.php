@@ -15,14 +15,17 @@ $postedPaid = parse_money_value($_POST['paid'] ?? '0');
 $postedDiscountPercent = max(0, parse_money_value($_POST['discountPercent'] ?? $_POST['discount'] ?? '0'));
 $items = json_decode($_POST['items'] ?? '[]', true);
 
-if ($tableNumber === '' || $paymentMethod === '' || empty($items) || !is_array($items)) {
+if ($tableNumber === '' || empty($items) || !is_array($items)) {
     echo json_encode(['status' => 'error', 'message' => 'Missing required fields']);
     exit;
 }
 
-if (!in_array($paymentMethod, ['cash', 'credit_card', 'qris'], true)) {
-    echo json_encode(['status' => 'error', 'message' => 'Invalid payment method']);
-    exit;
+// Validate the new snapshot field before creating the order header.
+foreach ($items as $item) {
+    if (mb_strlen((string)($item['variantName'] ?? '')) > 100) {
+        echo json_encode(['status' => 'error', 'message' => 'Nama varian maksimal 100 karakter.']);
+        exit;
+    }
 }
 
 $subtotal = 0;
@@ -31,7 +34,7 @@ foreach ($items as $item) {
     $unitPrice = max(0, (int)($item['unitPrice'] ?? 0));
     $finalPrice = max(0, (int)($item['finalPrice'] ?? $unitPrice));
     $cartType = $item['cartType'] ?? 'product';
-    $linePrice = $cartType === 'carwash' ? $finalPrice : $unitPrice;
+    $linePrice = in_array($cartType, ['carwash', 'detailing'], true) ? $finalPrice : $unitPrice;
     $subtotal += $linePrice * $qty;
 }
 
@@ -48,6 +51,19 @@ if ($postedDiscountPercent > 100) {
 $postedDiscount = (int)floor($subtotal * $postedDiscountPercent / 100);
 $total = max(0, $subtotal - $postedDiscount);
 $isOpenBill = $status === 'open_bill';
+$normalizedStatus = $isOpenBill ? 'OPEN BILL' : 'PAID';
+
+if (!$isOpenBill && $paymentMethod === '') {
+    echo json_encode(['status' => 'error', 'message' => 'Payment method is required']);
+    exit;
+}
+
+if (!$isOpenBill && !in_array($paymentMethod, ['cash', 'credit_card', 'qris'], true)) {
+    echo json_encode(['status' => 'error', 'message' => 'Invalid payment method']);
+    exit;
+}
+
+$paymentMethodValue = $isOpenBill ? null : $paymentMethod;
 $isNonCash = in_array($paymentMethod, ['credit_card', 'qris'], true);
 $paid = $postedPaid;
 
@@ -67,10 +83,10 @@ if ($isOpenBill) {
 $change = max(0, $paid - $total);
 
 $createdAt = date('Y-m-d H:i:s');
-$orderSql = "INSERT INTO orders (table_number, payment_method, total_amount, paid_amount, change_amount, created_at)
-             VALUES (?, ?, ?, ?, ?, ?)";
+$orderSql = "INSERT INTO orders (table_number, payment_method, total_amount, paid_amount, change_amount, status_order, created_at)
+             VALUES (?, ?, ?, ?, ?, ?, ?)";
 $stmt = mysqli_prepare($conn, $orderSql);
-mysqli_stmt_bind_param($stmt, "ssiiis", $tableNumber, $paymentMethod, $total, $paid, $change, $createdAt);
+mysqli_stmt_bind_param($stmt, "ssiiiss", $tableNumber, $paymentMethodValue, $total, $paid, $change, $normalizedStatus, $createdAt);
 $success = mysqli_stmt_execute($stmt);
 
 if (!$success) {
@@ -87,37 +103,41 @@ foreach ($items as $item) {
     $unitPrice = max(0, (int)($item['unitPrice'] ?? 0));
     $finalPrice = max(0, (int)($item['finalPrice'] ?? $unitPrice));
 
-    if (($item['cartType'] ?? 'product') === 'carwash') {
+    if (in_array($item['cartType'] ?? 'product', ['carwash', 'detailing'], true)) {
+        $serviceTable = $item['cartType'] === 'detailing' ? 'order_detailing' : 'order_carwash';
+        $itemTotal = $finalPrice * $qty;
+        $variantName = trim((string)($item['variantName'] ?? ''));
         $nopol = $item['nopol'] ?? '';
         $service = $item['service'] ?? '';
         $ukuran = $item['ukuran'] ?? '';
         $vacuum = strtolower(trim($item['vacuum'] ?? 'no'));
 
-        $profit_pegawai = (int)round($finalPrice * 0.30);
-        $profit_management = $finalPrice - $profit_pegawai;
+        $profit_pegawai = (int)round($itemTotal * 0.30);
+        $profit_management = $itemTotal - $profit_pegawai;
 
-        $sql = "INSERT INTO `order_carwash` (
+        $sql = "INSERT INTO `$serviceTable` (
                 `id_tr`, `id_prod`, `item_name`, `qty`, `unit_price`, `total`,
                 `nopol`, `service`, `ukuran`, `vacuum`,
-                `profit_pegawai`, `profit_management`
-            ) VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?)";
+                `profit_pegawai`, `profit_management`, `variant_name`
+            ) VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?)";
 
         $stmt = mysqli_prepare($conn, $sql);
         mysqli_stmt_bind_param(
             $stmt,
-            "issiiissssii",
+            "issiiissssiis",
             $orderId,
             $productId,
             $itemName,
             $qty,
             $unitPrice,
-            $finalPrice,
+            $itemTotal,
             $nopol,
             $service,
             $ukuran,
             $vacuum,
             $profit_pegawai,
-            $profit_management
+            $profit_management,
+            $variantName
         );
         mysqli_stmt_execute($stmt);
     } else {

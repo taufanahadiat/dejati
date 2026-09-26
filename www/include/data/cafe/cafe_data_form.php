@@ -184,7 +184,7 @@ $breadcrumb = [
     <?php if (!$isEdit || empty($product['foto'])): ?>
         // Initialize Dropzone only if no existing image
         let imageDropzone = new Dropzone("#dropzoneImage", {
-            url: "<?= $isEdit ? '/include/data/cafe/cafe_data_editAct.php' : '/include/data/cafe/cafe_data_handler.php' ?>",
+            url: "<?= $isEdit ? '/include/data/cafe/cafe_data_editAct' : '/include/data/cafe/cafe_data_handler' ?>",
             maxFiles: 1,
             maxFilesize: 7,
             acceptedFiles: ".jpg,.jpeg,.png",
@@ -239,7 +239,7 @@ $breadcrumb = [
                 $("#imageFormGroup .col-md-6").prepend('<div id="dropzoneImage" class="dropzone border border-secondary rounded p-2"></div>');
                 // re-init Dropzone
                 new Dropzone("#dropzoneImage", {
-                    url: "<?= $isEdit ? '/include/data/cafe/cafe_data_editAct.php' : '/include/data/cafe/cafe_data_handler.php' ?>",
+                    url: "<?= $isEdit ? '/include/data/cafe/cafe_data_editAct' : '/include/data/cafe/cafe_data_handler' ?>",
                     maxFiles: 1,
                     maxFilesize: 7,
                     acceptedFiles: ".jpg,.jpeg,.png",
@@ -376,7 +376,7 @@ $breadcrumb = [
 
             // Submit via AJAX
             $.ajax({
-                url: isEdit ? "/include/data/cafe/cafe_data_editAct.php" : "/include/data/cafe/cafe_data_handler.php",
+                url: isEdit ? "/include/data/cafe/cafe_data_editAct" : "/include/data/cafe/cafe_data_handler",
                 method: "POST",
                 data: formData,
                 processData: false,

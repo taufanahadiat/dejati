@@ -71,5 +71,5 @@
   <link rel="stylesheet" type="text/css" href="dist/css/fontsgoogleapis.css">
   <link rel="stylesheet" type="text/css" href="dist/css/style.css">
   <script src="plugins/jquery/jquery.min.js"></script>
-  <script src="/dist/js/bluetooth-printer-manager.js?v=2026071206"></script>
+  <script src="/dist/js/bluetooth-printer-manager.js?v=2026092601"></script>
 </head>

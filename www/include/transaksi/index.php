@@ -13,7 +13,8 @@ $result = $conn->query($sql);
 
 $cat_first = [
     'all' => ['label' => 'All', 'icon' => 'grid_view'],
-    'carwash' => ['label' => 'Carwash', 'icon' => 'local_car_wash']
+    'carwash' => ['label' => 'Carwash', 'icon' => 'local_car_wash'],
+    'detailing' => ['label' => 'Detailing', 'icon' => 'auto_awesome']
 ];
 
 if ($result->num_rows > 0) {
@@ -48,7 +49,7 @@ if ($result->num_rows > 0) {
     }
 }
 
-$carwashQuery = "SELECT id_produk, produk, biaya FROM tb_datacarwash ORDER BY produk ASC";
+$carwashQuery = "SELECT id_produk, produk, biaya, variant, nama_var, biaya_var, foto FROM tb_datacarwash ORDER BY produk ASC";
 $carwashResult = $conn->query($carwashQuery);
 
 $carwashProducts = [];
@@ -58,14 +59,33 @@ while ($row = mysqli_fetch_assoc($carwashResult)) {
         'name' => $row['produk'],
         'price' => $row['biaya'],
         'category' => 'carwash',
-        'variant' => 0,
-        'biaya_var' => '',
-        'nama_var' => '',
-        'image' => '', // assume no image
+        'variant' => $row['variant'] ?? 0,
+        'biaya_var' => $row['biaya_var'] ?? '',
+        'nama_var' => $row['nama_var'] ?? '',
+        'image' => !empty($row['foto']) ? cafe_product_thumb_url($row['foto']) : '',
+        'image_full' => !empty($row['foto']) ? cafe_product_image_url($row['foto']) : '',
     ];
 }
 
-$allProducts = array_merge($carwashProducts, $products);
+$detailingQuery = "SELECT id_produk, produk, biaya, variant, nama_var, biaya_var, foto FROM tb_datadetailing ORDER BY produk ASC";
+$detailingResult = $conn->query($detailingQuery);
+
+$detailingProducts = [];
+while ($row = mysqli_fetch_assoc($detailingResult)) {
+    $detailingProducts[] = [
+        'id' => $row['id_produk'],
+        'name' => $row['produk'],
+        'price' => $row['biaya'],
+        'category' => 'detailing',
+        'variant' => $row['variant'] ?? 0,
+        'biaya_var' => $row['biaya_var'] ?? '',
+        'nama_var' => $row['nama_var'] ?? '',
+        'image' => !empty($row['foto']) ? cafe_product_thumb_url($row['foto']) : '',
+        'image_full' => !empty($row['foto']) ? cafe_product_image_url($row['foto']) : '',
+    ];
+}
+
+$allProducts = array_merge($carwashProducts, $detailingProducts, $products);
 
 // Sort alphabetically by 'name'
 usort($allProducts, function ($a, $b) {
@@ -134,12 +154,7 @@ function formatPrice($number)
         <div class="modal-body px-4 py-3">
           <div class="form-group">
             <label for="open-table-number" class="font-weight-semibold">Table Number</label>
-            <input type="text" class="form-control form-control-lg" id="open-table-number" name="table_number" placeholder="Enter table number, e.g. A1 / VIP 2 / Takeaway" required>
-          </div>
-
-          <div class="form-group mt-3">
-            <label for="open-payment-method" class="font-weight-semibold">Payment Method</label>
-            <input type="text" class="form-control form-control-lg" id="open-payment-method" name="payment_method" value="Cash" readonly>
+            <input type="text" class="form-control form-control-lg" id="open-table-number" name="table_number" placeholder="Enter table number, e.g. A1 / VIP 2 / Takeaway" maxlength="50" required>
           </div>
         </div>
 
@@ -169,7 +184,7 @@ function formatPrice($number)
                                 <!-- Table number -->
                                 <div class="form-group">
                                     <label for="table-number">Table Number</label>
-                                    <input type="text" class="form-control" id="table-number" name="table_number" placeholder="e.g. A1 / VIP 2 / Takeaway" required>
+                                    <input type="text" class="form-control" id="table-number" name="table_number" placeholder="e.g. A1 / VIP 2 / Takeaway" maxlength="50" required>
                                 </div>
 
                                 <!-- Payment method -->
@@ -263,13 +278,13 @@ function formatPrice($number)
                     <div class="card-body">
                         <div class="row justify-content-left" id="product-list">
                             <?php foreach ($allProducts as $p): ?>
-                                <div class="col-md-2 col-4 mb-2 px-1" style="max-width: 130px;" data-category="<?= $p['category'] ?>" data-name="<?= strtolower($p['name']) ?>">
+                                <div class="col-md-2 col-4 mb-2 px-1" style="max-width: 130px;" data-category="<?= $p['category'] ?>" data-name="<?= htmlspecialchars(strtolower($p['name']), ENT_QUOTES) ?>">
                                     <div class="card product-card shadow-sm p-1" style="height:170px; cursor: pointer;"
-                                        onclick="<?= $p['category'] === 'carwash'
-                                                        ? "showCarwashModal('{$p['id']}', " . htmlspecialchars(json_encode($p['name'])) . ", {$p['price']})"
-                                                        : ($p['variant'] == 1
-                                                            ? "showVariantModal('{$p['id']}', " . htmlspecialchars(json_encode($p['name'])) . ", " . htmlspecialchars(json_encode($p['nama_var'])) . ", " . htmlspecialchars(json_encode($p['biaya_var'])) . ")"
-                                                            : "showBuyQueryModal('{$p['id']}', " . htmlspecialchars(json_encode($p['name'])) . ", {$p['price']})") ?>">
+                                        onclick="<?= $p['variant'] == 1
+                                            ? "showVariantModal('{$p['id']}', " . htmlspecialchars(json_encode($p['name']), ENT_QUOTES) . ", " . htmlspecialchars(json_encode($p['nama_var']), ENT_QUOTES) . ", " . htmlspecialchars(json_encode($p['biaya_var']), ENT_QUOTES) . ", '" . (in_array($p['category'], ['carwash', 'detailing'], true) ? $p['category'] : 'product') . "')"
+                                            : (in_array($p['category'], ['carwash', 'detailing'], true)
+                                                ? "showCarwashModal('{$p['id']}', " . htmlspecialchars(json_encode($p['name']), ENT_QUOTES) . ", {$p['price']}, '{$p['category']}')"
+                                                : "showBuyQueryModal('{$p['id']}', " . htmlspecialchars(json_encode($p['name']), ENT_QUOTES) . ", {$p['price']})") ?>">
                                         <?php
                                         $imgSrc = $p['image'] ?? '';
                                         $imgExists = !empty($imgSrc);
@@ -395,6 +410,8 @@ function formatPrice($number)
                                 </button>
                             </div>
                             <div class="modal-body">
+                                <input type="hidden" id="carwash-variant">
+                                <input type="hidden" id="carwash-type" value="carwash">
                                 <input type="hidden" id="carwash-id">
                                 <input type="hidden" id="carwash-name">
                                 <input type="hidden" id="carwash-price">
@@ -500,7 +517,7 @@ if (!empty($imported_order_json)):
   if (Array.isArray(IMPORTED.carwash)) {
     IMPORTED.carwash.forEach(cw => {
       importedCart.push({
-        id: cw.id_tr || cw.id || 0,
+        id: cw.id_prod || cw.id || 0,
         name: (cw.item_name || cw.name || 'Carwash').trim() + ' (Carwash)',
         unitPrice: toInt(cw.unit_price || cw.item_price || cw.price || 0),
         finalPrice: toInt(cw.total ? (toInt(cw.total) / Math.max(1, toInt(cw.qty))) : (cw.unit_price || cw.item_price || cw.price) ),
@@ -509,6 +526,27 @@ if (!empty($imported_order_json)):
         qty: toInt(cw.qty || 1),
         orderType: cw.order_type || 'dine-in',
         cartType: 'carwash',
+        variantName: cw.variant_name || '',
+        nopol: cw.nopol || '', service: cw.service || '', ukuran: cw.ukuran || '', vacuum: cw.vacuum || 'no',
+        notes: `NoPol: ${cw.nopol || ''} Service: ${cw.service || ''} Ukuran: ${cw.ukuran || ''} Vacuum: ${cw.vacuum || ''}`
+      });
+    });
+  }
+
+  if (Array.isArray(IMPORTED.detailing)) {
+    IMPORTED.detailing.forEach(cw => {
+      importedCart.push({
+        id: cw.id_prod || cw.id || 0,
+        name: (cw.item_name || cw.name || 'Detailing').trim() + ' (Detailing)',
+        unitPrice: toInt(cw.unit_price || cw.item_price || cw.price || 0),
+        finalPrice: toInt(cw.total ? (toInt(cw.total) / Math.max(1, toInt(cw.qty))) : (cw.unit_price || cw.item_price || cw.price) ),
+        discountValue: 0,
+        discountType: 'amount',
+        qty: toInt(cw.qty || 1),
+        orderType: cw.order_type || 'dine-in',
+        cartType: 'detailing',
+        variantName: cw.variant_name || '',
+        nopol: cw.nopol || '', service: cw.service || '', ukuran: cw.ukuran || '', vacuum: cw.vacuum || 'no',
         notes: `NoPol: ${cw.nopol || ''} Service: ${cw.service || ''} Ukuran: ${cw.ukuran || ''} Vacuum: ${cw.vacuum || ''}`
       });
     });
@@ -516,6 +554,7 @@ if (!empty($imported_order_json)):
 
   // Save to localStorage exactly as script.php expects
   localStorage.setItem('cart', JSON.stringify(importedCart));
+  localStorage.setItem('activeTableNumber', (IMPORTED.order && IMPORTED.order.table_number) ? String(IMPORTED.order.table_number) : '');
   console.log('ÃƒÆ’Ã†â€™Ãƒâ€šÃ‚Â¢ÃƒÆ’Ã¢â‚¬Â¦ÃƒÂ¢Ã¢â€šÂ¬Ã…â€œÃƒÆ’Ã‚Â¢ÃƒÂ¢Ã¢â‚¬Å¡Ã‚Â¬Ãƒâ€šÃ‚Â¦ Imported cart written to localStorage:', importedCart);
 
   // We DO NOT directly modify table HTML here.

@@ -57,6 +57,12 @@ $appPage = 'main.php';
                 <p>Produk Carwash</p>
               </a>
             </li>
+            <li class="nav-item">
+              <a href="main.php?id=detailingData" class="nav-link">
+                <i class="fas fa-car nav-icon"></i>
+                <p>Produk Detailing</p>
+              </a>
+            </li>
           </ul>
         </li>
         <li class="nav-item">
@@ -77,13 +83,13 @@ $appPage = 'main.php';
             <li class="nav-item">
               <a href="main.php?id=report" class="nav-link">
                 <i class="nav-icon fas fa-history"></i>
-                <p>History</p>
+                <p>History Transaksi</p>
               </a>
             </li>
             <li class="nav-item">
               <a href="main.php?id=dailyReport" class="nav-link">
                 <i class="nav-icon fas fa-calendar-day"></i>
-                <p>Daily Report</p>
+                <p>Closing Harian</p>
               </a>
             </li>
           </ul>

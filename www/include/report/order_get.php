@@ -11,11 +11,14 @@ if ($id <= 0) {
 $items = mysqli_query($conn, "SELECT * FROM order_items WHERE id_tr=$id");
 $carwash = mysqli_query($conn, "SELECT * FROM order_carwash WHERE id_tr=$id");
 
+$detailing = mysqli_query($conn, "SELECT * FROM order_detailing WHERE id_tr=$id");
+$detailing_count = $detailing ? mysqli_num_rows($detailing) : 0;
+
 $item_count = $items ? mysqli_num_rows($items) : 0;
 $carwash_count = $carwash ? mysqli_num_rows($carwash) : 0;
 ?>
 <h5>Order #<?= $id ?></h5>
-<?php if ($item_count === 0 && $carwash_count === 0): ?>
+<?php if ($item_count === 0 && $carwash_count === 0 && $detailing_count === 0): ?>
     <div class='alert alert-warning'>No items found for this order.</div>
 <?php else: ?>
 <table class="table table-sm table-bordered">
@@ -42,6 +45,28 @@ $carwash_count = $carwash ? mysqli_num_rows($carwash) : 0;
                 <td>
                     <?= htmlspecialchars($c['item_name']) ?><br>
                     <small>
+                        <?php if (!empty($c['variant_name'])): ?>Varian: <?= htmlspecialchars($c['variant_name']) ?> | <?php endif; ?>
+                        Nopol: <?= htmlspecialchars($c['nopol']) ?> |
+                        Service: <?= htmlspecialchars($c['service']) ?> |
+                        Ukuran: <?= htmlspecialchars($c['ukuran']) ?> |
+                        Vacuum: <?= ucfirst($c['vacuum']) ?>
+                    </small>
+                </td>
+                <td><?= number_format($c['unit_price'], 0, ",", ".") ?></td>
+                <td><?= $c['qty'] ?></td>
+                <td>
+                    <?= number_format($c['total'], 0, ",", ".") ?><br>
+                    <small class="text-success">Pegawai: <?= number_format($c['profit_pegawai'], 0, ",", ".") ?></small><br>
+                    <small class="text-primary">Management: <?= number_format($c['profit_management'], 0, ",", ".") ?></small>
+                </td>
+            </tr>
+        <?php endwhile; ?>
+        <?php if ($detailing) while ($c = mysqli_fetch_assoc($detailing)): ?>
+            <tr class="table-info">
+                <td>
+                    <span class="badge badge-info">Detailing</span> <?= htmlspecialchars($c['item_name']) ?><br>
+                    <small>
+                        <?php if (!empty($c['variant_name'])): ?>Varian: <?= htmlspecialchars($c['variant_name']) ?> | <?php endif; ?>
                         Nopol: <?= htmlspecialchars($c['nopol']) ?> |
                         Service: <?= htmlspecialchars($c['service']) ?> |
                         Ukuran: <?= htmlspecialchars($c['ukuran']) ?> |

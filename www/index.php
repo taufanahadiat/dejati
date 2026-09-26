@@ -18,7 +18,8 @@ if (isset($_SESSION['loggedin'])) {
 
 if (isset($_POST['login'])) {
   $username = filter_input(INPUT_POST, 'username', FILTER_SANITIZE_SPECIAL_CHARS);
-  $password = filter_input(INPUT_POST, 'password', FILTER_SANITIZE_SPECIAL_CHARS);
+  // Passwords must match the exact bytes hashed by the user configuration form.
+  $password = filter_input(INPUT_POST, 'password', FILTER_UNSAFE_RAW);
 
   $stmt = mysqli_prepare($conn, "SELECT * FROM tb_user WHERE username = ? LIMIT 1");
   if (!$stmt) {

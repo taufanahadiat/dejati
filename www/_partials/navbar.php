@@ -10,21 +10,19 @@
     </ul>
 
     <ul class="navbar-nav ml-auto">
-      <li class="nav-item d-flex align-items-center mr-2" id="navbarPrinterStatus">
-        <span class="badge badge-light border mr-1 small" id="navbarCashierPrinterStatus">Cashier: not connected</span>
-        <span class="badge badge-light border small" id="navbarKitchenPrinterStatus">Kitchen: not connected</span>
-      </li>
       <li class="nav-item dropdown">
         <a class="nav-link" data-toggle="dropdown" href="#" role="button" aria-label="Printer menu" title="Printer">
           <i class="fas fa-print"></i>
         </a>
         <div class="dropdown-menu dropdown-menu-right">
           <span class="dropdown-item dropdown-header">Bluetooth Printers</span>
-          <button type="button" class="dropdown-item" id="navbarConnectCashierPrinter">
+          <button type="button" class="dropdown-item" id="navbarConnectCashierPrinter" data-printer-status-button>
             <i class="fas fa-cash-register mr-2"></i> Connect Cashier
+            <i class="fas fa-check ml-2 d-none" data-printer-connected-icon aria-hidden="true"></i>
           </button>
-          <button type="button" class="dropdown-item" id="navbarConnectKitchenPrinter">
+          <button type="button" class="dropdown-item" id="navbarConnectKitchenPrinter" data-printer-status-button>
             <i class="fas fa-utensils mr-2"></i> Connect Kitchen
+            <i class="fas fa-check ml-2 d-none" data-printer-connected-icon aria-hidden="true"></i>
           </button>
           <div class="dropdown-divider"></div>
           <button type="button" class="dropdown-item" id="navbarTestCashierPrinter">

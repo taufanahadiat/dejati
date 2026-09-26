@@ -25,7 +25,14 @@ if (strtotime($startFilter) > strtotime($endFilter)) {
 $startDate = $startFilter . ' 00:00:00';
 $endDate = $endFilter . ' 23:59:59';
 
-$stmt = $conn->prepare("SELECT id, table_number, payment_method, total_amount, paid_amount, change_amount, created_at FROM orders WHERE created_at BETWEEN ? AND ? ORDER BY created_at DESC");
+$stmt = $conn->prepare("SELECT id, table_number, payment_method, total_amount, paid_amount, change_amount, created_at,
+                               (SELECT COALESCE(SUM(i.total), 0) FROM order_items i WHERE i.id_tr = o.id) AS cafe,
+                               (SELECT COALESCE(SUM(c.total), 0) FROM order_carwash c WHERE c.id_tr = o.id) AS carwash,
+                               (SELECT COALESCE(SUM(d.total), 0) FROM order_detailing d WHERE d.id_tr = o.id) AS detailing,
+                               COALESCE(NULLIF(status_order, ''), CASE WHEN paid_amount = 0 THEN 'OPEN BILL' ELSE 'PAID' END) AS status_order
+                        FROM orders o
+                        WHERE created_at BETWEEN ? AND ?
+                        ORDER BY created_at DESC");
 $stmt->bind_param('ss', $startDate, $endDate);
 $stmt->execute();
 $result = $stmt->get_result();
@@ -89,7 +96,7 @@ $result = $stmt->get_result();
                         </div>
                         <div class="col-md-2 text-right">
                             <button id="printClosinganBtn" class="btn btn-info mt-4">
-                                <i class="fas fa-print"></i> Print Closingan
+                                <i class="fas fa-cash-register"></i> Closing Hari Ini
                             </button>
                         </div>
                     </div>
@@ -98,7 +105,7 @@ $result = $stmt->get_result();
   <div class="modal-dialog modal-lg" role="document">
     <div class="modal-content">
       <div class="modal-header bg-info text-white">
-        <h5 class="modal-title">Preview Closingan Hari Ini</h5>
+        <h5 class="modal-title">Preview Closing Harian</h5>
         <button type="button" class="close text-white" data-dismiss="modal">&times;</button>
       </div>
       <div class="modal-body">
@@ -113,7 +120,7 @@ $result = $stmt->get_result();
         <button id="addPengeluaran" class="btn btn-outline-primary btn-sm mt-2">+ Tambah Pengeluaran</button>
       </div>
       <div class="modal-footer">
-        <button id="confirmPrintClosingan" class="btn btn-success">Print & Simpan</button>
+        <button id="confirmPrintClosingan" class="btn btn-success">Simpan & Cetak</button>
         <button class="btn btn-secondary" data-dismiss="modal">Tutup</button>
       </div>
     </div>
@@ -126,7 +133,11 @@ $result = $stmt->get_result();
                             <tr>
                                 <th>Date</th>
                                 <th>Table</th>
+                                <th>Status</th>
                                 <th>Payment</th>
+                                <th>Cafe</th>
+                                <th>Carwash</th>
+                                <th>Detailing</th>
                                 <th>Total</th>
                                 <th>Paid</th>
                                 <th>Change</th>
@@ -138,7 +149,22 @@ $result = $stmt->get_result();
                                 <tr>
                                     <td><?= $row['created_at'] ?></td>
                                     <td><?= $row['table_number'] ?></td>
-                                    <td><?= ucfirst($row['payment_method']) ?></td>
+                                    <td>
+                                        <?php
+                                        $statusOrder = strtoupper((string)($row['status_order'] ?? 'PAID'));
+                                        $statusClass = 'badge-success';
+                                        if ($statusOrder === 'OPEN BILL') {
+                                            $statusClass = 'badge-warning';
+                                        } elseif ($statusOrder === 'CANCEL') {
+                                            $statusClass = 'badge-danger';
+                                        }
+                                        ?>
+                                        <span class="badge <?= $statusClass; ?>"><?= htmlspecialchars($statusOrder) ?></span>
+                                    </td>
+                                    <td><?= $row['payment_method'] ? ucfirst(str_replace('_', ' ', $row['payment_method'])) : '-' ?></td>
+                                    <td><?= number_format($row['cafe'], 0, ",", ".") ?></td>
+                                    <td><?= number_format($row['carwash'], 0, ",", ".") ?></td>
+                                    <td><?= number_format($row['detailing'], 0, ",", ".") ?></td>
                                     <td><?= number_format($row['total_amount'], 0, ",", ".") ?></td>
                                     <td><?= number_format($row['paid_amount'], 0, ",", ".") ?></td>
                                     <td><?= number_format($row['change_amount'], 0, ",", ".") ?></td>
@@ -152,9 +178,14 @@ $result = $stmt->get_result();
                                         <button class="btn btn-sm btn-warning print-chit" data-id="<?= $row['id'] ?>">
                                             <i class="fas fa-receipt"></i> Print Chit
                                         </button>
-                                        <?php if ($row['paid_amount'] == 0): ?>
+                                        <?php if ($statusOrder === 'OPEN BILL'): ?>
                                             <button id="btnTransact" class="btn btn-sm btn-success transact" data-id="<?= $row['id'] ?>">
                                                 <i class="fas fa-cash-register"></i> Transact
+                                            </button>
+                                        <?php endif; ?>
+                                        <?php if ($statusOrder !== 'CANCEL'): ?>
+                                            <button class="btn btn-sm btn-danger cancel-order" data-id="<?= $row['id'] ?>" data-table="<?= htmlspecialchars($row['table_number'], ENT_QUOTES) ?>">
+                                                <i class="fas fa-times-circle"></i> Cancel
                                             </button>
                                         <?php endif; ?>
                                     </td>
@@ -184,6 +215,36 @@ $result = $stmt->get_result();
 </div>
 
 <!-- Required scripts -->
+<div class="modal fade" id="cancelOrderModal" tabindex="-1">
+  <div class="modal-dialog modal-md">
+    <div class="modal-content">
+      <div class="modal-header bg-danger text-white">
+        <h5 class="modal-title">Cancel Order</h5>
+        <button type="button" class="close text-white" data-dismiss="modal">&times;</button>
+      </div>
+      <div class="modal-body">
+        <form id="cancelOrderForm">
+          <input type="hidden" id="cancel_order_id">
+          <div class="form-group">
+            <label>Table Number</label>
+            <input type="text" class="form-control" id="cancel_order_table" readonly>
+          </div>
+          <div class="form-group mb-0">
+            <label for="cancel_order_reason">Reason</label>
+            <textarea class="form-control" id="cancel_order_reason" rows="4" maxlength="500" placeholder="Tulis alasan cancel order..." required></textarea>
+          </div>
+        </form>
+      </div>
+      <div class="modal-footer">
+        <button type="button" class="btn btn-secondary" data-dismiss="modal">Tutup</button>
+        <button type="button" class="btn btn-danger" id="confirmCancelOrder">
+          <i class="fas fa-times-circle"></i> Confirm Cancel
+        </button>
+      </div>
+    </div>
+  </div>
+</div>
+
 <div class="modal fade" id="transactModal" tabindex="-1">
   <div class="modal-dialog modal-md">
     <div class="modal-content">
@@ -252,9 +313,11 @@ $(function () {
   // === LOAD DATA PREVIEW ===
   function loadClosinganData() {
     $('#closinganPreview').html('<p>Loading...</p>');
-    $.get('/include/report/closingan_preview.php', function (data) {
-      $('#closinganPreview').html(data);
-    });
+    $.get('/include/report/closingan_preview.php')
+      .done(function (data) { $('#closinganPreview').html(data); })
+      .fail(function (xhr) {
+        $('#closinganPreview').html(`<div class="alert alert-danger mb-0">${xhr.responseText || 'Gagal memuat preview closing.'}</div>`);
+      });
   }
 
   // === ADD PENGELUARAN INPUT FIELD ===
@@ -277,41 +340,56 @@ $(function () {
 
   // === PRINT & SAVE CLOSINGAN ===
   $("#confirmPrintClosingan").on("click", async function () {
+    const $button = $(this);
     const pengeluaran = [];
+    let invalidExpense = false;
 
     $('.pengeluaran-item').each(function () {
-      const keterangan = $(this).find('.keterangan').val();
+      const keterangan = $(this).find('.keterangan').val().trim();
       const total = $(this).find('.total').val();
       if (keterangan && total) {
         pengeluaran.push({ keterangan, total });
+      } else if (keterangan || total) {
+        invalidExpense = true;
       }
     });
 
-    try {
-      if (!window.getReportPrinter) { throw new Error('Printer helper is not ready. Please reload this page.'); }
-      await window.getReportPrinter('cashier');
-    } catch (error) {
-      Swal.fire({ icon: 'error', title: 'Printer Required', text: error.message || 'Unable to connect cashier printer.' });
+    if (invalidExpense) {
+      Swal.fire({ icon: 'warning', title: 'Data Belum Lengkap', text: 'Lengkapi keterangan dan nominal pengeluaran, atau hapus baris yang kosong.' });
       return;
     }
 
-    $.post('/include/report/pengeluaran.php', { data: JSON.stringify(pengeluaran) }, function (res) {
-      console.log('Pengeluaran saved:', res);
+    $button.prop('disabled', true).html('<i class="fas fa-spinner fa-spin"></i> Memproses...');
+    try {
+      if (!window.getReportPrinter) { throw new Error('Printer helper is not ready. Please reload this page.'); }
+      await window.getReportPrinter('cashier');
 
-      // After pengeluaran saved, get closingan data again and print to saved cashier printer
-      $.get('/include/report/closingan_preview.php?print=true', async function (escpos) {
-        try {
-          if (!window.writeReportPrinter) {
-            throw new Error('Printer helper is not ready. Please reload this page.');
-          }
-          await window.writeReportPrinter('cashier', escpos);
-          $('#closinganModal').modal('hide');
-          Swal.fire({ icon: 'success', title: 'Printed', text: 'Closingan sent to cashier printer.' });
-        } catch (error) {
-          Swal.fire({ icon: 'error', title: 'Print Closingan Failed', text: error.message || 'Unable to print closingan.' });
-        }
+      await $.ajax({
+        url: '/include/report/pengeluaran.php',
+        method: 'POST',
+        dataType: 'json',
+        data: { data: JSON.stringify(pengeluaran) }
       });
-    });
+      $('#pengeluaranList').empty();
+
+      const escpos = await $.ajax({
+        url: '/include/report/closingan_preview.php',
+        method: 'POST',
+        dataType: 'text',
+        data: { save: '1' }
+      });
+      if (!window.writeReportPrinter) {
+        throw new Error('Printer helper is not ready. Please reload this page.');
+      }
+      await window.writeReportPrinter('cashier', escpos);
+      $('#closinganModal').modal('hide');
+      Swal.fire({ icon: 'success', title: 'Closing Tersimpan', text: 'Rekap diperbarui dan berhasil dikirim ke printer kasir.' });
+    } catch (error) {
+      const message = error.responseJSON?.message || error.responseText || error.message || 'Closing harian gagal diproses.';
+      Swal.fire({ icon: 'error', title: 'Closing Gagal', text: message });
+    } finally {
+      $button.prop('disabled', false).html('Simpan & Cetak');
+    }
   });
 });
 </script>
@@ -327,7 +405,7 @@ $(function(){
     if (!orderId) return alert('No order id');
 
     // Fetch JSON from server endpoint
-    $.get('/include/report/order_get_json.php', { id: orderId })
+    $.get('/include/report/order_get_json', { id: orderId })
       .done(function (data) {
         // create a form and POST JSON to the transaksi page (browser navigation)
         const form = document.createElement('form');
@@ -358,7 +436,7 @@ $(function(){
         const reportEndDate = <?= json_encode($endFilter) ?>;
         const reportTitle = `History Transaksi ${reportStartDate} to ${reportEndDate}`;
         const reportFileName = `History_Transaksi_${reportStartDate}_to_${reportEndDate}`;
-        const exportOptions = { columns: [0, 1, 2, 3, 4, 5] };
+        const exportOptions = { columns: [0, 1, 2, 3, 4, 5, 6, 7, 8, 9] };
 
         let table = $("#ordersTable").DataTable({
             responsive: true,
@@ -451,8 +529,42 @@ $(function(){
             $("#modalContent").html("<p class='text-center'>Loading...</p>");
             $("#detailsModal").modal("show");
 
-            $.get("/include/report/order_get.php", { id: orderId }, function(data) {
+            $.get("/include/report/order_get", { id: orderId }, function(data) {
                 $("#modalContent").html(data);
+            });
+        });
+
+        $(document).on('click', '.cancel-order', function () {
+            $('#cancel_order_id').val($(this).data('id'));
+            $('#cancel_order_table').val($(this).data('table') || '');
+            $('#cancel_order_reason').val('');
+            $('#cancelOrderModal').modal('show');
+        });
+
+        $('#confirmCancelOrder').on('click', function () {
+            const orderId = parseInt($('#cancel_order_id').val(), 10) || 0;
+            const reason = $('#cancel_order_reason').val().trim();
+
+            if (!orderId) {
+                Swal.fire({ icon: 'error', title: 'Invalid Order', text: 'Order ID tidak ditemukan.' });
+                return;
+            }
+
+            if (!reason) {
+                Swal.fire({ icon: 'warning', title: 'Reason Required', text: 'Silakan isi alasan cancel order.' });
+                return;
+            }
+
+            $.post('/include/report/order_cancel', { id: orderId, reason }, function (response) {
+                if (response && response.status === 'success') {
+                    $('#cancelOrderModal').modal('hide');
+                    Swal.fire({ icon: 'success', title: 'Order Canceled', text: 'Status order berhasil diubah menjadi CANCEL.' })
+                        .then(() => window.location.reload());
+                } else {
+                    Swal.fire({ icon: 'error', title: 'Cancel Failed', text: (response && response.message) || 'Unable to cancel order.' });
+                }
+            }, 'json').fail(function () {
+                Swal.fire({ icon: 'error', title: 'Cancel Failed', text: 'Unable to cancel order.' });
             });
         });
     });
@@ -506,14 +618,26 @@ $(function () {
     });
 
     (data.carwash || []).forEach(item => {
-      const notes = `NoPol: ${item.nopol || ""}, Service: ${item.service || ""}, Ukuran: ${item.ukuran || ""}, Vacuum: ${(item.vacuum || "no") === "yes" ? "Ya" : "Tidak"}`;
+      const notes = `${item.variant_name ? "Varian: " + item.variant_name + ", " : ""}NoPol: ${item.nopol || ""}, Service: ${item.service || ""}, Ukuran: ${item.ukuran || ""}, Vacuum: ${(item.vacuum || "no") === "yes" ? "Ya" : "Tidak"}`;
       items.push({
         name: item.item_name || "Carwash",
         qty: parseInt(item.qty || 1, 10) || 1,
         unitPrice: parseInt(item.unit_price || 0, 10) || 0,
-        finalPrice: parseInt(item.unit_price || 0, 10) || 0,
+        finalPrice: (parseInt(item.total || 0, 10) || 0) / Math.max(1, parseInt(item.qty || 1, 10) || 1),
         notes,
         orderType: "carwash"
+      });
+    });
+
+    (data.detailing || []).forEach(item => {
+      const notes = `${item.variant_name ? "Varian: " + item.variant_name + ", " : ""}NoPol: ${item.nopol || ""}, Service: ${item.service || ""}, Ukuran: ${item.ukuran || ""}, Vacuum: ${(item.vacuum || "no") === "yes" ? "Ya" : "Tidak"}`;
+      items.push({
+        name: item.item_name || "Detailing",
+        qty: parseInt(item.qty || 1, 10) || 1,
+        unitPrice: parseInt(item.unit_price || 0, 10) || 0,
+        finalPrice: (parseInt(item.total || 0, 10) || 0) / Math.max(1, parseInt(item.qty || 1, 10) || 1),
+        notes,
+        orderType: "detailing"
       });
     });
 
