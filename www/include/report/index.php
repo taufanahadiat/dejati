@@ -26,9 +26,6 @@ $startDate = $startFilter . ' 00:00:00';
 $endDate = $endFilter . ' 23:59:59';
 
 $stmt = $conn->prepare("SELECT id, table_number, payment_method, total_amount, paid_amount, change_amount, created_at,
-                               (SELECT COALESCE(SUM(i.total), 0) FROM order_items i WHERE i.id_tr = o.id) AS cafe,
-                               (SELECT COALESCE(SUM(c.total), 0) FROM order_carwash c WHERE c.id_tr = o.id) AS carwash,
-                               (SELECT COALESCE(SUM(d.total), 0) FROM order_detailing d WHERE d.id_tr = o.id) AS detailing,
                                COALESCE(NULLIF(status_order, ''), CASE WHEN paid_amount = 0 THEN 'OPEN BILL' ELSE 'PAID' END) AS status_order
                         FROM orders o
                         WHERE created_at BETWEEN ? AND ?
@@ -135,13 +132,8 @@ $result = $stmt->get_result();
                                 <th>Table</th>
                                 <th>Status</th>
                                 <th>Payment</th>
-                                <th>Cafe</th>
-                                <th>Carwash</th>
-                                <th>Detailing</th>
                                 <th>Total</th>
-                                <th>Paid</th>
-                                <th>Change</th>
-                                <th>Details</th>
+                                <th>Action</th>
                             </tr>
                         </thead>
                         <tbody>
@@ -162,32 +154,11 @@ $result = $stmt->get_result();
                                         <span class="badge <?= $statusClass; ?>"><?= htmlspecialchars($statusOrder) ?></span>
                                     </td>
                                     <td><?= $row['payment_method'] ? ucfirst(str_replace('_', ' ', $row['payment_method'])) : '-' ?></td>
-                                    <td><?= number_format($row['cafe'], 0, ",", ".") ?></td>
-                                    <td><?= number_format($row['carwash'], 0, ",", ".") ?></td>
-                                    <td><?= number_format($row['detailing'], 0, ",", ".") ?></td>
                                     <td><?= number_format($row['total_amount'], 0, ",", ".") ?></td>
-                                    <td><?= number_format($row['paid_amount'], 0, ",", ".") ?></td>
-                                    <td><?= number_format($row['change_amount'], 0, ",", ".") ?></td>
                                     <td>
                                         <button class="btn btn-sm btn-info view-details" data-id="<?= $row['id'] ?>">
                                             <i class="fas fa-eye"></i> View
                                         </button>
-                                        <button class="btn btn-sm btn-primary print-invoice" data-id="<?= $row['id'] ?>">
-                                            <i class="fas fa-print"></i> Print Invoice
-                                        </button>
-                                        <button class="btn btn-sm btn-warning print-chit" data-id="<?= $row['id'] ?>">
-                                            <i class="fas fa-receipt"></i> Print Chit
-                                        </button>
-                                        <?php if ($statusOrder === 'OPEN BILL'): ?>
-                                            <button id="btnTransact" class="btn btn-sm btn-success transact" data-id="<?= $row['id'] ?>">
-                                                <i class="fas fa-cash-register"></i> Transact
-                                            </button>
-                                        <?php endif; ?>
-                                        <?php if ($statusOrder !== 'CANCEL'): ?>
-                                            <button class="btn btn-sm btn-danger cancel-order" data-id="<?= $row['id'] ?>" data-table="<?= htmlspecialchars($row['table_number'], ENT_QUOTES) ?>">
-                                                <i class="fas fa-times-circle"></i> Cancel
-                                            </button>
-                                        <?php endif; ?>
                                     </td>
                                 </tr>
                             <?php endwhile; ?>
@@ -207,7 +178,7 @@ $result = $stmt->get_result();
                 <h5 class="modal-title">Order Details</h5>
                 <button type="button" class="close" data-dismiss="modal">&times;</button>
             </div>
-            <div class="modal-body" id="modalContent">
+            <div id="modalContent">
                 <p class="text-center">Loading...</p>
             </div>
         </div>
@@ -436,7 +407,7 @@ $(function(){
         const reportEndDate = <?= json_encode($endFilter) ?>;
         const reportTitle = `History Transaksi ${reportStartDate} to ${reportEndDate}`;
         const reportFileName = `History_Transaksi_${reportStartDate}_to_${reportEndDate}`;
-        const exportOptions = { columns: [0, 1, 2, 3, 4, 5, 6, 7, 8, 9] };
+        const exportOptions = { columns: [0, 1, 2, 3, 4] };
 
         let table = $("#ordersTable").DataTable({
             responsive: true,
@@ -450,6 +421,7 @@ $(function(){
                 { extend: "excel", text: "Excel", title: reportTitle, filename: reportFileName, exportOptions },
                 { extend: "pdf", text: "PDF", title: reportTitle, filename: reportFileName, exportOptions }
             ],
+            columnDefs: [{ targets: 5, orderable: false, searchable: false }],
             order: [[0, "desc"]]
         });
 
@@ -522,23 +494,28 @@ $(function(){
             const [start, end] = getPresetRange("today");
             window.location.href = `main.php?id=report&range=today&start=${encodeURIComponent(start)}&end=${encodeURIComponent(end)}`;
         });
-        // Modal Details Loader
-        // Event delegation to support DataTable rows
+        let detailRequest = null;
         $(document).on("click", ".view-details", function() {
-            let orderId = $(this).data("id");
-            $("#modalContent").html("<p class='text-center'>Loading...</p>");
+            const orderId = $(this).data("id");
+            if (detailRequest) detailRequest.abort();
+            $("#modalContent").html("<div class='modal-body text-center'>Loading...</div>");
             $("#detailsModal").modal("show");
-
-            $.get("/include/report/order_get", { id: orderId }, function(data) {
-                $("#modalContent").html(data);
-            });
+            detailRequest = $.get("/include/report/order_get", { id: orderId })
+                .done(function(data) { $("#modalContent").html(data); })
+                .fail(function(xhr, status) {
+                    if (status !== 'abort') {
+                        $("#modalContent").html("<div class='modal-body'><div class='alert alert-danger mb-0'>Gagal memuat detail transaksi. Tutup modal lalu klik View untuk mencoba kembali.</div></div>");
+                    }
+                });
         });
 
         $(document).on('click', '.cancel-order', function () {
             $('#cancel_order_id').val($(this).data('id'));
             $('#cancel_order_table').val($(this).data('table') || '');
             $('#cancel_order_reason').val('');
-            $('#cancelOrderModal').modal('show');
+            $('#detailsModal').one('hidden.bs.modal', function () {
+                $('#cancelOrderModal').modal('show');
+            }).modal('hide');
         });
 
         $('#confirmCancelOrder').on('click', function () {
@@ -753,5 +730,3 @@ $(function () {
 </body>
 
 </html>
-GET['start'] ?? '';
-$endFilter =

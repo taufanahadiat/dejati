@@ -62,9 +62,28 @@ if ($scenario === 'read') {
     check((int)$data['detailing'][0]['total'] === 210000, 'JSON detailing total');
     ob_start(); require 'include/report/order_get.php'; $html = ob_get_clean();
     check(str_contains($html, 'Detailing Test') && str_contains($html, 'B 1234 TEST') && str_contains($html, 'Varian: Large'), 'Order detail display');
+    foreach (['Cafe' => '20.000', 'Carwash' => '30.000', 'Detailing' => '210.000'] as $label => $amount) {
+        check(str_contains($html, 'Subtotal ' . $label) && str_contains($html, 'Rp ' . $amount), 'Service subtotal: ' . $label);
+    }
+    check(substr_count($html, '<table ') === 3 && str_contains($html, 'Rp 260.000'), 'Separate tables and order total');
+    check(str_contains($html, 'modal-footer') && str_contains($html, 'print-chit') && str_contains($html, 'print-invoice') && str_contains($html, 'cancel-order'), 'Modal actions');
+    // Empty divisions must not render a table, including a free item in the remaining division.
+    $conn->query("INSERT INTO orders (table_number, total_amount, paid_amount, status_order, created_at) VALUES ('CAFE ONLY', 0, 0, 'CANCEL', NOW())");
+    $cafeOnlyId = $conn->insert_id;
+    $conn->query("INSERT INTO order_items (id_tr, item_name, item_price, quantity, total) VALUES ($cafeOnlyId, '<Free Coffee>', 0, 1, 0)");
+    $_GET = ['id' => $cafeOnlyId];
+    ob_start(); require 'include/report/order_get.php'; $singleHtml = ob_get_clean();
+    check(substr_count($singleHtml, '<table ') === 1 && str_contains($singleHtml, 'Subtotal Cafe'), 'Zero-priced cafe table visible');
+    check(!str_contains($singleHtml, 'Subtotal Carwash') && !str_contains($singleHtml, 'Subtotal Detailing'), 'Empty service tables hidden');
+    check(str_contains($singleHtml, '&lt;Free Coffee&gt;') && str_contains($singleHtml, 'disabled'), 'Escaped item and canceled action disabled');
     $_GET = [];
     ob_start(); require 'include/report/index.php'; $html = ob_get_clean();
-    check(str_contains($html, '<th>Detailing</th>') && str_contains($html, '210.000'), 'History column and amount');
+    check(str_contains($html, '<th>Action</th>') && str_contains($html, '260.000'), 'History action and total');
+    foreach (['Cafe', 'Carwash', 'Detailing', 'Paid', 'Change', 'Details'] as $column) {
+        check(!str_contains($html, '<th>' . $column . '</th>'), 'Hidden history column: ' . $column);
+    }
+    preg_match('/<table id="ordersTable".*?<\/table>/s', $html, $tableMatch);
+    check(!str_contains($tableMatch[0], 'print-invoice') && !str_contains($tableMatch[0], 'cancel-order') && !str_contains($tableMatch[0], 'transact"'), 'History rows only offer View');
     file_put_contents('/tmp/detailing-report-test.html', $html);
     $_SERVER['REQUEST_METHOD'] = 'GET';
     ob_start(); require 'include/report/closingan_preview.php'; $html = ob_get_clean();
