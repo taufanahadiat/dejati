@@ -12,6 +12,24 @@ services:
       - db
     networks:
       - proxy
+      - whatsapp_private
+
+  whatsapp:
+    build: ./services/whatsapp
+    restart: unless-stopped
+    init: true
+    shm_size: 256mb
+    stop_grace_period: 30s
+    volumes:
+      - whatsapp_data:/data
+      - ./config/whatsapp-bot.token:/run/secrets/stock-token:ro
+    networks:
+      - whatsapp_private
+    healthcheck:
+      test: ["CMD", "node", "-e", "fetch('http://localhost:3000/health').then(r=>process.exit(r.ok?0:1)).catch(()=>process.exit(1))"]
+      interval: 30s
+      timeout: 5s
+      retries: 3
 
   # --- MySQL database ---
   db:
@@ -60,10 +78,13 @@ services:
       - proxy
 
 volumes:
+  whatsapp_data:
   db_data:
   caddy_data:
   caddy_config:
 
 networks:
+  whatsapp_private:
+    driver: bridge
   proxy:
     driver: bridge

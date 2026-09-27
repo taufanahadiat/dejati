@@ -1,9 +1,7 @@
 <?php
 header('Content-Type: application/json');
 date_default_timezone_set("Asia/Jakarta");
-if (session_status() !== PHP_SESSION_ACTIVE) session_start();
 require_once __DIR__ . '/../../config/config.php';
-require_once __DIR__ . '/../../config/transaction_audit.php';
 
 $id = isset($_POST['id']) ? (int)$_POST['id'] : 0;
 $reason = trim((string)($_POST['reason'] ?? ''));
@@ -51,14 +49,6 @@ if (!$success) {
     echo json_encode(['status' => 'error', 'message' => 'Failed to cancel order']);
     exit;
 }
-
-transactionAudit($conn, 'transaction_canceled', [
-    'order_id' => $id,
-    'user_id' => isset($_SESSION['id_user']) ? (int)$_SESSION['id_user'] : null,
-    'source' => 'server_web',
-    'status' => 'success',
-    'details' => ['reason' => $reason],
-]);
 
 echo json_encode([
     'status' => 'success',

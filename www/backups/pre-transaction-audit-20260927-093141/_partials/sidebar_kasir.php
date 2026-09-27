@@ -24,15 +24,11 @@
             <p>Transaksi</p>
           </a>
         </li>
-        <li class="nav-item has-treeview <?= (isset($id) && in_array($id, ['report', 'activityLog'], true)) ? 'menu-open' : '' ?>">
-          <a href="#" class="nav-link <?= (isset($id) && in_array($id, ['report', 'activityLog'], true)) ? 'active' : '' ?>">
+        <li class="nav-item">
+          <a href="main.php?id=report" class="nav-link <?= (isset($id) && $id === 'report') ? 'active' : '' ?>">
             <i class="nav-icon fas fa-receipt"></i>
-            <p>Report<i class="right fas fa-angle-left"></i></p>
+            <p>History Transaksi</p>
           </a>
-          <ul class="nav nav-treeview">
-            <li class="nav-item"><a href="main.php?id=report" class="nav-link <?= (isset($id) && $id === 'report') ? 'active' : '' ?>"><i class="nav-icon fas fa-history"></i><p>History Transaksi</p></a></li>
-            <li class="nav-item"><a href="main.php?id=activityLog" class="nav-link <?= (isset($id) && $id === 'activityLog') ? 'active' : '' ?>"><i class="nav-icon fas fa-clipboard-list"></i><p>Log Aktivitas</p></a></li>
-          </ul>
         </li>
       </ul>
     </nav>

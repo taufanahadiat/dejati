@@ -98,12 +98,6 @@ $appPage = 'main.php';
                 <p>Closing Harian</p>
               </a>
             </li>
-            <li class="nav-item">
-              <a href="main.php?id=activityLog" class="nav-link">
-                <i class="nav-icon fas fa-clipboard-list"></i>
-                <p>Log Aktivitas</p>
-              </a>
-            </li>
           </ul>
         </li>
         <?php if (($_SESSION['level'] ?? '') === 'Administrator'): ?>

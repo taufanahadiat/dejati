@@ -14,7 +14,7 @@ $stockRows = $conn->query("SELECT b.*, COUNT(DISTINCT pb.product_id) product_cou
     FROM vw_stock_balances b
     LEFT JOIN stock_product_bindings pb ON pb.stock_item_id=b.id
     LEFT JOIN tb_datacafe p ON p.id_prod=pb.product_id
-    GROUP BY b.id,b.name,b.initial_quantity,b.unit,b.active,b.current_quantity,b.updated_at,b.minimum_quantity
+    GROUP BY b.id,b.name,b.initial_quantity,b.unit,b.active,b.current_quantity,b.updated_at
     ORDER BY b.name")->fetch_all(MYSQLI_ASSOC);
 $products = $conn->query("SELECT p.id_prod,p.nama_prod,c.name_cat,
     GROUP_CONCAT(pb.stock_item_id ORDER BY s.name) stock_ids,
@@ -32,7 +32,7 @@ $movements = $conn->query("SELECT m.created_at,s.name,m.movement_type,m.quantity
     JOIN stock_items s ON s.id=m.stock_item_id
     LEFT JOIN order_items oi ON oi.id=m.order_item_id
     ORDER BY m.id DESC LIMIT 250")->fetch_all(MYSQLI_ASSOC);
-$lowStockCount = count(array_filter($stockRows, fn($row) => (float)$row['current_quantity'] > 0 && (float)$row['current_quantity'] <= (float)$row['minimum_quantity']));
+$stockInToday = (float)$conn->query("SELECT COALESCE(SUM(stock_in_quantity),0) total FROM stock_movements WHERE DATE(created_at)=CURDATE()")->fetch_assoc()['total'];
 $outOfStockCount = count(array_filter($stockRows, fn($row) => (float)$row['current_quantity'] <= 0));
 $boundCount = count(array_filter($products, fn($row) => $row['stock_ids'] !== null));
 $formatQty = static function ($value): string {
@@ -49,7 +49,7 @@ $jsonAttr = static fn($value): string => htmlspecialchars(json_encode($value), E
     <div class="row">
       <div class="col-sm-6 col-lg-3"><div class="info-box"><span class="info-box-icon bg-info"><i class="fas fa-boxes"></i></span><div class="info-box-content"><span class="info-box-text">Item Stock</span><span class="info-box-number"><?= count($stockRows) ?></span></div></div></div>
       <div class="col-sm-6 col-lg-3"><div class="info-box"><span class="info-box-icon bg-success"><i class="fas fa-link"></i></span><div class="info-box-content"><span class="info-box-text">Produk Terikat</span><span class="info-box-number"><?= $boundCount ?></span></div></div></div>
-      <div class="col-sm-6 col-lg-3"><div class="info-box"><span class="info-box-icon bg-warning"><i class="fas fa-exclamation-triangle"></i></span><div class="info-box-content"><span class="info-box-text">Stock Minim</span><span class="info-box-number"><?= $lowStockCount ?></span></div></div></div>
+      <div class="col-sm-6 col-lg-3"><div class="info-box"><span class="info-box-icon bg-primary"><i class="fas fa-arrow-down"></i></span><div class="info-box-content"><span class="info-box-text">Stock Masuk (Hari Ini)</span><span class="info-box-number"><?= $formatQty($stockInToday) ?></span></div></div></div>
       <div class="col-sm-6 col-lg-3"><div class="info-box"><span class="info-box-icon bg-danger"><i class="fas fa-box-open"></i></span><div class="info-box-content"><span class="info-box-text">Stock Habis</span><span class="info-box-number"><?= $outOfStockCount ?></span></div></div></div>
     </div>
 
@@ -71,7 +71,7 @@ $jsonAttr = static fn($value): string => htmlspecialchars(json_encode($value), E
                 <tr><td class="font-weight-bold"><?= htmlspecialchars($row['name']) ?></td>
                   <td><?php if ($row['products']): foreach (explode(', ', $row['products']) as $boundProduct): ?><span class="badge badge-info bound-product-badge"><?= htmlspecialchars($boundProduct) ?></span><?php endforeach; else: ?><span class="text-muted">Belum ada binding</span><?php endif; ?></td>
                   <td class="text-right"><span class="badge badge-<?= $quantity < 0 ? 'danger' : ($quantity == 0 ? 'warning' : 'success') ?> px-2 py-1"><?= $formatQty($quantity) ?> <?= htmlspecialchars($row['unit']) ?></span></td>
-                  <td><button class="btn btn-success btn-sm edit-stock" data-toggle="modal" data-target="#editStockModal" data-id="<?= (int)$row['id'] ?>" data-name="<?= htmlspecialchars($row['name'],ENT_QUOTES) ?>" data-quantity="<?= htmlspecialchars((string)$quantity) ?>" data-unit="<?= htmlspecialchars($row['unit'],ENT_QUOTES) ?>" data-minimum="<?= htmlspecialchars((string)$row['minimum_quantity']) ?>" data-products="<?= $jsonAttr($productIds) ?>" title="Edit item stock" aria-label="Edit item stock"><i class="fas fa-edit"></i></button></td></tr>
+                  <td><button class="btn btn-success btn-sm edit-stock" data-toggle="modal" data-target="#editStockModal" data-id="<?= (int)$row['id'] ?>" data-name="<?= htmlspecialchars($row['name'],ENT_QUOTES) ?>" data-quantity="<?= htmlspecialchars((string)$quantity) ?>" data-unit="<?= htmlspecialchars($row['unit'],ENT_QUOTES) ?>" data-products="<?= $jsonAttr($productIds) ?>" title="Edit item stock" aria-label="Edit item stock"><i class="fas fa-edit"></i></button></td></tr>
               <?php endforeach; ?>
               </tbody></table></div>
           </div>
@@ -112,10 +112,8 @@ $jsonAttr = static fn($value): string => htmlspecialchars(json_encode($value), E
 <div class="modal fade" id="editStockModal" tabindex="-1" aria-hidden="true"><div class="modal-dialog modal-lg"><form class="modal-content" method="post" action="/include/data/stock/stock_action.php">
   <div class="modal-header"><h5 class="modal-title">Edit Item Stock</h5><button type="button" class="close" data-dismiss="modal" aria-label="Tutup"><span aria-hidden="true">&times;</span></button></div>
   <div class="modal-body"><input type="hidden" name="csrf" value="<?= htmlspecialchars($csrf) ?>"><input type="hidden" name="action" value="edit_stock_item"><input type="hidden" name="stock_item_id" id="editStockId">
-    <div class="form-group"><label for="editStockName">Nama item</label><input id="editStockName" class="form-control" name="name" maxlength="100" required></div>
     <div class="form-group"><label for="editStockQuantity">Jumlah sekarang</label><input id="editStockQuantity" class="form-control" type="number" step="0.001" name="quantity" required></div>
     <div class="form-group"><label for="editStockUnit">Unit</label><select id="editStockUnit" class="form-control" name="unit" required><option value="pcs">pcs</option><option value="gr">gr</option></select></div>
-    <div class="form-group"><label for="editStockMinimum">Batas stok minim</label><input id="editStockMinimum" class="form-control" type="number" min="0" max="999999999" step="0.001" name="minimum_quantity" required><small class="form-text text-muted">Mengikuti satuan item. Default 5, atau 50 untuk gr. Isi 0 untuk menonaktifkan kategori minim.</small></div>
     <div class="form-group mb-0"><label for="editStockProducts">Produk Cafe Terikat</label><select id="editStockProducts" class="form-control" name="product_ids[]" multiple><?php foreach ($products as $product): ?><option value="<?= (int)$product['id_prod'] ?>"><?= htmlspecialchars($product['nama_prod']) ?></option><?php endforeach; ?></select><small class="form-text text-muted">Cari lalu pilih beberapa produk. Produk terpilih ditampilkan sebagai highlight.</small></div>
   </div><div class="modal-footer"><button type="button" class="btn btn-secondary" data-dismiss="modal">Batal</button><button class="btn btn-primary"><i class="fas fa-save mr-1"></i> Simpan</button></div>
 </form></div></div>
@@ -145,7 +143,7 @@ $(function () {
     select.trigger('change.select2');
   };
   $('#editStockModal').on('show.bs.modal',function(event){
-    const modal=$(this),button=$(event.relatedTarget); modal.find('.modal-title').text('Edit '+button.data('name')); $('#editStockId').val(button.data('id')); $('#editStockName').val(button.data('name')); $('#editStockQuantity').val(button.data('quantity')); $('#editStockUnit').val(button.attr('data-unit')); $('#editStockMinimum').val(button.attr('data-minimum')); setupSelect($('#editStockProducts'),modal,selectedValues(button.attr('data-products')),'Cari produk cafe');
+    const modal=$(this),button=$(event.relatedTarget); modal.find('.modal-title').text('Edit '+button.data('name')); $('#editStockId').val(button.data('id')); $('#editStockQuantity').val(button.data('quantity')); $('#editStockUnit').val(button.attr('data-unit')); setupSelect($('#editStockProducts'),modal,selectedValues(button.attr('data-products')),'Cari produk cafe');
   });
   $('#editBindingModal').on('show.bs.modal',function(event){
     const modal=$(this),button=$(event.relatedTarget); modal.find('.modal-title').text('Binding '+button.data('name')); $('#editBindingProductId').val(button.data('id')); $('#editBindingUsage').val(button.data('usage')); setupSelect($('#editBindingStocks'),modal,selectedValues(button.attr('data-stocks')),'Cari item stock');

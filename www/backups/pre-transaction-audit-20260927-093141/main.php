@@ -13,7 +13,7 @@ $role = $_SESSION['level'] ?? '';
 
 if ($role === 'Kasir') {
   $id = isset($_GET['id']) ? $_GET['id'] : 'transaksi';
-  $allowed_pages = ['transaksi', 'report', 'activityLog'];
+  $allowed_pages = ['transaksi', 'report'];
   if (!in_array($id, $allowed_pages, true)) {
     $id = 'transaksi';
   }
@@ -56,8 +56,6 @@ if ($role === 'Kasir') {
         include_once('include/report/index.php');
       } elseif ($id == "dailyReport") {
         include_once('include/report/history.php');
-      } elseif ($id == "activityLog") {
-        include_once('include/report/activity_log.php');
       } elseif ($id == "transaksi") {
         include_once('include/transaksi/index.php');
       } elseif ($id == "whatsapp" && $role === 'Administrator') {

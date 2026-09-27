@@ -9,7 +9,6 @@ if ($_SERVER['REQUEST_METHOD'] === 'OPTIONS') exit;
 
 require_once __DIR__ . '/../../config/config.php';
 require_once __DIR__ . '/../../config/order_type.php';
-require_once __DIR__ . '/../../config/transaction_audit.php';
 date_default_timezone_set('Asia/Jakarta');
 
 mysqli_query($conn, 'CREATE TABLE IF NOT EXISTS mobile_api_tokens (token_hash CHAR(64) PRIMARY KEY, user_id INT NOT NULL, expires_at DATETIME NOT NULL, created_at DATETIME NOT NULL)');
@@ -29,45 +28,6 @@ function user(mysqli $conn): array {
   if (!$account) reply(['message' => 'Unauthorized'], 401); return $account;
 }
 function money(mixed $value): int { return max(0, (int) preg_replace('/[^0-9]/', '', (string) $value)); }
-function mobileOrderItems(array $items): array {
-  $normalized = [];
-  foreach ($items as $item) {
-    $type = (string)($item['cartType'] ?? 'product');
-    $price = in_array($type, ['carwash','detailing'], true) ? money($item['finalPrice'] ?? $item['unitPrice'] ?? 0) : money($item['unitPrice'] ?? 0);
-    $row = $item;
-    $row['cartType'] = $type;
-    $row['qty'] = max(1, (int)($item['qty'] ?? 1));
-    $row['unitPrice'] = $price;
-    $row['finalPrice'] = $price;
-    if (!in_array($type, ['carwash','detailing'], true)) $row['orderType'] = transactionItemOrderType($item);
-    $normalized[] = $row;
-  }
-  return $normalized;
-}
-function mobileOrderTotal(array $items): int {
-  return array_sum(array_map(fn(array $item): int => (int)$item['unitPrice'] * (int)$item['qty'], $items));
-}
-function mobileOrderHash(string $table, string $method, string $status, int $total, array $items): string {
-  $lines = array_map(function(array $item): array {
-    $type = (string)$item['cartType'];
-    $line = ['id'=>(string)($item['id'] ?? ''),'name'=>(string)($item['name'] ?? ''),'qty'=>(int)$item['qty'],'price'=>(int)$item['unitPrice'],'cartType'=>$type,'orderType'=>$item['orderType'] ?? null];
-    if (in_array($type,['carwash','detailing'],true)) $line += ['nopol'=>(string)($item['nopol'] ?? ''),'service'=>(string)($item['service'] ?? ''),'ukuran'=>(string)($item['ukuran'] ?? ''),'vacuum'=>(string)($item['vacuum'] ?? ''),'variantName'=>(string)($item['variantName'] ?? '')];
-    return $line;
-  }, $items);
-  return hash('sha256', json_encode(['table'=>$table,'method'=>$method,'status'=>$status,'total'=>$total,'items'=>$lines], JSON_UNESCAPED_UNICODE | JSON_UNESCAPED_SLASHES | JSON_THROW_ON_ERROR));
-}
-function mobileInsertOrderItems(mysqli $conn, int $orderId, array $items): void {
-  foreach ($items as $item) {
-    $id=(string)($item['id'] ?? ''); $name=(string)($item['name'] ?? ''); $qty=(int)$item['qty']; $type=(string)$item['cartType']; $price=(int)$item['unitPrice']; $line=$price*$qty;
-    if (in_array($type, ['carwash','detailing'], true)) {
-      $serviceTable=$type === 'detailing' ? 'order_detailing' : 'order_carwash'; $nopol=trim((string)($item['nopol'] ?? '')); $service=trim((string)($item['service'] ?? '')); $ukuran=trim((string)($item['ukuran'] ?? '')); $vacuum=strtolower((string)($item['vacuum'] ?? 'no')) === 'yes' ? 'yes' : 'no'; $variantName=trim((string)($item['variantName'] ?? '')); $staff=(int)round($line*.3); $management=$line-$staff;
-      $stmt=mysqli_prepare($conn,"INSERT INTO `$serviceTable` (id_tr,id_prod,item_name,qty,unit_price,total,nopol,service,ukuran,vacuum,profit_pegawai,profit_management,variant_name) VALUES (?,?,?,?,?,?,?,?,?,?,?,?,?)"); mysqli_stmt_bind_param($stmt,'issiiissssiis',$orderId,$id,$name,$qty,$price,$line,$nopol,$service,$ukuran,$vacuum,$staff,$management,$variantName);
-    } else {
-      $stmt=mysqli_prepare($conn,'INSERT INTO order_items (id_tr,id_prod,item_name,item_price,quantity,total,order_type) VALUES (?,?,?,?,?,?,?)'); $orderType=$item['orderType'] ?? null; mysqli_stmt_bind_param($stmt,'issiiis',$orderId,$id,$name,$price,$qty,$line,$orderType);
-    }
-    mysqli_stmt_execute($stmt);
-  }
-}
 
 $path = trim((string) ($_GET['path'] ?? ''), '/');
 if ($path === 'login' && $_SERVER['REQUEST_METHOD'] === 'POST') {
@@ -96,52 +56,27 @@ if ($path === 'orders' && $_SERVER['REQUEST_METHOD'] === 'POST') {
   $input = body(); $clientId = (string)($input['client_order_id'] ?? ''); $items = $input['items'] ?? []; $table = trim((string)($input['table_number'] ?? '')); $method = strtolower((string)($input['payment_method'] ?? 'cash')); $requestedStatus = strtolower((string)($input['status'] ?? 'paid'));
   $timestamp = isset($input['created_at']) ? strtotime((string)$input['created_at']) : false;
   $canceling = $requestedStatus === 'cancel';
-  $openBill = $requestedStatus === 'open_bill';
-  if (($canceling || $openBill) && in_array($method, ['open bill','open_bill',''], true)) $method = '';
-  if (!preg_match('/^[a-f0-9-]{36}$/i', $clientId) || !is_array($items) || !$items || !$table || !in_array($requestedStatus, ['paid','cancel','open_bill'], true) || (!$canceling && !$openBill && !in_array($method, ['cash','qris','credit_card'], true)) || (($canceling || $openBill) && !in_array($method, ['','cash','qris','credit_card'], true))) reply(['message' => 'Data transaksi tidak valid'], 422);
+  if ($canceling && in_array($method, ['open bill','open_bill',''], true)) $method = '';
+  if (!preg_match('/^[a-f0-9-]{36}$/i', $clientId) || !$items || !$table || !in_array($requestedStatus, ['paid','cancel'], true) || (!$canceling && !in_array($method, ['cash','qris','credit_card'], true)) || ($canceling && !in_array($method, ['','cash','qris','credit_card'], true))) reply(['message' => 'Data transaksi tidak valid'], 422);
   if ($timestamp === false || $timestamp > time() + 300) reply(['message' => 'Waktu transaksi tidak valid'], 422);
-  try { $items = mobileOrderItems($items); } catch (InvalidArgumentException $e) { reply(['message' => $e->getMessage()], 422); }
-  $total = mobileOrderTotal($items); if ($total < 1) reply(['message' => 'Total transaksi tidak valid'], 422);
-  $normalizedStatus = $canceling ? 'CANCEL' : ($openBill ? 'OPEN BILL' : 'PAID');
-  $hash = mobileOrderHash($table, $method, $normalizedStatus, $total, $items);
-  $clientCreatedAt = (new DateTimeImmutable('@'.$timestamp))->setTimezone(new DateTimeZone('Asia/Jakarta'))->format('Y-m-d H:i:s');
-  transactionAudit($conn,'sync_attempt',['client_order_id'=>$clientId,'user_id'=>(int)$account['id_user'],'source'=>'mobile','status'=>'pending','table_number'=>$table,'amount'=>$total,'payment_method'=>$method,'client_event_at'=>$clientCreatedAt,'details'=>['requested_status'=>$normalizedStatus,'item_count'=>count($items)]]);
-  $stmt = mysqli_prepare($conn, 'SELECT m.order_id,m.payload_hash,o.table_number,o.total_amount,o.payment_method,o.status_order FROM mobile_sync_orders m JOIN orders o ON o.id=m.order_id WHERE m.client_order_id=?'); mysqli_stmt_bind_param($stmt, 's', $clientId); mysqli_stmt_execute($stmt); $exists = mysqli_fetch_assoc(mysqli_stmt_get_result($stmt));
-  if ($exists) {
-    if ($openBill && strtoupper((string)$exists['status_order']) === 'OPEN BILL' && (!$exists['payload_hash'] || !hash_equals((string)$exists['payload_hash'],$hash))) {
-      mysqli_begin_transaction($conn);
-      try {
-        $orderId=(int)$exists['order_id'];
-        mysqli_query($conn,"DELETE FROM order_items WHERE id_tr=$orderId"); mysqli_query($conn,"DELETE FROM order_carwash WHERE id_tr=$orderId"); mysqli_query($conn,"DELETE FROM order_detailing WHERE id_tr=$orderId");
-        mobileInsertOrderItems($conn,$orderId,$items);
-        $stmt=mysqli_prepare($conn,"UPDATE orders SET table_number=?,total_amount=?,paid_amount=0,change_amount=0,status_order='OPEN BILL',payment_method=NULL WHERE id=?"); mysqli_stmt_bind_param($stmt,'sii',$table,$total,$orderId); mysqli_stmt_execute($stmt);
-        $stmt=mysqli_prepare($conn,'UPDATE mobile_sync_orders SET payload_hash=? WHERE order_id=?'); mysqli_stmt_bind_param($stmt,'si',$hash,$orderId); mysqli_stmt_execute($stmt);
-        transactionAudit($conn,'open_bill_updated',['order_id'=>$orderId,'client_order_id'=>$clientId,'user_id'=>(int)$account['id_user'],'source'=>'mobile','status'=>'success','table_number'=>$table,'amount'=>$total,'client_event_at'=>$clientCreatedAt,'details'=>['previous_table'=>$exists['table_number'],'previous_total'=>(int)$exists['total_amount'],'item_count'=>count($items)]]);
-        mysqli_commit($conn);
-        reply(['order_id'=>$orderId,'client_order_id'=>$clientId,'table_number'=>$table,'total'=>$total,'status'=>'OPEN BILL','updated'=>true]);
-      } catch(Throwable $e) { mysqli_rollback($conn); reply(['message'=>'Gagal memperbarui open bill'],500); }
+  $stmt = mysqli_prepare($conn, 'SELECT order_id FROM mobile_sync_orders WHERE client_order_id=?'); mysqli_stmt_bind_param($stmt, 's', $clientId); mysqli_stmt_execute($stmt); $exists = mysqli_fetch_assoc(mysqli_stmt_get_result($stmt)); if ($exists) reply(['order_id' => (int)$exists['order_id'], 'duplicate' => true]);
+  $total = 0; foreach ($items as $item) { $type = (string)($item['cartType'] ?? 'product'); $price = in_array($type, ['carwash','detailing'], true) ? money($item['finalPrice'] ?? $item['unitPrice'] ?? 0) : money($item['unitPrice'] ?? 0); $total += $price * max(1, (int)($item['qty'] ?? 1)); } if ($total < 1) reply(['message' => 'Total transaksi tidak valid'], 422);
+  try {
+    foreach ($items as &$item) {
+      if (!in_array($item['cartType'] ?? 'product', ['carwash', 'detailing'], true)) $item['orderType'] = transactionItemOrderType($item);
     }
-    $same = (!$exists['payload_hash'] || hash_equals((string)$exists['payload_hash'],$hash)) && (string)$exists['table_number']===$table && (int)$exists['total_amount']===$total && (string)($exists['payment_method'] ?? '')===$method && strtoupper((string)$exists['status_order'])===$normalizedStatus;
-    transactionAudit($conn,$same?'sync_duplicate':'sync_conflict',['order_id'=>(int)$exists['order_id'],'client_order_id'=>$clientId,'user_id'=>(int)$account['id_user'],'source'=>'mobile','status'=>$same?'success':'rejected','table_number'=>$table,'amount'=>$total,'payment_method'=>$method,'details'=>['server_table'=>$exists['table_number'],'server_total'=>(int)$exists['total_amount'],'server_status'=>$exists['status_order']]]);
-    if (!$same) reply(['message'=>'ID transaksi sudah dipakai oleh transaksi dengan isi berbeda. Muat ulang history dan buat transaksi baru.'],409);
-    if (!$exists['payload_hash']) { $stmt=mysqli_prepare($conn,'UPDATE mobile_sync_orders SET payload_hash=? WHERE client_order_id=?'); mysqli_stmt_bind_param($stmt,'ss',$hash,$clientId); mysqli_stmt_execute($stmt); }
-    reply(['order_id'=>(int)$exists['order_id'],'client_order_id'=>$clientId,'table_number'=>$table,'total'=>$total,'status'=>$normalizedStatus,'duplicate'=>true]);
-  }
+    unset($item);
+  } catch (InvalidArgumentException $e) { reply(['message' => $e->getMessage()], 422); }
   mysqli_begin_transaction($conn); try {
-    $status = $normalizedStatus; $paid = ($canceling || $openBill) ? money($input['paid'] ?? 0) : $total; $change = ($canceling || $openBill) ? money($input['change'] ?? 0) : 0;
+    $status = $canceling ? 'CANCEL' : 'PAID'; $paid = $canceling ? money($input['paid'] ?? 0) : $total; $change = $canceling ? money($input['change'] ?? 0) : 0;
     $cancelReason = $canceling ? trim((string)($input['cancel_reason'] ?? '')) : null;
     if ($canceling && $cancelReason === '') $cancelReason = 'Dibatalkan di perangkat';
     $canceledTimestamp = $canceling && !empty($input['canceled_at']) ? strtotime((string)$input['canceled_at']) : false;
     $canceledAt = $canceling ? ($canceledTimestamp === false ? date('Y-m-d H:i:s') : (new DateTimeImmutable('@'.$canceledTimestamp))->setTimezone(new DateTimeZone('Asia/Jakarta'))->format('Y-m-d H:i:s')) : null;
     $createdAt = (new DateTimeImmutable('@'.$timestamp))->setTimezone(new DateTimeZone('Asia/Jakarta'))->format('Y-m-d H:i:s');
-    $paidAt = $status === 'PAID' ? $createdAt : null;
-    $paymentMethod = $openBill ? null : $method;
-    $stmt = mysqli_prepare($conn, 'INSERT INTO orders (table_number,payment_method,total_amount,paid_amount,change_amount,status_order,cancel_reason,canceled_at,paid_at,created_at) VALUES (?,?,?,?,?,?,?,?,?,?)'); mysqli_stmt_bind_param($stmt, 'ssiiisssss', $table, $paymentMethod, $total, $paid, $change, $status, $cancelReason, $canceledAt, $paidAt, $createdAt); mysqli_stmt_execute($stmt); $orderId = mysqli_insert_id($conn);
-    mobileInsertOrderItems($conn,$orderId,$items);
-    $stmt = mysqli_prepare($conn, 'INSERT INTO mobile_sync_orders (client_order_id,order_id,user_id,payload_hash,created_at) VALUES (?,?,?,?,NOW())'); mysqli_stmt_bind_param($stmt, 'siis', $clientId,$orderId,$account['id_user'],$hash); mysqli_stmt_execute($stmt);
-    transactionAudit($conn,$openBill?'open_bill_created':($canceling?'transaction_canceled':'transaction_created'),['order_id'=>$orderId,'client_order_id'=>$clientId,'user_id'=>(int)$account['id_user'],'source'=>'mobile','status'=>'success','table_number'=>$table,'amount'=>$total,'payment_method'=>$method,'client_event_at'=>$createdAt,'details'=>['item_count'=>count($items)]]);
-    if ($status === 'PAID') transactionAudit($conn,'payment_recorded',['order_id'=>$orderId,'client_order_id'=>$clientId,'user_id'=>(int)$account['id_user'],'source'=>'mobile','status'=>'success','table_number'=>$table,'amount'=>$total,'payment_method'=>$method,'client_event_at'=>$createdAt]);
-    mysqli_commit($conn); reply(['order_id'=>$orderId,'client_order_id'=>$clientId,'table_number'=>$table,'total'=>$total,'status'=>$status]);
+    $stmt = mysqli_prepare($conn, 'INSERT INTO orders (table_number,payment_method,total_amount,paid_amount,change_amount,status_order,cancel_reason,canceled_at,created_at) VALUES (?,?,?,?,?,?,?,?,?)'); mysqli_stmt_bind_param($stmt, 'ssiiissss', $table, $method, $total, $paid, $change, $status, $cancelReason, $canceledAt, $createdAt); mysqli_stmt_execute($stmt); $orderId = mysqli_insert_id($conn);
+    foreach ($items as $item) { $id = (string)($item['id'] ?? ''); $name = (string)($item['name'] ?? ''); $qty = max(1, (int)($item['qty'] ?? 1)); $type = (string)($item['cartType'] ?? 'product'); $price = in_array($type, ['carwash','detailing'], true) ? money($item['finalPrice'] ?? $item['unitPrice'] ?? 0) : money($item['unitPrice'] ?? 0); $line=$price*$qty; if (in_array($type, ['carwash','detailing'], true)) { $serviceTable = $type === 'detailing' ? 'order_detailing' : 'order_carwash'; $nopol=trim((string)($item['nopol'] ?? '')); $service=trim((string)($item['service'] ?? '')); $ukuran=trim((string)($item['ukuran'] ?? '')); $vacuum=strtolower((string)($item['vacuum'] ?? 'no')) === 'yes' ? 'yes' : 'no'; $variantName=trim((string)($item['variantName'] ?? '')); $staff=(int)round($line*.3); $management=$line-$staff; $stmt = mysqli_prepare($conn, "INSERT INTO `$serviceTable` (id_tr,id_prod,item_name,qty,unit_price,total,nopol,service,ukuran,vacuum,profit_pegawai,profit_management,variant_name) VALUES (?,?,?,?,?,?,?,?,?,?,?,?,?)"); mysqli_stmt_bind_param($stmt, 'issiiissssiis', $orderId,$id,$name,$qty,$price,$line,$nopol,$service,$ukuran,$vacuum,$staff,$management,$variantName); } else { $stmt = mysqli_prepare($conn, 'INSERT INTO order_items (id_tr,id_prod,item_name,item_price,quantity,total,order_type) VALUES (?,?,?,?,?,?,?)'); $orderType=$item['orderType'] ?? null; mysqli_stmt_bind_param($stmt, 'issiiis', $orderId,$id,$name,$price,$qty,$line,$orderType); } mysqli_stmt_execute($stmt); }
+    $stmt = mysqli_prepare($conn, 'INSERT INTO mobile_sync_orders (client_order_id,order_id,user_id,created_at) VALUES (?,?,?,NOW())'); mysqli_stmt_bind_param($stmt, 'sii', $clientId,$orderId,$account['id_user']); mysqli_stmt_execute($stmt); mysqli_commit($conn); reply(['order_id'=>$orderId,'total'=>$total]);
   } catch (Throwable $e) { mysqli_rollback($conn); reply(['message' => 'Gagal menyimpan transaksi'], 500); }
 }
 if ($path === 'daily-report' && $_SERVER['REQUEST_METHOD'] === 'GET') {

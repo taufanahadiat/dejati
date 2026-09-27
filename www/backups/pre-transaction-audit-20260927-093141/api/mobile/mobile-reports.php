@@ -126,7 +126,7 @@ function reportSaveClosing(mysqli $conn, array $input, int $userId): array {
     finally { reportQuery($conn,'SELECT RELEASE_LOCK(?)','s',[$lock]); }
 }
 
-function reportOrderAction(mysqli $conn, string $action, array $input, int $userId): array {
+function reportOrderAction(mysqli $conn, string $action, array $input): array {
     $id = filter_var($input['id'] ?? null,FILTER_VALIDATE_INT);
     if (!$id || $id<1) throw new InvalidArgumentException('Order ID tidak valid.');
     $conn->begin_transaction();
@@ -137,42 +137,20 @@ function reportOrderAction(mysqli $conn, string $action, array $input, int $user
         if ($action==='order-cancel') {
             $reason = trim((string)($input['reason'] ?? ''));
             if ($reason==='' || strlen($reason)>5000) throw new InvalidArgumentException('Isi alasan pembatalan (maksimal 5000 byte).');
-            if ($status!=='CANCEL') {
-                reportQuery($conn,"UPDATE orders SET status_order='CANCEL',cancel_reason=?,canceled_at=NOW() WHERE id=?",'si',[$reason,$id]);
-                transactionAudit($conn,'transaction_canceled',['order_id'=>$id,'user_id'=>$userId,'source'=>'mobile','status'=>'success','table_number'=>$order['table_number'],'amount'=>(int)$order['total_amount'],'payment_method'=>$order['payment_method'],'details'=>['reason'=>$reason]]);
-            }
+            if ($status!=='CANCEL') reportQuery($conn,"UPDATE orders SET status_order='CANCEL',cancel_reason=?,canceled_at=NOW() WHERE id=?",'si',[$reason,$id]);
         } else {
             $method = (string)($input['method'] ?? '');
             $paid = filter_var($input['paid'] ?? null,FILTER_VALIDATE_INT);
-            $clientId = (string)($input['client_order_id'] ?? '');
-            $table = trim((string)($input['table_number'] ?? ''));
-            $rawItems = $input['items'] ?? [];
-            if (!preg_match('/^[a-f0-9-]{36}$/i',$clientId) || $table==='' || !is_array($rawItems) || !$rawItems || !in_array($method,['cash','qris','credit_card'],true) || $paid===false || $paid<0 || $paid>2147483647) throw new InvalidArgumentException('Pembayaran tidak valid.');
-            $mapping = reportQuery($conn,'SELECT payload_hash FROM mobile_sync_orders WHERE order_id=? AND client_order_id=? FOR UPDATE','is',[$id,$clientId])->get_result()->fetch_assoc();
-            if (!$mapping) throw new DomainException('Identitas open bill tidak cocok dengan data server.');
-            $items = mobileOrderItems($rawItems);
-            $total = mobileOrderTotal($items);
+            if (!in_array($method,['cash','qris','credit_card'],true) || $paid===false || $paid<0 || $paid>2147483647) throw new InvalidArgumentException('Pembayaran tidak valid.');
+            $total = (int)$order['total_amount'];
             if ($method!=='cash') $paid=$total;
             if ($paid<$total) throw new InvalidArgumentException('Uang bayar kurang.');
             if ($status==='CANCEL') throw new InvalidArgumentException('Transaksi sudah dibatalkan.');
-            $hash = mobileOrderHash($table,$method,'PAID',$total,$items);
-            if ($status==='PAID') {
-                if (!$mapping['payload_hash'] || !hash_equals((string)$mapping['payload_hash'],$hash)) throw new DomainException('Transaksi sudah dibayar dengan isi berbeda. Muat ulang history dan buat transaksi baru.');
-            } else {
-                $settledTimestamp = !empty($input['settled_at']) ? strtotime((string)$input['settled_at']) : false;
-                $settledAt = $settledTimestamp === false ? date('Y-m-d H:i:s') : (new DateTimeImmutable('@'.$settledTimestamp))->setTimezone(new DateTimeZone('Asia/Jakarta'))->format('Y-m-d H:i:s');
-                reportQuery($conn,'DELETE FROM order_items WHERE id_tr=?','i',[$id]);
-                reportQuery($conn,'DELETE FROM order_carwash WHERE id_tr=?','i',[$id]);
-                reportQuery($conn,'DELETE FROM order_detailing WHERE id_tr=?','i',[$id]);
-                mobileInsertOrderItems($conn,$id,$items);
-                reportQuery($conn,"UPDATE orders SET table_number=?,status_order='PAID',payment_method=?,total_amount=?,paid_amount=?,change_amount=?,paid_at=? WHERE id=?",'ssiiisi',[$table,$method,$total,$paid,$paid-$total,$settledAt,$id]);
-                reportQuery($conn,'UPDATE mobile_sync_orders SET payload_hash=? WHERE order_id=?','si',[$hash,$id]);
-                transactionAudit($conn,'open_bill_settled',['order_id'=>$id,'client_order_id'=>$clientId,'user_id'=>$userId,'source'=>'mobile','status'=>'success','table_number'=>$table,'amount'=>$total,'payment_method'=>$method,'client_event_at'=>$settledAt,'details'=>['previous_table'=>$order['table_number'],'previous_total'=>(int)$order['total_amount'],'item_count'=>count($items)]]);
-                transactionAudit($conn,'payment_recorded',['order_id'=>$id,'client_order_id'=>$clientId,'user_id'=>$userId,'source'=>'mobile','status'=>'success','table_number'=>$table,'amount'=>$total,'payment_method'=>$method,'client_event_at'=>$settledAt]);
-            }
+            if ($status==='PAID' && ($order['payment_method']!==$method || (int)$order['paid_amount']!==$paid)) throw new InvalidArgumentException('Transaksi sudah dibayar dengan data berbeda. Muat ulang history.');
+            if ($status==='OPEN BILL') reportQuery($conn,"UPDATE orders SET status_order='PAID',payment_method=?,paid_amount=?,change_amount=? WHERE id=?",'siii',[$method,$paid,$paid-$total,$id]);
         }
         $conn->commit();
-        return ['success'=>true,'order_id'=>$id,'client_order_id'=>$input['client_order_id'] ?? null,'table_number'=>$input['table_number'] ?? $order['table_number'],'total'=>$total ?? (int)$order['total_amount'],'status'=>$action==='order-cancel'?'CANCEL':'PAID'];
+        return ['success'=>true,'order_id'=>$id];
     } catch (Throwable $e) { $conn->rollback(); throw $e; }
 }
 
@@ -183,7 +161,7 @@ if (isset($reportRoutes[$path])) {
     mysqli_report(MYSQLI_REPORT_ERROR | MYSQLI_REPORT_STRICT);
     try {
         if ($path==='closing-save') reply(reportSaveClosing($conn,body(),(int)$account['id_user']));
-        if ($path==='order-cancel' || $path==='order-settle') reply(reportOrderAction($conn,$path,body(),(int)$account['id_user']));
+        if ($path==='order-cancel' || $path==='order-settle') reply(reportOrderAction($conn,$path,body()));
         $conn->begin_transaction(MYSQLI_TRANS_START_READ_ONLY);
         if ($path==='report-history') $result=reportHistory($conn);
         elseif ($path==='daily-reports') $result=['records'=>reportSnapshots($conn)];
@@ -193,7 +171,6 @@ if (isset($reportRoutes[$path])) {
         }
         $conn->commit();
         reply($result);
-    } catch (DomainException $e) { $conn->rollback(); reply(['message'=>$e->getMessage()],409); }
-    catch (InvalidArgumentException $e) { $conn->rollback(); reply(['message'=>$e->getMessage()],422); }
+    } catch (InvalidArgumentException $e) { $conn->rollback(); reply(['message'=>$e->getMessage()],422); }
     catch (Throwable $e) { $conn->rollback(); error_log('Mobile report: '.$e->getMessage()); reply(['message'=>'Gagal memproses laporan. Silakan coba kembali.'],500); }
 }

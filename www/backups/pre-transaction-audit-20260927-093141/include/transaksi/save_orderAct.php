@@ -1,10 +1,8 @@
 <?php
 header('Content-Type: application/json');
 date_default_timezone_set("Asia/Jakarta");
-if (session_status() !== PHP_SESSION_ACTIVE) session_start();
 require_once __DIR__ . '/../../config/config.php';
 require_once __DIR__ . '/../../config/order_type.php';
-require_once __DIR__ . '/../../config/transaction_audit.php';
 
 function parse_money_value($value)
 {
@@ -166,29 +164,6 @@ foreach ($items as $item) {
         mysqli_stmt_execute($stmt);
     }
 }
-
-$auditUserId = isset($_SESSION['id_user']) ? (int)$_SESSION['id_user'] : null;
-transactionAudit($conn, $isOpenBill ? 'open_bill_created' : 'transaction_created', [
-    'order_id' => $orderId,
-    'user_id' => $auditUserId,
-    'source' => 'server_web',
-    'status' => 'success',
-    'table_number' => $tableNumber,
-    'amount' => $total,
-    'payment_method' => $paymentMethodValue,
-    'client_event_at' => $createdAt,
-    'details' => ['item_count' => count($items), 'discount_percent' => $postedDiscountPercent],
-]);
-if (!$isOpenBill) transactionAudit($conn, 'payment_recorded', [
-    'order_id' => $orderId,
-    'user_id' => $auditUserId,
-    'source' => 'server_web',
-    'status' => 'success',
-    'table_number' => $tableNumber,
-    'amount' => $total,
-    'payment_method' => $paymentMethodValue,
-    'client_event_at' => $createdAt,
-]);
 
 echo json_encode([
     'status' => 'success',

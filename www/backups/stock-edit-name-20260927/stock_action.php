@@ -4,7 +4,6 @@ declare(strict_types=1);
 require_once __DIR__ . '/../../../config/session.php';
 session_start();
 require_once __DIR__ . '/../../../config/config.php';
-require_once __DIR__ . '/../../../config/stock_threshold.php';
 
 if (empty($_SESSION['loggedin']) || ($_SESSION['level'] ?? '') !== 'Administrator') {
     http_response_code(403);
@@ -29,12 +28,11 @@ try {
         if ($name === '' || mb_strlen($name) > 100 || !in_array($unit, ['pcs', 'gr'], true) || !is_numeric($quantityText) || abs((float)$quantityText) > 999999999) {
             throw new InvalidArgumentException('Nama dan jumlah awal stok tidak valid.');
         }
-        $minimum = stockMinimumQuantity($_POST['minimum_quantity'] ?? null, $unit);
         $quantity = round((float)$quantityText, 3);
         $conn->begin_transaction();
         $zero = 0.0;
-        $stmt = $conn->prepare('INSERT INTO stock_items (name,initial_quantity,unit,minimum_quantity) VALUES (?,?,?,?)');
-        $stmt->bind_param('sdsd', $name, $zero, $unit, $minimum);
+        $stmt = $conn->prepare('INSERT INTO stock_items (name,initial_quantity,unit) VALUES (?,?,?)');
+        $stmt->bind_param('sds', $name, $zero, $unit);
         $stmt->execute();
         $stockId = $conn->insert_id;
         if (abs($quantity) >= 0.0005) {
@@ -50,26 +48,24 @@ try {
         $_SESSION['stock_success'] = 'Item stok ' . $name . ' berhasil ditambahkan.';
     } elseif (($_POST['action'] ?? '') === 'edit_stock_item') {
         $stockId = filter_var($_POST['stock_item_id'] ?? null, FILTER_VALIDATE_INT);
-        $name = trim((string)($_POST['name'] ?? ''));
         $unit = trim((string)($_POST['unit'] ?? 'pcs'));
         $quantityText = str_replace(',', '.', trim((string)($_POST['quantity'] ?? '')));
         $productIds = postedIds('product_ids');
-        if (!$stockId || $name === '' || mb_strlen($name) > 100 || !in_array($unit, ['pcs', 'gr'], true) || !is_numeric($quantityText) || abs((float)$quantityText) > 999999999) {
-            throw new InvalidArgumentException('Nama, jumlah, atau unit stok tidak valid.');
+        if (!$stockId || !in_array($unit, ['pcs', 'gr'], true) || !is_numeric($quantityText) || abs((float)$quantityText) > 999999999) {
+            throw new InvalidArgumentException('Jumlah stok tidak valid.');
         }
         $target = round((float)$quantityText, 3);
         $note = trim((string)($_POST['note'] ?? ''));
         if (strlen($note) > 180) throw new InvalidArgumentException('Catatan maksimal 180 karakter.');
 
         $conn->begin_transaction();
-        $stmt = $conn->prepare('SELECT name,initial_quantity,minimum_quantity FROM stock_items WHERE id=? FOR UPDATE');
+        $stmt = $conn->prepare('SELECT name,initial_quantity FROM stock_items WHERE id=? FOR UPDATE');
         $stmt->bind_param('i', $stockId);
         $stmt->execute();
         $row = $stmt->get_result()->fetch_assoc();
         if (!$row) throw new InvalidArgumentException('Item stok tidak ditemukan.');
-        $minimum = stockMinimumQuantity($_POST['minimum_quantity'] ?? $row['minimum_quantity'], $unit);
-        $stmt = $conn->prepare('UPDATE stock_items SET name=?,unit=?,minimum_quantity=? WHERE id=?');
-        $stmt->bind_param('ssdi', $name, $unit, $minimum, $stockId);
+        $stmt = $conn->prepare('UPDATE stock_items SET unit=? WHERE id=?');
+        $stmt->bind_param('si', $unit, $stockId);
         $stmt->execute();
         $stmt = $conn->prepare('SELECT COALESCE(SUM(quantity_delta),0) movement_total FROM stock_movements WHERE stock_item_id=?');
         $stmt->bind_param('i', $stockId);
@@ -105,7 +101,7 @@ try {
             $insertBinding->execute();
         }
         $conn->commit();
-        $_SESSION['stock_success'] = 'Stok ' . $name . ' berhasil diperbarui.';
+        $_SESSION['stock_success'] = 'Stok ' . $row['name'] . ' berhasil diperbarui.';
     } elseif (($_POST['action'] ?? '') === 'save_binding') {
         $productId = filter_var($_POST['product_id'] ?? null, FILTER_VALIDATE_INT);
         $usageText = str_replace(',', '.', trim((string)($_POST['quantity_per_sale'] ?? '1')));

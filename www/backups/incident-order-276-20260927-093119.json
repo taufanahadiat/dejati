@@ -1,0 +1,61 @@
+{
+    "SELECT * FROM orders WHERE id=276": [
+        {
+            "id": "276",
+            "table_number": "Bangku oren",
+            "payment_method": "qris",
+            "total_amount": "44000",
+            "paid_amount": "44000",
+            "change_amount": "0",
+            "status_order": "PAID",
+            "cancel_reason": null,
+            "canceled_at": null,
+            "created_at": "2026-09-27 12:01:59"
+        }
+    ],
+    "SELECT * FROM mobile_sync_orders WHERE order_id=276": [
+        {
+            "client_order_id": "fbf1ceae-9f1c-433b-b996-540171f227bf",
+            "order_id": "276",
+            "user_id": "1",
+            "created_at": "2026-09-27 12:57:30"
+        }
+    ],
+    "SELECT * FROM order_items WHERE id_tr=276": [
+        {
+            "id": "570",
+            "id_tr": "276",
+            "id_prod": "133",
+            "item_name": "SOSTEL",
+            "order_type": "dine-in",
+            "item_price": "12000",
+            "quantity": "1",
+            "total": "12000",
+            "created_at": "2026-09-27 12:57:30"
+        },
+        {
+            "id": "571",
+            "id_tr": "276",
+            "id_prod": "27",
+            "item_name": "ONION RING",
+            "order_type": "dine-in",
+            "item_price": "16000",
+            "quantity": "1",
+            "total": "16000",
+            "created_at": "2026-09-27 12:57:30"
+        },
+        {
+            "id": "572",
+            "id_tr": "276",
+            "id_prod": "114",
+            "item_name": "Wedang uwuh",
+            "order_type": "dine-in",
+            "item_price": "16000",
+            "quantity": "1",
+            "total": "16000",
+            "created_at": "2026-09-27 12:57:30"
+        }
+    ],
+    "SELECT * FROM order_carwash WHERE id_tr=276": [],
+    "SELECT * FROM order_detailing WHERE id_tr=276": []
+}
