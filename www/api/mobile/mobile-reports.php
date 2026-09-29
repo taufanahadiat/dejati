@@ -1,6 +1,8 @@
 <?php
 // Included after mobile token authentication; shared by the APK report routes.
 declare(strict_types=1);
+require_once __DIR__ . '/../../config/whatsapp_closing.php';
+require_once __DIR__ . '/../../config/closing_persistence.php';
 
 function reportQuery(mysqli $conn, string $sql, string $types = '', array $params = []): mysqli_stmt {
     $stmt = $conn->prepare($sql);
@@ -101,25 +103,19 @@ function reportSaveClosing(mysqli $conn, array $input, int $userId): array {
         $existing = reportQuery($conn,'SELECT user_id,payload_hash,response_json FROM mobile_report_requests WHERE request_id=?','s',[$key])->get_result()->fetch_assoc();
         if ($existing) {
             if ((int)$existing['user_id']!==$userId || !hash_equals($existing['payload_hash'],$hash)) throw new InvalidArgumentException('Permintaan closing berbeda dari percobaan sebelumnya.');
-            $conn->commit();
-            return json_decode($existing['response_json'],true,512,JSON_THROW_ON_ERROR);
+            // Repeated sync refreshes sales, but must never reinsert its expenses.
         }
         $date = (string)($input['date'] ?? '');
         if (!preg_match('/^\d{4}-\d{2}-\d{2}$/',$date) || !checkdate((int)substr($date,5,2),(int)substr($date,8,2),(int)substr($date,0,4)) || $date > date('Y-m-d')) throw new InvalidArgumentException('Tanggal closing tidak valid.');
-        $sameDate = reportQuery($conn,'SELECT user_id,payload_hash,response_json FROM mobile_report_requests WHERE closing_date=?','s',[$date])->get_result()->fetch_assoc();
-        if ($sameDate) {
-            if ((int)$sameDate['user_id']!==$userId || !hash_equals($sameDate['payload_hash'],$hash)) throw new InvalidArgumentException('Closing tanggal ini sudah tersimpan dengan data berbeda.');
-            $conn->commit();
-            return json_decode($sameDate['response_json'],true,512,JSON_THROW_ON_ERROR);
+        $samePayload = reportQuery($conn,'SELECT request_id FROM mobile_report_requests WHERE closing_date=? AND payload_hash=? LIMIT 1','ss',[$date,$hash])->get_result()->fetch_assoc();
+        if (!$existing && !$samePayload) {
+            foreach ($expenses as $row) reportQuery($conn,'INSERT INTO pengeluaran (keterangan,total,created_at) VALUES (?,?,?)','sis',[$row['keterangan'],$row['total'],$date.' 23:59:59']);
         }
-        $savedClosing = reportQuery($conn,'SELECT id FROM tb_closingan WHERE tanggal=? FOR UPDATE','s',[$date])->get_result()->fetch_assoc();
-        if ($savedClosing) throw new InvalidArgumentException('Closing tanggal ini sudah tersimpan di server. Muat ulang history.');
-        foreach ($expenses as $row) reportQuery($conn,'INSERT INTO pengeluaran (keterangan,total,created_at) VALUES (?,?,?)','sis',[$row['keterangan'],$row['total'],$date.' 23:59:59']);
         $closing = reportClosing($conn,$date);
-        reportQuery($conn,'INSERT INTO tb_closingan (tanggal,total_penjualan,cash,qris,card,cafe,carwash,detailing,detail_pengeluaran,created_at) VALUES (?,?,?,?,?,?,?,?,?,NOW()) ON DUPLICATE KEY UPDATE total_penjualan=VALUES(total_penjualan),cash=VALUES(cash),qris=VALUES(qris),card=VALUES(card),cafe=VALUES(cafe),carwash=VALUES(carwash),detailing=VALUES(detailing),detail_pengeluaran=VALUES(detail_pengeluaran),created_at=NOW()',
-            'siiiiiiis',[$closing['tanggal'],$closing['total_penjualan'],$closing['cash'],$closing['qris'],$closing['card'],$closing['cafe'],$closing['carwash'],$closing['detailing'],json_encode($closing['expenses'],JSON_UNESCAPED_UNICODE|JSON_THROW_ON_ERROR)]);
+        $closing['id'] = saveClosingSnapshot($conn, $closing);
+        waEnqueueClosing($conn, $date);
         $result = ['closing'=>$closing,'saved'=>true];
-        reportQuery($conn,'INSERT INTO mobile_report_requests (request_id,closing_date,user_id,payload_hash,response_json,created_at) VALUES (?,?,?,?,?,NOW())','ssiss',[$key,$date,$userId,$hash,json_encode($result,JSON_THROW_ON_ERROR)]);
+        reportQuery($conn,'INSERT INTO mobile_report_requests (request_id,closing_date,user_id,payload_hash,response_json,created_at) VALUES (?,?,?,?,?,NOW()) ON DUPLICATE KEY UPDATE response_json=VALUES(response_json)','ssiss',[$key,$date,$userId,$hash,json_encode($result,JSON_THROW_ON_ERROR)]);
         $conn->commit();
         return $result;
     } catch (Throwable $e) { $conn->rollback(); throw $e; }

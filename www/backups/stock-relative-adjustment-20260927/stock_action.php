@@ -4,6 +4,7 @@ declare(strict_types=1);
 require_once __DIR__ . '/../../../config/session.php';
 session_start();
 require_once __DIR__ . '/../../../config/config.php';
+require_once __DIR__ . '/../../../config/stock_threshold.php';
 
 if (empty($_SESSION['loggedin']) || ($_SESSION['level'] ?? '') !== 'Administrator') {
     http_response_code(403);
@@ -28,11 +29,12 @@ try {
         if ($name === '' || mb_strlen($name) > 100 || !in_array($unit, ['pcs', 'gr'], true) || !is_numeric($quantityText) || abs((float)$quantityText) > 999999999) {
             throw new InvalidArgumentException('Nama dan jumlah awal stok tidak valid.');
         }
+        $minimum = stockMinimumQuantity($_POST['minimum_quantity'] ?? null, $unit);
         $quantity = round((float)$quantityText, 3);
         $conn->begin_transaction();
         $zero = 0.0;
-        $stmt = $conn->prepare('INSERT INTO stock_items (name,initial_quantity,unit) VALUES (?,?,?)');
-        $stmt->bind_param('sds', $name, $zero, $unit);
+        $stmt = $conn->prepare('INSERT INTO stock_items (name,initial_quantity,unit,minimum_quantity) VALUES (?,?,?,?)');
+        $stmt->bind_param('sdsd', $name, $zero, $unit, $minimum);
         $stmt->execute();
         $stockId = $conn->insert_id;
         if (abs($quantity) >= 0.0005) {
@@ -60,13 +62,14 @@ try {
         if (strlen($note) > 180) throw new InvalidArgumentException('Catatan maksimal 180 karakter.');
 
         $conn->begin_transaction();
-        $stmt = $conn->prepare('SELECT name,initial_quantity FROM stock_items WHERE id=? FOR UPDATE');
+        $stmt = $conn->prepare('SELECT name,initial_quantity,minimum_quantity FROM stock_items WHERE id=? FOR UPDATE');
         $stmt->bind_param('i', $stockId);
         $stmt->execute();
         $row = $stmt->get_result()->fetch_assoc();
         if (!$row) throw new InvalidArgumentException('Item stok tidak ditemukan.');
-        $stmt = $conn->prepare('UPDATE stock_items SET name=?,unit=? WHERE id=?');
-        $stmt->bind_param('ssi', $name, $unit, $stockId);
+        $minimum = stockMinimumQuantity($_POST['minimum_quantity'] ?? $row['minimum_quantity'], $unit);
+        $stmt = $conn->prepare('UPDATE stock_items SET name=?,unit=?,minimum_quantity=? WHERE id=?');
+        $stmt->bind_param('ssdi', $name, $unit, $minimum, $stockId);
         $stmt->execute();
         $stmt = $conn->prepare('SELECT COALESCE(SUM(quantity_delta),0) movement_total FROM stock_movements WHERE stock_item_id=?');
         $stmt->bind_param('i', $stockId);

@@ -13,6 +13,7 @@ $breadcrumb = [['label' => 'WhatsApp']];
       <p>Tautkan akun WhatsApp Anda ke server Dejati melalui kode QR.</p>
       <p><strong>Bot stok aktif:</strong> kirim “update stock hari ini”, “cek stok”, atau “/stok” untuk mendapatkan daftar stok terbaru. Perintah lain: “stok ayam berapa?”, “penjualan hari ini”, “produk terlaris hari ini”, “ringkasan hari ini”, dan “bantuan”. Di grup, wajib mention akun De’Jati melalui fitur @. Kirim “stok habis” untuk daftar stok nol/minus dan stok minim sesuai batas per item secara terpisah.</p>
       <div id="wa-status" class="alert alert-secondary" role="status" aria-live="polite">Memeriksa koneksi…</div>
+      <p>Ubah stok via chat: “ubah stok Ayam Bakar”, “tambah stok Ayam Bakar 2”, atau “kurang stok Ayam Bakar 2”. Bot menampilkan stok awal dan akhir, lalu menunggu konfirmasi Anda sebelum menyimpan.</p>
       <p id="wa-monitor" class="text-muted small" aria-live="polite"></p>
       <p id="wa-account" class="font-weight-bold" hidden></p>
       <div id="wa-qr-wrap" class="text-center mb-3" hidden>

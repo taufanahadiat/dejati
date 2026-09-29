@@ -27,7 +27,7 @@ function setup() {
 test('replies in the requesting private chat and group, once per message', async () => {
   const { bot, msg, sent, saved } = setup();
   await Promise.all([bot.handle(msg, {}), bot.handle(msg, {})]);
-  await bot.handle({ ...msg, from: '123-456@g.us', mentionedIds: ['999@c.us'] }, { info: { wid: { _serialized: '999@c.us' } } });
+  await bot.handle({ ...msg, from: '123-456@g.us', author: '123@lid', mentionedIds: ['999@c.us'] }, { info: { wid: { _serialized: '999@c.us' } } });
   assert.deepEqual(sent.map(x => x.chat), ['123@lid', '123-456@g.us']);
   assert.equal(saved.length, 2);
   const second = setup(); second.bot.restore(saved.at(-1));
@@ -54,7 +54,7 @@ test('data failure sends no fabricated report; uncertain delivery is not retried
 test('group requires an actual mention of this account; private chats do not', async () => {
   const { bot, msg, sent } = setup();
   const client = { info: { wid: { _serialized: '999@c.us' } }, pupPage: { evaluate: async () => ['999@c.us', '777@lid'] } };
-  const group = { ...msg, from: '123-456@g.us' };
+  const group = { ...msg, from: '123-456@g.us', author: '123@lid' };
   await bot.handle({ ...group, body: '@Dejati update stock hari ini' }, client);
   await bot.handle({ ...group, mentionedIds: ['888@c.us'] }, client);
   assert.equal(sent.length, 0);
@@ -101,4 +101,19 @@ test('per-item thresholds override defaults; grams default to 50 and zero disabl
  assert.match(body,/\*Stok Minim\*/);assert.doesNotMatch(body,/>0|5 satuan/);
  for(const name of ['Gram default','Custom high','Empty disabled','Fraction'])assert.ok(body.includes(name),name);
  for(const name of ['Gram above','Custom low','Disabled'])assert.ok(!body.includes('• '+name+':'),name);
+});
+test('dialog starts with group mention, then only same sender can continue without mentioning',async()=>{
+ const {StockDialog}=require('./stock-dialog');
+ const {bot,msg,sent}=setup();let writes=0;
+ bot.getReport=async()=>({asOf:new Date().toISOString(),items:[{id:1,name:'Ayam Bakar',current_quantity:5,unit:'pcs'}]});
+ bot.dialog=new StockDialog({getReport:bot.getReport,save:async()=>{},api:async x=>{if(x.action==='confirm')writes++;return {status:x.action==='confirm'?'applied':'pending',token:x.token,name:'Ayam Bakar',unit:'pcs',old:5,new:7,delta:2}}});
+ const client={info:{wid:'999@lid'}};
+ const group={...msg,from:'123-456@g.us',author:'123@lid'};
+ await bot.handle({...group,id:{id:'start'},body:'update stok hari ini',mentionedIds:['999@lid']},client);
+ assert.match(sent[0].body,/Mau update stok apa/);
+ await bot.handle({...group,id:{id:'item'},body:'Ayam Bakar'},client);
+ await bot.handle({...group,id:{id:'amount'},body:'tambah 2'},client);
+ assert.equal(writes,0);assert.match(sent.at(-1).body,/Konfirmasi/);
+ await bot.handle({...group,author:'888@lid',id:{id:'wrong-yes'},body:'YA'},client);assert.equal(writes,0);
+ await bot.handle({...group,id:{id:'yes'},body:'IYA'},client);assert.equal(writes,1);assert.match(sent.at(-1).body,/terupdate: 7/);
 });

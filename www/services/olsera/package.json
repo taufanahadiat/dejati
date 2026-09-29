@@ -1,0 +1,1 @@
+{"name":"dejati-olsera","version":"1.0.0","private":true,"scripts":{"start":"node worker.js","test":"node --test"},"dependencies":{"playwright-core":"1.55.1"}}

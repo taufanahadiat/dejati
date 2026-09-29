@@ -1,5 +1,6 @@
 const fs = require('node:fs/promises');
 const { parseCommand, formatCommand } = require('./commands');
+const { StockDialog, parseEdit } = require('./stock-dialog');
 function isStockRequest(body) {
   if (typeof body !== 'string' || body.length > 250) return false;
   const text = body.toLowerCase().replace(/[_*~]/g, ' ').trim();
@@ -48,8 +49,8 @@ function formatReport(data, shortagesOnly = false) {
   return lines.join('\n');
 }
 class StockBot {
-  constructor({ getReport, send, save, now = Date.now, log = console.log }) {
-    Object.assign(this, { getReport, send, save, now, log });
+  constructor({ getReport, send, save, dialog, now = Date.now, log = console.log }) {
+    Object.assign(this, { getReport, send, save, dialog, now, log });
     this.seen = {};
     this.queue = Promise.resolve();
     this.startedAt = now();
@@ -64,15 +65,25 @@ class StockBot {
   async process(message, client) {
     const chat = message.from;
     const command = parseCommand(message.body);
+    const sender = chat?.endsWith('@g.us') ? message.author : chat;
+    const ctx = { chat, sender, messageId: message.id?._serialized || (chat + ':' + sender + ':' + message.id?.id) };
     const id = message.id?._serialized || (message.id?.id ? chat + ':' + message.id.id : null);
     if (!id || message.fromMe || message.isStatus || message.type !== 'chat' ||
-        !/^[0-9-]+@(c\.us|lid|g\.us)$/.test(chat || '') || !command) return;
+        !/^[0-9-]+@(c\.us|lid|g\.us)$/.test(chat || '') || (!command && !parseEdit(message.body) && !this.dialog?.sessions[this.dialog.key(ctx)])) return;
+    if (!/^[0-9]+@(c\.us|lid)$/.test(sender || '')) return;
     const timestamp = Number(message.timestamp) * 1000;
     if (!Number.isFinite(timestamp) || timestamp < this.startedAt - 30000 || this.now() - timestamp > 300000) return;
     if (this.seen[id]) return;
-    if (chat.endsWith('@g.us') && !await mentionsBot(message, client)) return;
-    const data = command.kind === 'help' ? null : await this.getReport(command.kind);
-    const body = formatCommand(command, data, formatReport);
+    if (chat.endsWith('@g.us') && !this.dialog?.active(ctx) && !await mentionsBot(message, client)) return;
+    let body;
+    try { body = await this.dialog?.handle(ctx, message.body, command); }
+    catch (error) { body = error.userMessage || 'Layanan perubahan stok belum dapat dipastikan. Balas YA lagi jika sedang mengonfirmasi; perubahan tidak akan digandakan.'; }
+    if (!body) {
+      if (!command) return;
+      const data = command.kind === 'help' ? null : await this.getReport(command.kind);
+      body = formatCommand(command, data, formatReport);
+      if (this.dialog && command.kind === 'stock') body += '\n\nMau update stok apa? Balas nama item, atau BATAL.';
+    }
     // Persist before dispatch. An ambiguous network failure must never duplicate a reply.
     const cutoff = this.now() - 7 * 86400000;
     this.seen = Object.fromEntries(Object.entries(this.seen).filter(([, at]) => at >= cutoff).slice(-4999));
@@ -113,6 +124,23 @@ async function createStockBot() {
       await fs.rename('/data/stock-bot-seen.json.tmp', '/data/stock-bot-seen.json');
     }
   });
+  bot.dialog = new StockDialog({
+    getReport: () => bot.getReport('stock'),
+    api: async input => {
+      const response = await fetch('http://lampp_web/api/whatsapp-stock-change', {
+        method: 'POST', headers: { 'X-Stock-Token': token, 'Content-Type': 'application/json' },
+        body: JSON.stringify(input), signal: AbortSignal.timeout(20000)
+      });
+      const data = await response.json();
+      if (!response.ok) { const error = new Error('Stock change failed'); error.userMessage = data.error; throw error; }
+      return data;
+    },
+    save: async sessions => {
+      await fs.writeFile('/data/stock-dialogs.json.tmp', JSON.stringify(sessions), { mode: 0o600 });
+      await fs.rename('/data/stock-dialogs.json.tmp', '/data/stock-dialogs.json');
+    }
+  });
+  try { bot.dialog.restore(JSON.parse(await fs.readFile('/data/stock-dialogs.json', 'utf8'))); } catch {}
   try { bot.restore(JSON.parse(await fs.readFile('/data/stock-bot-seen.json', 'utf8'))); } catch {}
   return bot;
 }

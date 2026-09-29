@@ -8,6 +8,8 @@ if (empty($_SESSION['loggedin'])) {
 }
 
 require_once __DIR__ . '/../../config/config.php';
+require_once __DIR__ . '/../../config/whatsapp_closing.php';
+require_once __DIR__ . '/../../config/closing_persistence.php';
 date_default_timezone_set('Asia/Jakarta');
 
 function closingScalar(mysqli $conn, string $sql): int
@@ -94,32 +96,12 @@ if ($isSaveRequest) {
 
   mysqli_begin_transaction($conn);
   try {
-    $existing = $conn->prepare('SELECT id FROM tb_closingan WHERE tanggal = CURDATE() ORDER BY id DESC LIMIT 1 FOR UPDATE');
-    $existing->execute();
-    $existingRow = $existing->get_result()->fetch_assoc();
-    $existing->close();
-
-    if ($existingRow) {
-      $stmt = $conn->prepare(
-        'UPDATE tb_closingan
-         SET total_penjualan = ?, cash = ?, qris = ?, card = ?, cafe = ?, carwash = ?, detailing = ?, detail_pengeluaran = ?, created_at = NOW()
-         WHERE id = ?'
-      );
-      $closingId = (int) $existingRow['id'];
-      $stmt->bind_param('iiiiiiisi', $totalPenjualan, $cash, $qris, $card, $cafe, $carwash, $detailing, $jsonPengeluaran, $closingId);
-    } else {
-      $stmt = $conn->prepare(
-        'INSERT INTO tb_closingan
-         (tanggal, total_penjualan, cash, qris, card, cafe, carwash, detailing, detail_pengeluaran, created_at)
-         VALUES (CURDATE(), ?, ?, ?, ?, ?, ?, ?, ?, NOW())'
-      );
-      $stmt->bind_param('iiiiiiis', $totalPenjualan, $cash, $qris, $card, $cafe, $carwash, $detailing, $jsonPengeluaran);
-    }
-
-    if (!$stmt->execute()) {
-      throw new RuntimeException($stmt->error);
-    }
-    $stmt->close();
+    $closingId = saveClosingSnapshot($conn, [
+      'tanggal'=>date('Y-m-d'), 'total_penjualan'=>$totalPenjualan,
+      'cash'=>$cash, 'qris'=>$qris, 'card'=>$card, 'cafe'=>$cafe,
+      'carwash'=>$carwash, 'detailing'=>$detailing, 'expenses'=>$pengeluaranRows
+    ]);
+    waEnqueueClosing($conn, date('Y-m-d'));
     mysqli_commit($conn);
   } catch (Throwable $e) {
     mysqli_rollback($conn);

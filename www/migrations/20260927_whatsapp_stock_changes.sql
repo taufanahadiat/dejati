@@ -1,0 +1,21 @@
+CREATE TABLE IF NOT EXISTS whatsapp_stock_changes (
+  token CHAR(64) PRIMARY KEY,
+  chat_id VARCHAR(128) NOT NULL,
+  sender_id VARCHAR(128) NOT NULL,
+  stock_item_id INT NOT NULL,
+  item_name VARCHAR(100) NOT NULL,
+  unit VARCHAR(20) NOT NULL,
+  mode ENUM('set','add','subtract') NOT NULL,
+  amount DECIMAL(12,3) NOT NULL,
+  old_quantity DECIMAL(12,3) NOT NULL,
+  new_quantity DECIMAL(12,3) NOT NULL,
+  movement_revision BIGINT NOT NULL,
+  state ENUM('pending','applied','cancelled','expired') NOT NULL DEFAULT 'pending',
+  last_confirmation_id CHAR(64) NULL,
+  last_result JSON NULL,
+  expires_at DATETIME NOT NULL,
+  created_at DATETIME NOT NULL DEFAULT CURRENT_TIMESTAMP,
+  updated_at DATETIME NOT NULL DEFAULT CURRENT_TIMESTAMP ON UPDATE CURRENT_TIMESTAMP,
+  KEY idx_wa_stock_actor (chat_id,sender_id,state),
+  CONSTRAINT fk_wa_stock_item FOREIGN KEY (stock_item_id) REFERENCES stock_items(id)
+) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4;

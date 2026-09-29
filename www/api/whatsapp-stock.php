@@ -18,7 +18,7 @@ try {
     $now = new DateTimeImmutable('now', new DateTimeZone('Asia/Jakarta'));
     $conn->query("SET time_zone = '+07:00'");
     $conn->begin_transaction(MYSQLI_TRANS_START_READ_ONLY | MYSQLI_TRANS_START_WITH_CONSISTENT_SNAPSHOT);
-    $rows = $conn->query('SELECT name,current_quantity,unit,minimum_quantity FROM vw_stock_balances WHERE active=1 ORDER BY name')->fetch_all(MYSQLI_ASSOC);
+    $rows = $conn->query('SELECT id,name,current_quantity,unit,minimum_quantity FROM vw_stock_balances WHERE active=1 ORDER BY name')->fetch_all(MYSQLI_ASSOC);
     $data = ['asOf' => $now->format(DATE_ATOM), 'items' => $rows];
     if (in_array($_GET['report'] ?? '', ['sales', 'bestsellers', 'summary'], true)) {
         $data['sales'] = whatsappDailySales($conn, $now->setTime(0,0)->format('Y-m-d H:i:s'), $now->modify('+1 day')->setTime(0,0)->format('Y-m-d H:i:s'));

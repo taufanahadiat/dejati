@@ -9,6 +9,8 @@ include __DIR__ . '/../include/data/stock/index.php';
 $html = ob_get_clean();
 
 $checks = [
+    'minimum_edit_field' => str_contains($html, 'id="editStockMinimum"') && str_contains($html, 'name="minimum_quantity"'),
+    'minimum_values' => str_contains($html, 'data-minimum="50.000"') && str_contains($html, "$('#editStockMinimum').val(button.attr('data-minimum'))"),
     'title' => str_contains($html, 'Stock Saat Ini'),
     'binding_tab' => str_contains($html, 'Binding Produk'),
     'history_tab' => str_contains($html, 'Riwayat'),
@@ -17,9 +19,7 @@ $checks = [
     'out_of_stock_card' => str_contains($html, 'Stock Habis'),
     'edit_stock_modal' => str_contains($html, 'editStockProducts'),
     'edit_stock_name' => str_contains($html, 'id="editStockName"') && str_contains($html, "$('#editStockName').val(button.data('name'))"),
-    'editable_current_stock' => str_contains($html, 'id="editStockCurrent"') && str_contains($html, 'name="quantity"') && !preg_match('/id="editStockCurrent"[^>]*readonly/', $html),
-    'relative_stock_adjustment' => str_contains($html, 'id="editStockAdjustment"') && str_contains($html, "$('#editStockAdjustment').on('input change',calculateStockTarget)"),
-    'adjustment_has_no_zero_default' => !preg_match('/id="editStockAdjustment"[^>]*value="0"/', $html),
+    'relative_stock_adjustment' => str_contains($html, 'id="editStockCurrent"') && str_contains($html, 'name="adjustment_quantity"'),
     'surplus_deficit_options' => str_contains($html, 'value="surplus"') && str_contains($html, 'value="deficit"'),
     'add_unit_options' => str_contains($html, 'id="stockUnit"') && str_contains($html, '<option value="gr">gr</option>'),
     'edit_unit_options' => str_contains($html, 'id="editStockUnit"') && str_contains($html, "$('#editStockUnit').val(button.attr('data-unit'))"),

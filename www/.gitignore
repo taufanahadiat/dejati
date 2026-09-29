@@ -1,2 +1,6 @@
 
 /config/whatsapp-bot.token
+
+/config/olsera.credentials.json
+/services/olsera/node_modules/
+/services/olsera/__pycache__/

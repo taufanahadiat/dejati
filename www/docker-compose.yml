@@ -31,6 +31,27 @@ services:
       timeout: 5s
       retries: 3
 
+  olsera:
+    build: ./services/olsera
+    restart: unless-stopped
+    init: true
+    shm_size: 256mb
+    stop_grace_period: 5m
+    volumes:
+      - olsera_data:/data
+      - ./config/whatsapp-bot.token:/run/secrets/stock-token:ro
+      - ./config/olsera.credentials.json:/run/secrets/olsera-credentials:ro
+    networks:
+      - whatsapp_private
+    depends_on:
+      - web
+    healthcheck:
+      test: ["CMD", "node", "-e", "const fs=require('fs');process.exit(Date.now()-Number(fs.readFileSync('/data/heartbeat','utf8'))<360000?0:1)"]
+      interval: 60s
+      timeout: 5s
+      start_period: 5m
+      retries: 3
+
   # --- MySQL database ---
   db:
     image: mysql:8.0
@@ -79,6 +100,7 @@ services:
 
 volumes:
   whatsapp_data:
+  olsera_data:
   db_data:
   caddy_data:
   caddy_config:

@@ -31,3 +31,7 @@ RewriteRule ^ %1 [R=301,L,NC]
 <Files "whatsapp-bot.token">
     Require all denied
 </Files>
+
+<Files "olsera.credentials.json">
+    Require all denied
+</Files>

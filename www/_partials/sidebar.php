@@ -93,6 +93,11 @@ $appPage = 'main.php';
               </a>
             </li>
             <li class="nav-item">
+              <a href="main.php?id=salesReport" class="nav-link">
+                <i class="nav-icon fas fa-chart-line"></i><p>Laporan Penjualan</p>
+              </a>
+            </li>
+            <li class="nav-item">
               <a href="main.php?id=dailyReport" class="nav-link">
                 <i class="nav-icon fas fa-calendar-day"></i>
                 <p>Closing Harian</p>

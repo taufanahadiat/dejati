@@ -5,6 +5,8 @@ const QRCode = require('qrcode');
 const WhatsAppManager = require('./manager');
 const ConnectionMonitor = require('./monitor');
 const { createStockBot } = require('./stock-bot');
+const { createClosingNotifier } = require('./closing-notifier');
+let closingNotifier, closingTimer;
 let stockBot;
 const enabledFile = '/data/enabled';
 const manager = new WhatsAppManager({
@@ -55,6 +57,8 @@ const server = http.createServer(async (req, res) => {
 server.listen(3000, '0.0.0.0', async () => {
   console.log('WhatsApp service listening on port 3000');
   stockBot = await createStockBot();
+  closingNotifier = await createClosingNotifier(manager);
+  closingTimer = setInterval(() => closingNotifier.tick(), 30000);
   try { monitor.restore(JSON.parse(await fs.readFile('/data/monitor.json', 'utf8'))); } catch {}
   monitorTimer = setInterval(() => monitor.check().catch(() => console.error('Cannot persist WhatsApp monitoring report.')), 60000);
   if (await fs.access(enabledFile).then(() => true, () => false)) {
@@ -67,6 +71,7 @@ server.listen(3000, '0.0.0.0', async () => {
   }
 });
 async function shutdown() {
+  clearInterval(closingTimer);
   clearInterval(monitorTimer);
   manager.enabled = false;
   clearTimeout(manager.timer);

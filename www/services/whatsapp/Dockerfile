@@ -4,7 +4,7 @@ RUN apt-get update && apt-get install -y --no-install-recommends chromium ca-cer
 WORKDIR /app
 COPY package*.json ./
 RUN npm ci --omit=dev
-COPY server.js manager.js monitor.js stock-bot.js commands.js ./
+COPY server.js manager.js monitor.js stock-bot.js commands.js stock-dialog.js closing-notifier.js ./
 RUN mkdir /data && chown node:node /data /app
 USER node
 EXPOSE 3000

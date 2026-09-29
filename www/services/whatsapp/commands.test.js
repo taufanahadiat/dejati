@@ -25,8 +25,8 @@ test('help does not require database; sales in groups still requires account men
  const bot=new StockBot({getReport:async()=>{reads++;return data},send:async(_,chat,body)=>sent.push(body),save:async()=>{},log:()=>{}});
  const msg={from:'123@lid',id:{id:'help'},type:'chat',body:'bantuan',timestamp:Math.floor(Date.now()/1000)};
  await bot.handle(msg,{});assert.equal(reads,0);assert.match(sent[0],/Penjualan hari ini/);
- await bot.handle({...msg,from:'123@g.us',id:{id:'sales'},body:'penjualan hari ini'},{});assert.equal(reads,0);
- await bot.handle({...msg,from:'123@g.us',id:{id:'sales'},body:'penjualan hari ini',mentionedIds:['999@lid']},{info:{wid:'999@lid'}});assert.equal(reads,1);assert.equal(sent.length,2);
+ await bot.handle({...msg,from:'123@g.us',author:'123@lid',id:{id:'sales'},body:'penjualan hari ini'},{});assert.equal(reads,0);
+ await bot.handle({...msg,from:'123@g.us',author:'123@lid',id:{id:'sales'},body:'penjualan hari ini',mentionedIds:['999@lid']},{info:{wid:'999@lid'}});assert.equal(reads,1);assert.equal(sent.length,2);
 });
 test('sales aliases and explicit division selection',()=>{
  for(const [body,divisions] of [['pendapatan cafe hari ini',['cafe']],['omset car wash',['carwash']],['omzet detailing hari ini',['detailing']],['penjualan kafe dan carwash',['cafe','carwash']],['rincian pendapatan hari ini',['cafe','carwash','detailing']]])assert.deepEqual(parseCommand(body),{kind:'sales',divisions});
